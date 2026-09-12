@@ -862,7 +862,6 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
 @media(max-width:760px){
   .sidebar-close{display:flex;}
 }
-}
 </style>
 </head>
 <body>
@@ -893,9 +892,9 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
       <div class="nav-item" data-page="settings"><i class="fas fa-sliders"></i> Settings</div>
     </nav>
     <div class="sidebar-footer">
-      <div class="user-chip">
-        <div class="user-avatar">KB</div>
-        <div class="user-info">KhanBaba<span>Free plan</span></div>
+      <div class="user-chip" id="userChip" title="Guest session">
+        <div class="user-avatar">G</div>
+        <div class="user-info">Guest<span>Free plan</span></div>
       </div>
     </div>
   </aside>
@@ -993,6 +992,15 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
               <div class="text-muted" id="scoreHint">Add components to unlock your analysis.</div>
             </div>
           </div>
+        </div>
+
+        <!-- SHARE CARD -->
+        <div class="card mb-3" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+          <div>
+            <div class="card-title mb-1"><i class="fas fa-image"></i> Share your score</div>
+            <div class="text-muted" style="font-size:.82rem;">Download a PNG card with your build + score, ready to post on Discord, Reddit, or Twitter.</div>
+          </div>
+          <button class="btn btn-primary" onclick="generateShareCard()"><i class="fas fa-download"></i> Generate card</button>
         </div>
 
         <!-- QUICK STATS -->
@@ -1194,9 +1202,16 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
             <h1>Games</h1>
             <p>Personalized FPS estimates for your build. Click a game for details.</p>
           </div>
-          <div class="flex">
+          <div class="flex" style="gap:.6rem;align-items:center;">
+            <label style="display:flex;align-items:center;gap:.5rem;font-size:.78rem;font-weight:600;color:var(--text-2);background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.4rem .65rem;">
+              <i class="fas fa-bullseye" style="color:var(--primary);"></i>
+              Target
+              <input type="number" id="targetFps" value="60" min="30" max="360" step="15" style="width:56px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.2rem .4rem;color:var(--text);font-family:inherit;font-size:.78rem;font-weight:700;text-align:center;">
+              FPS
+            </label>
             <select class="field" id="gameFilterQuality" style="padding:.5rem .75rem;border-radius:var(--radius-sm);background:var(--surface-2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:.82rem;">
               <option value="all">All qualities</option>
+              <option value="hits-target">Hits target ✓</option>
               <option value="excellent">Excellent only</option>
               <option value="playable">Playable+</option>
             </select>
@@ -1442,7 +1457,7 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
         <div class="card">
           <div class="card-header"><div class="card-title"><i class="fas fa-circle-info"></i> About</div></div>
           <p class="text-muted mb-2">PC Playground is a client-side performance modeler. All estimates are algorithmic, based on a curated component database and relative-weight FPS model.</p>
-          <p class="text-muted" style="font-size:.75rem;">Version 4.1 · Built with vanilla HTML/CSS/JS · No tracking · No server.</p>
+          <p class="text-muted" style="font-size:.75rem;">Version 4.2 · Built with vanilla HTML/CSS/JS · No tracking · No server.</p>
         </div>
       </section>
 
@@ -1487,12 +1502,14 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
 
 <script>
 /* ================================================================
-   PC PLAYGROUND — CORE ENGINE v4.1
+   PC PLAYGROUND — CORE ENGINE v4.2
    ----------------------------------------------------------------
-   CHANGES FROM v4.0:
-     - Added `store:` field to every game (Steam/Epic/Riot/etc)
-     - Added "View on Store" + "Copy game name" buttons to modal
-   Everything else is byte-identical to v4.0.
+   CHANGES FROM v4.1:
+     - Guest chip (removed KhanBaba branding)
+     - "Fix My Bottleneck" one-click action in Advisor
+     - "Share your score" card generator (Canvas → PNG download)
+     - Target FPS filter on Games page
+   Everything else is byte-identical to v4.1.
    ================================================================ */
 
 const DATA_MODE = 'local';
@@ -1615,10 +1632,6 @@ const STORAGE_TYPES = [
 
 const CAPACITIES = ['64GB','128GB','256GB','500GB','1TB','2TB','4TB','8TB'];
 
-/* ----------------------------------------------------------------
-   GAME DB — every game now has a `store:` field
-   Steam games auto-use their app ID, non-Steam use official pages
-   ---------------------------------------------------------------- */
 const GAMES = [
   {name:'Cyberpunk 2077',      genre:'RPG',      base:42,  cw:0.22, gw:0.68, rw:0.10, preset:'High', rt:true,
     banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/header.jpg',
@@ -2245,6 +2258,155 @@ function renderPerfChart(a){
   `;
 }
 
+/* ================================================================
+   SHARE CARD GENERATOR — draws a PNG of your build score using Canvas
+   ================================================================ */
+function generateShareCard(){
+  const a = state.analysis;
+  if(!a){
+    toast('Analyze your PC first to share your score','fa-triangle-exclamation');
+    return;
+  }
+  const W = 1200, H = 630;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // Background gradient
+  const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+  bgGrad.addColorStop(0, '#0a0c14');
+  bgGrad.addColorStop(1, '#12161f');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Accent blobs
+  const blob1 = ctx.createRadialGradient(1000, 100, 0, 1000, 100, 500);
+  blob1.addColorStop(0, 'rgba(59,130,246,.35)');
+  blob1.addColorStop(1, 'rgba(59,130,246,0)');
+  ctx.fillStyle = blob1;
+  ctx.fillRect(0, 0, W, H);
+
+  const blob2 = ctx.createRadialGradient(200, H-100, 0, 200, H-100, 500);
+  blob2.addColorStop(0, 'rgba(168,85,247,.25)');
+  blob2.addColorStop(1, 'rgba(168,85,247,0)');
+  ctx.fillStyle = blob2;
+  ctx.fillRect(0, 0, W, H);
+
+  // Top-left brand icon square
+  ctx.fillStyle = '#3b82f6';
+  ctx.beginPath();
+  if(ctx.roundRect) ctx.roundRect(60, 50, 48, 48, 12); else ctx.rect(60, 50, 48, 48);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 28px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('⚡', 84, 74);
+
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#eef2f9';
+  ctx.font = 'bold 26px Inter, sans-serif';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('PC Playground', 124, 74);
+
+  // Score ring
+  const scoreCX = W - 240, scoreCY = 200, scoreR = 110;
+  ctx.strokeStyle = '#232a3a';
+  ctx.lineWidth = 16;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.arc(scoreCX, scoreCY, scoreR, 0, Math.PI * 2);
+  ctx.stroke();
+
+  const scoreGrad = ctx.createLinearGradient(scoreCX-scoreR, scoreCY-scoreR, scoreCX+scoreR, scoreCY+scoreR);
+  scoreGrad.addColorStop(0, '#3b82f6');
+  scoreGrad.addColorStop(1, '#a78bfa');
+  ctx.strokeStyle = scoreGrad;
+  ctx.beginPath();
+  ctx.arc(scoreCX, scoreCY, scoreR, -Math.PI/2, -Math.PI/2 + (Math.PI*2) * (a.totalScore/100));
+  ctx.stroke();
+
+  ctx.fillStyle = '#eef2f9';
+  ctx.font = 'bold 72px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(String(a.totalScore), scoreCX, scoreCY - 6);
+
+  ctx.fillStyle = '#6b7689';
+  ctx.font = 'bold 18px Inter, sans-serif';
+  ctx.fillText('/ 100', scoreCX, scoreCY + 42);
+
+  // Build title
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#a8b2c6';
+  ctx.font = 'bold 18px Inter, sans-serif';
+  ctx.fillText('MY BUILD', 60, 160);
+
+  ctx.fillStyle = '#eef2f9';
+  ctx.font = 'bold 38px Inter, sans-serif';
+  ctx.fillText(a.cpu.name, 60, 200);
+  ctx.fillText(a.gpu.name, 60, 246);
+  ctx.fillStyle = '#a8b2c6';
+  ctx.font = '22px Inter, sans-serif';
+  ctx.fillText(a.ram.name, 60, 288);
+
+  // Rating text
+  const rating = a.totalScore>=85?'Excellent':a.totalScore>=70?'Very Good':a.totalScore>=50?'Good':'Needs upgrade';
+  ctx.fillStyle = '#a78bfa';
+  ctx.font = 'bold 22px Inter, sans-serif';
+  ctx.fillText(rating, 60, 335);
+
+  // Breakdown bars
+  const barY = 400;
+  const bars = [
+    {label:'CPU',     value:a.cpuScore},
+    {label:'GPU',     value:a.gpuScore},
+    {label:'RAM',     value:a.ramScore},
+    {label:'Storage', value:a.storageScore},
+  ];
+  bars.forEach((b, i)=>{
+    const bx = 60 + i * 260;
+    ctx.fillStyle = '#6b7689';
+    ctx.font = 'bold 14px Inter, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(b.label.toUpperCase(), bx, barY);
+
+    ctx.fillStyle = '#232a3a';
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(bx, barY + 14, 200, 10, 5); else ctx.rect(bx, barY + 14, 200, 10);
+    ctx.fill();
+
+    const barGrad = ctx.createLinearGradient(bx, 0, bx + 200, 0);
+    barGrad.addColorStop(0, '#3b82f6');
+    barGrad.addColorStop(1, '#a78bfa');
+    ctx.fillStyle = barGrad;
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(bx, barY + 14, Math.max(6, 200 * (b.value/100)), 10, 5);
+    else ctx.rect(bx, barY + 14, Math.max(6, 200 * (b.value/100)), 10);
+    ctx.fill();
+
+    ctx.fillStyle = '#eef2f9';
+    ctx.font = 'bold 20px Inter, sans-serif';
+    ctx.fillText(String(b.value), bx, barY + 62);
+  });
+
+  // Bottom line
+  ctx.fillStyle = '#6b7689';
+  ctx.font = '600 16px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Analyzed by PC Playground', W/2, H - 40);
+
+  // Download
+  canvas.toBlob((blob)=>{
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `pcplayground-${a.cpu.name.replace(/\s+/g,'')}-${a.gpu.name.replace(/\s+/g,'')}.png`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast('Score card downloaded!','fa-image');
+  });
+}
+
 function gameCardHtml(g){
   const bannerInner = g.banner && g.banner.length
     ? `<img src="${g.banner}" alt="" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('no-img');">`
@@ -2327,18 +2489,36 @@ function renderGamesPage(){
 
   const filter = $('#gameFilterQuality').value;
   const sort = $('#gameSort').value;
+  const target = parseInt(($('#targetFps') && $('#targetFps').value) || '60', 10) || 60;
+
   let list = [...a.gameResults];
   if(filter==='excellent') list = list.filter(g=>g.fps>=144);
   else if(filter==='playable') list = list.filter(g=>g.fps>=30);
+  else if(filter==='hits-target') list = list.filter(g=>g.fps>=target);
+
   if(sort==='fps-desc') list.sort((x,y)=>y.fps-x.fps);
   else if(sort==='fps-asc') list.sort((x,y)=>x.fps-y.fps);
   else list.sort((x,y)=>x.name.localeCompare(y.name));
 
-  $('#gamesList').innerHTML = list.map(g=>gameCardHtml(g)).join('');
+  if(filter==='hits-target'){
+    const hits = list.length;
+    const total = a.gameResults.length;
+    const banner = `
+      <div style="grid-column:1/-1;background:color-mix(in srgb,var(--success) 10%,transparent);border:1px solid color-mix(in srgb,var(--success) 30%,transparent);border-radius:var(--radius-sm);padding:.75rem 1rem;margin-bottom:.25rem;display:flex;align-items:center;gap:.65rem;font-size:.85rem;">
+        <i class="fas fa-bullseye" style="color:var(--success);"></i>
+        <span>Your PC hits <strong>${target} FPS</strong> in <strong>${hits} of ${total}</strong> games.</span>
+      </div>`;
+    $('#gamesList').innerHTML = banner + list.map(g=>gameCardHtml(g)).join('');
+  } else {
+    $('#gamesList').innerHTML = list.map(g=>gameCardHtml(g)).join('');
+  }
   $$('#gamesList .game-card').forEach((el,i)=>el.addEventListener('click',()=>openGameModal(list[i])));
 }
 $('#gameFilterQuality').addEventListener('change', renderGamesPage);
 $('#gameSort').addEventListener('change', renderGamesPage);
+document.addEventListener('input', (e)=>{
+  if(e.target && e.target.id === 'targetFps') renderGamesPage();
+});
 
 function openGameModal(g){
   const hero = $('#modalHero');
@@ -2681,10 +2861,44 @@ $$('#advisorGoals button').forEach(btn=>btn.addEventListener('click', ()=>{
       ${a.ram.capacity<32?'<li>• <strong>RAM:</strong> 32GB kit — future-proofs modern games.</li>':''}
     </ul>`;
   } else if(goal==='fix'){
-    if(a.bottlenecks.length===0){ html = `<div class="card-title mb-2"><i class="fas fa-circle-check" style="color:var(--success);"></i> No Bottlenecks</div><p class="text-muted">Your system is well balanced. No fixes required.</p>`; }
-    else {
-      html = `<div class="card-title mb-2"><i class="fas fa-wrench"></i> Fixing Your Bottleneck${a.bottlenecks.length>1?'s':''}</div>`;
-      html += a.bottlenecks.map(b=>`<div class="bn-item mb-2"><div class="bn-icon ${b.icon}"><i class="fas fa-${b.component==='CPU'?'microchip':b.component==='GPU'?'display':'memory'}"></i></div><div class="bn-body"><div class="bn-head"><strong>${b.component}</strong></div><div class="bn-desc">${b.desc}</div></div></div>`).join('');
+    if(a.bottlenecks.length===0){
+      html = `<div class="card-title mb-2"><i class="fas fa-circle-check" style="color:var(--success);"></i> No Bottlenecks</div><p class="text-muted">Your system is well balanced. No fixes required.</p>`;
+    } else {
+      const worst = a.bottlenecks.reduce((x,y)=> (x.pct||0) > (y.pct||0) ? x : y);
+      const gpuTier = a.gpu.tier;
+      const upgradeMap = {
+        'entry':       {cpu:'Ryzen 5 7600X', gpu:'RX 7600',      cost:'~$200'},
+        'mainstream':  {cpu:'Ryzen 7 7800X3D', gpu:'RTX 4070',   cost:'~$350'},
+        'performance': {cpu:'Ryzen 7 7800X3D', gpu:'RTX 4070 Ti',cost:'~$550'},
+        'enthusiast':  {cpu:'Ryzen 9 7900X',  gpu:'RTX 4080',    cost:'~$900'},
+        'flagship':    {cpu:'Ryzen 9 9950X3D',gpu:'RTX 5090',    cost:'~$2000'}
+      };
+      const rec = upgradeMap[gpuTier] || upgradeMap.mainstream;
+      let suggestion = '';
+      if(worst.component === 'CPU'){
+        suggestion = `Upgrade your CPU to a <strong>${rec.cpu}</strong> to feed your ${a.gpu.name}.`;
+      } else if(worst.component === 'GPU'){
+        suggestion = `Upgrade your GPU to a <strong>${rec.gpu}</strong> to match your ${a.cpu.name}.`;
+      } else {
+        suggestion = `Add more RAM — go from <strong>${a.ram.capacity}GB to 32GB</strong> to remove memory pressure in modern games.`;
+      }
+      html = `<div class="card-title mb-2"><i class="fas fa-wrench"></i> Fix My Bottleneck</div>
+      <div class="bn-item mb-3" style="border-color:color-mix(in srgb,var(--warn) 40%,transparent);">
+        <div class="bn-icon ${worst.icon}"><i class="fas fa-${worst.component==='CPU'?'microchip':worst.component==='GPU'?'display':'memory'}"></i></div>
+        <div class="bn-body">
+          <div class="bn-head"><strong>Biggest bottleneck: ${worst.component}</strong><span>${worst.pct}% impact</span></div>
+          <div class="bn-desc">${worst.desc}</div>
+        </div>
+      </div>
+      <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;margin-bottom:.75rem;">
+        <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:.4rem;">Recommended upgrade</div>
+        <div style="font-size:.95rem;font-weight:600;line-height:1.4;">${suggestion}</div>
+        <div class="text-muted" style="font-size:.78rem;margin-top:.5rem;">Estimated cost: <strong>${rec.cost}</strong></div>
+      </div>
+      <div class="flex" style="gap:.5rem;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="navigate('upgrade')"><i class="fas fa-arrow-up"></i> See full upgrade path</button>
+        <button class="btn btn-ghost" onclick="navigate('compare')"><i class="fas fa-code-compare"></i> Compare vs upgrade</button>
+      </div>`;
     }
   } else if(goal==='upgrade'){
     html = `<div class="card-title mb-2"><i class="fas fa-arrow-up"></i> Upgrade Plan</div>
@@ -2783,7 +2997,7 @@ $('#quickTheme').addEventListener('click', ()=>{
 $('#quickSettings').addEventListener('click', ()=>navigate('settings'));
 
 $('#exportBtn').addEventListener('click', ()=>{
-  const payload = {version:4.1, build:state.build, settings:state.settings, builds:state.savedBuilds, exported:new Date().toISOString()};
+  const payload = {version:4.2, build:state.build, settings:state.settings, builds:state.savedBuilds, exported:new Date().toISOString()};
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -2884,7 +3098,6 @@ document.addEventListener('touchstart', (e)=>{
   const t = e.touches[0];
   touchStartX = t.clientX;
   touchStartY = t.clientY;
-  // Starting a swipe from the left edge counts as "open intent"
   touchingSidebar = touchStartX < 40 || $('#sidebar').contains(e.target);
 }, {passive:true});
 
@@ -2894,19 +3107,15 @@ document.addEventListener('touchend', (e)=>{
   const t = e.changedTouches[0];
   const dx = t.clientX - touchStartX;
   const dy = t.clientY - touchStartY;
-  // Ignore vertical scrolls
   if(Math.abs(dy) > Math.abs(dx)) return;
   const isOpen = $('#sidebar').classList.contains('open');
   if(!isOpen && touchStartX < 40 && dx > 60){
-    // Swipe right from left edge → open
     openSidebar();
   } else if(isOpen && dx < -60){
-    // Swipe left anywhere on sidebar → close
     closeSidebar();
   }
 }, {passive:true});
 
-// Escape key closes the sidebar (nice touch for tablets with keyboards)
 document.addEventListener('keydown', (e)=>{
   if(e.key === 'Escape' && $('#sidebar').classList.contains('open')) closeSidebar();
 });
@@ -2937,7 +3146,7 @@ document.addEventListener('keydown', (e)=>{
     $('#heroRam').textContent = state.build.ram;
     $('#gamesCountBadge').textContent = GAMES.length;
   }
-  console.log('%cPC Playground v4.1','font-size:16px;font-weight:800;color:#3b82f6');
+  console.log('%cPC Playground v4.2','font-size:16px;font-weight:800;color:#3b82f6');
   console.log('Loaded:', allCpus().length, 'CPUs,', allGpus().length, 'GPUs,', GAMES.length, 'games');
 })();
 </script>
