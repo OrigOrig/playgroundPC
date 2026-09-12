@@ -1755,23 +1755,13 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
         </div>
 
         <div class="bapc-grid">
-          <!-- LEFT: visual case -->
+          <!-- LEFT: configurator summary -->
           <div class="card bapc-visual-card">
             <div class="card-header">
               <div class="card-title"><i class="fas fa-cube"></i> Your build</div>
               <span class="card-sub" id="bapcCaseLabel">—</span>
             </div>
-            <div class="bapc-viewport" id="bapcViewport">
-              <svg id="bapcSvg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet"></svg>
-              <div class="bapc-hint">
-                <i class="fas fa-arrows-left-right"></i> Drag to rotate
-              </div>
-            </div>
-            <div class="bapc-legend">
-              <span><i class="fas fa-circle" style="color:var(--success);"></i> Fits</span>
-              <span><i class="fas fa-circle" style="color:var(--warn);"></i> Tight</span>
-              <span><i class="fas fa-circle" style="color:var(--danger);"></i> Won't fit</span>
-            </div>
+            <div id="bapcSpecList" style="display:flex;flex-direction:column;gap:.55rem;margin-top:.5rem;"></div>
           </div>
 
           <!-- RIGHT: configurator -->
