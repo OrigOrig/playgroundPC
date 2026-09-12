@@ -1816,6 +1816,246 @@ document.addEventListener('keydown', (e)=>{
 });
 
 /* ================================================================
+   BUILD A PC — SVG ICON SET (Paste 5b-1)
+   Pure functions that return SVG markup strings. Each icon is
+   designed on a 100×100 viewBox so they scale cleanly.
+   ================================================================ */
+
+/* ---------- shared helpers ---------- */
+function svgWrap(inner, vb){
+  const viewBox = vb || '0 0 100 100';
+  return `<svg viewBox="${viewBox}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">${inner}</svg>`;
+}
+function iconGrad(id, c1, c2){
+  return `<defs>
+    <linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="${c1}"/>
+      <stop offset="100%" stop-color="${c2}"/>
+    </linearGradient>
+  </defs>`;
+}
+
+/* ----------------------------------------------------------------
+   CPU — square chip with pins on all four sides + inner die
+   ---------------------------------------------------------------- */
+function iconCpu(color1, color2){
+  const c1 = color1 || 'var(--primary)';
+  const c2 = color2 || 'var(--accent)';
+  const gid = 'bapc-cpu-' + Math.random().toString(36).slice(2,7);
+  const pins = [];
+  // top & bottom pins
+  for(let i = 0; i < 6; i++){
+    const x = 28 + i * 8;
+    pins.push(`<rect x="${x}" y="14" width="4" height="8" rx="1" fill="${c2}" opacity="0.85"/>`);
+    pins.push(`<rect x="${x}" y="78" width="4" height="8" rx="1" fill="${c2}" opacity="0.85"/>`);
+  }
+  // left & right pins
+  for(let i = 0; i < 6; i++){
+    const y = 28 + i * 8;
+    pins.push(`<rect x="14" y="${y}" width="8" height="4" rx="1" fill="${c2}" opacity="0.85"/>`);
+    pins.push(`<rect x="78" y="${y}" width="8" height="4" rx="1" fill="${c2}" opacity="0.85"/>`);
+  }
+  return svgWrap(`
+    ${iconGrad(gid, c1, c2)}
+    ${pins.join('')}
+    <rect x="22" y="22" width="56" height="56" rx="6" fill="url(#${gid})"/>
+    <rect x="28" y="28" width="44" height="44" rx="4" fill="rgba(0,0,0,0.28)"/>
+    <rect x="36" y="36" width="28" height="28" rx="3" fill="rgba(255,255,255,0.15)"/>
+    <text x="50" y="55" text-anchor="middle" font-family="Inter,sans-serif" font-weight="800"
+          font-size="14" fill="rgba(255,255,255,0.9)">CPU</text>
+  `);
+}
+
+/* ----------------------------------------------------------------
+   GPU — long card with two fans + IO bracket
+   ---------------------------------------------------------------- */
+function iconGpu(color1, color2){
+  const c1 = color1 || 'var(--success)';
+  const c2 = color2 || 'var(--primary)';
+  const gid = 'bapc-gpu-' + Math.random().toString(36).slice(2,7);
+  const fan = (cx) => `
+    <circle cx="${cx}" cy="52" r="14" fill="rgba(0,0,0,0.35)"/>
+    <circle cx="${cx}" cy="52" r="12" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.2"/>
+    <g transform="translate(${cx},52)">
+      <path d="M 0 -9 Q 7 -4 6 3 Q -1 6 -4 0 Q -4 -7 0 -9 Z" fill="rgba(255,255,255,0.65)"/>
+      <path d="M 0 -9 Q 7 -4 6 3 Q -1 6 -4 0 Q -4 -7 0 -9 Z" fill="rgba(255,255,255,0.4)"
+            transform="rotate(120)"/>
+      <path d="M 0 -9 Q 7 -4 6 3 Q -1 6 -4 0 Q -4 -7 0 -9 Z" fill="rgba(255,255,255,0.4)"
+            transform="rotate(240)"/>
+    </g>
+    <circle cx="${cx}" cy="52" r="3" fill="rgba(255,255,255,0.9)"/>
+  `;
+  return svgWrap(`
+    ${iconGrad(gid, c1, c2)}
+    <rect x="10" y="26" width="80" height="48" rx="5" fill="url(#${gid})"/>
+    <rect x="10" y="26" width="80" height="48" rx="5" fill="none" stroke="rgba(0,0,0,0.25)" stroke-width="1"/>
+    <rect x="6"  y="30" width="6"  height="40" rx="1.5" fill="rgba(0,0,0,0.35)"/>
+    <rect x="6"  y="34" width="4"  height="3" fill="rgba(255,255,255,0.4)"/>
+    <rect x="6"  y="40" width="4"  height="3" fill="rgba(255,255,255,0.4)"/>
+    <rect x="6"  y="46" width="4"  height="3" fill="rgba(255,255,255,0.4)"/>
+    ${fan(36)}
+    ${fan(64)}
+    <text x="50" y="88" text-anchor="middle" font-family="Inter,sans-serif" font-weight="800"
+          font-size="10" fill="rgba(255,255,255,0.55)" letter-spacing="2">GPU</text>
+  `);
+}
+
+/* ----------------------------------------------------------------
+   RAM — vertical stick with heatspreader + gold contacts
+   ---------------------------------------------------------------- */
+function iconRam(color1, color2){
+  const c1 = color1 || 'var(--warn)';
+  const c2 = color2 || 'var(--danger)';
+  const gid = 'bapc-ram-' + Math.random().toString(36).slice(2,7);
+  const contacts = [];
+  for(let i = 0; i < 10; i++){
+    contacts.push(`<rect x="${26 + i*4.8}" y="80" width="2.4" height="6" fill="#fbbf24" opacity="0.9"/>`);
+  }
+  return svgWrap(`
+    ${iconGrad(gid, c1, c2)}
+    <rect x="22" y="14" width="56" height="66" rx="4" fill="url(#${gid})"/>
+    <rect x="22" y="14" width="56" height="66" rx="4" fill="none" stroke="rgba(0,0,0,0.25)" stroke-width="1"/>
+    <path d="M 22 22 L 78 22 L 78 30 L 30 30 L 30 70 L 78 70 L 78 78 L 22 78 Z"
+          fill="rgba(0,0,0,0.22)"/>
+    <rect x="28" y="20" width="44" height="8" rx="2" fill="rgba(255,255,255,0.18)"/>
+    <rect x="28" y="58" width="44" height="8" rx="2" fill="rgba(255,255,255,0.18)"/>
+    <rect x="34" y="36" width="32" height="18" rx="2" fill="rgba(0,0,0,0.32)"/>
+    <text x="50" y="49" text-anchor="middle" font-family="Inter,sans-serif" font-weight="800"
+          font-size="9" fill="rgba(255,255,255,0.9)" letter-spacing="1">RAM</text>
+    ${contacts.join('')}
+  `);
+}
+
+/* ----------------------------------------------------------------
+   COOLER — tower heatsink with fan + heatpipes
+   ---------------------------------------------------------------- */
+function iconCooler(color1, color2){
+  const c1 = color1 || 'var(--info)';
+  const c2 = color2 || 'var(--primary)';
+  const gid = 'bapc-cooler-' + Math.random().toString(36).slice(2,7);
+  const fins = [];
+  for(let i = 0; i < 9; i++){
+    const y = 20 + i * 5.2;
+    fins.push(`<rect x="30" y="${y}" width="40" height="2.4" rx="0.8" fill="rgba(255,255,255,0.35)"/>`);
+  }
+  return svgWrap(`
+    ${iconGrad(gid, c1, c2)}
+    <rect x="28" y="14" width="44" height="60" rx="4" fill="url(#${gid})"/>
+    <rect x="28" y="14" width="44" height="60" rx="4" fill="none" stroke="rgba(0,0,0,0.25)" stroke-width="1"/>
+    ${fins.join('')}
+    <circle cx="50" cy="76" r="12" fill="rgba(0,0,0,0.35)"/>
+    <circle cx="50" cy="76" r="10" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.2"/>
+    <g transform="translate(50,76)">
+      <path d="M 0 -7 Q 5 -3 4.5 2 Q -1 4 -3 0 Q -3 -5 0 -7 Z" fill="rgba(255,255,255,0.7)"/>
+      <path d="M 0 -7 Q 5 -3 4.5 2 Q -1 4 -3 0 Q -3 -5 0 -7 Z" fill="rgba(255,255,255,0.45)" transform="rotate(120)"/>
+      <path d="M 0 -7 Q 5 -3 4.5 2 Q -1 4 -3 0 Q -3 -5 0 -7 Z" fill="rgba(255,255,255,0.45)" transform="rotate(240)"/>
+      <circle r="2" fill="rgba(255,255,255,0.9)"/>
+    </g>
+    <text x="50" y="94" text-anchor="middle" font-family="Inter,sans-serif" font-weight="800"
+          font-size="8" fill="rgba(255,255,255,0.5)" letter-spacing="1.5">COOL</text>
+  `);
+}
+
+/* ----------------------------------------------------------------
+   PSU — box with fan grille + cables exiting right side
+   ---------------------------------------------------------------- */
+function iconPsu(color1, color2){
+  const c1 = color1 || 'var(--text-2)';
+  const c2 = color2 || 'var(--primary)';
+  const gid = 'bapc-psu-' + Math.random().toString(36).slice(2,7);
+  const grille = [];
+  for(let r = 3; r <= 10; r += 3.5){
+    grille.push(`<circle cx="42" cy="52" r="${r}" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>`);
+  }
+  return svgWrap(`
+    ${iconGrad(gid, c1, c2)}
+    <rect x="14" y="28" width="66" height="48" rx="5" fill="url(#${gid})"/>
+    <rect x="14" y="28" width="66" height="48" rx="5" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="1"/>
+    <circle cx="42" cy="52" r="16" fill="rgba(0,0,0,0.35)"/>
+    ${grille.join('')}
+    <circle cx="42" cy="52" r="3" fill="rgba(255,255,255,0.6)"/>
+    <rect x="62" y="36" width="14" height="4" rx="1" fill="rgba(0,0,0,0.35)"/>
+    <rect x="62" y="44" width="14" height="4" rx="1" fill="rgba(0,0,0,0.35)"/>
+    <rect x="62" y="52" width="14" height="4" rx="1" fill="rgba(0,0,0,0.35)"/>
+    <rect x="62" y="60" width="14" height="4" rx="1" fill="rgba(0,0,0,0.35)"/>
+    <path d="M 80 40 Q 92 40 92 50 Q 92 60 80 60" fill="none" stroke="${c2}" stroke-width="2" opacity="0.8"/>
+    <text x="34" y="86" text-anchor="middle" font-family="Inter,sans-serif" font-weight="800"
+          font-size="9" fill="rgba(255,255,255,0.55)" letter-spacing="1.5">PSU</text>
+  `);
+}
+
+/* ----------------------------------------------------------------
+   STORAGE — 2.5" / M.2 hybrid drive with activity LED
+   ---------------------------------------------------------------- */
+function iconStorage(color1, color2){
+  const c1 = color1 || 'var(--accent)';
+  const c2 = color2 || 'var(--info)';
+  const gid = 'bapc-stg-' + Math.random().toString(36).slice(2,7);
+  return svgWrap(`
+    ${iconGrad(gid, c1, c2)}
+    <rect x="18" y="30" width="64" height="44" rx="4" fill="url(#${gid})"/>
+    <rect x="18" y="30" width="64" height="44" rx="4" fill="none" stroke="rgba(0,0,0,0.28)" stroke-width="1"/>
+    <rect x="24" y="36" width="52" height="6" rx="1.5" fill="rgba(0,0,0,0.28)"/>
+    <rect x="24" y="46" width="34" height="4" rx="1" fill="rgba(0,0,0,0.22)"/>
+    <rect x="24" y="53" width="22" height="4" rx="1" fill="rgba(0,0,0,0.22)"/>
+    <circle cx="72" cy="56" r="3" fill="#22c55e"/>
+    <circle cx="72" cy="56" r="5" fill="#22c55e" opacity="0.35"/>
+    <rect x="22" y="74" width="56" height="3" rx="1" fill="rgba(0,0,0,0.35)"/>
+    <text x="50" y="28" text-anchor="middle" font-family="Inter,sans-serif" font-weight="800"
+          font-size="8" fill="rgba(255,255,255,0.55)" letter-spacing="1.5">SSD</text>
+  `);
+}
+
+/* ----------------------------------------------------------------
+   CASE — ATX tower with tempered-glass side, front intake fans
+   ---------------------------------------------------------------- */
+function iconCase(color1, color2){
+  const c1 = color1 || 'var(--surface-3)';
+  const c2 = color2 || 'var(--primary)';
+  const gid = 'bapc-case-' + Math.random().toString(36).slice(2,7);
+  const frontFan = (cy) => `
+    <circle cx="30" cy="${cy}" r="6" fill="rgba(0,0,0,0.4)"/>
+    <circle cx="30" cy="${cy}" r="5" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>
+    <g transform="translate(30,${cy})">
+      <path d="M 0 -4 Q 3 -1.5 2.5 1.5 Q -1 2 -2 0 Q -2 -3 0 -4 Z" fill="rgba(255,255,255,0.55)"/>
+      <path d="M 0 -4 Q 3 -1.5 2.5 1.5 Q -1 2 -2 0 Q -2 -3 0 -4 Z" fill="rgba(255,255,255,0.35)" transform="rotate(120)"/>
+      <path d="M 0 -4 Q 3 -1.5 2.5 1.5 Q -1 2 -2 0 Q -2 -3 0 -4 Z" fill="rgba(255,255,255,0.35)" transform="rotate(240)"/>
+    </g>`;
+  return svgWrap(`
+    ${iconGrad(gid, c1, c2)}
+    <rect x="16" y="12" width="68" height="80" rx="6" fill="url(#${gid})"/>
+    <rect x="16" y="12" width="68" height="80" rx="6" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="1.2"/>
+    <rect x="24" y="20" width="40" height="60" rx="4" fill="rgba(0,0,0,0.35)"/>
+    <rect x="24" y="20" width="40" height="60" rx="4" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+    <rect x="68" y="20" width="10" height="60" rx="3" fill="rgba(0,0,0,0.2)"/>
+    ${frontFan(32)}
+    ${frontFan(50)}
+    ${frontFan(68)}
+    <circle cx="40" cy="30" r="2" fill="#22c55e"/>
+    <rect x="36" y="26" width="6" height="2" rx="0.5" fill="rgba(255,255,255,0.35)"/>
+    <rect x="24" y="84" width="52" height="3" rx="1" fill="rgba(0,0,0,0.4)"/>
+    <text x="50" y="9" text-anchor="middle" font-family="Inter,sans-serif" font-weight="800"
+          font-size="7" fill="rgba(255,255,255,0.5)" letter-spacing="1.5">CASE</text>
+  `);
+}
+
+/* ----------------------------------------------------------------
+   Generic dispatcher — call this when you need "the icon for X"
+   ---------------------------------------------------------------- */
+function bapcIcon(type){
+  switch(type){
+    case 'cpu':     return iconCpu();
+    case 'gpu':     return iconGpu();
+    case 'ram':     return iconRam();
+    case 'cooler':  return iconCooler();
+    case 'psu':     return iconPsu();
+    case 'storage': return iconStorage();
+    case 'case':    return iconCase();
+    default:        return svgWrap(`<circle cx="50" cy="50" r="30" fill="var(--surface-3)"/>`);
+  }
+}
+
+/* ================================================================
    BUILD A PC  —  Paste 5a-2
    Dropdown population + cost table + compatibility checks
    ================================================================ */
