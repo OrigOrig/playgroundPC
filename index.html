@@ -2121,8 +2121,8 @@ function renderPerfChart(a){
     {label:'Storage', value:a.storageScore},
   ];
 
-  const W = 500, H = 180;
-  const padL = 30, padR = 16, padT = 20, padB = 30;
+  const W = 900, H = 260;
+  const padL = 40, padR = 24, padT = 28, padB = 38;
   const chartW = W - padL - padR;
   const chartH = H - padT - padB;
   const maxV = 100;
@@ -2158,7 +2158,7 @@ function renderPerfChart(a){
   `).join('');
 
   wrap.innerHTML = `
-    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
       <defs>
         <linearGradient id="perfGradient" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stop-color="var(--primary)" stop-opacity="0.55"/>
