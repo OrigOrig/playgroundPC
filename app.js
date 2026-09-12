@@ -2240,6 +2240,8 @@ function renderBuildAPC(){
       bapc.psu = PSUS[+e.target.value] || PSUS[0];
     } else if(id === 'bapcStorage'){
       bapc.storage = STORAGE_EXTENDED[+e.target.value] || STORAGE_EXTENDED[0];
+    } else if(id === 'bapcStorageQty'){
+      setBapcStorageQty(+e.target.value);
     }
 
     renderBapcWarnings();
