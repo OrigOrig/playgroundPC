@@ -6,11 +6,11 @@
 <title>PC Playground — Know Your PC</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
 /* ============================================================
-   THEME ENGINE — everything is driven by CSS variables
+   THEME ENGINE
    ============================================================ */
 :root{
   --bg:#0a0c14;
@@ -43,7 +43,6 @@
   --sidebar-w:248px;
   --transition:180ms cubic-bezier(.4,0,.2,1);
 }
-
 body.theme-light{
   --bg:#f4f6fb;
   --bg-grad-1:rgba(59,130,246,.08);
@@ -60,7 +59,6 @@ body.theme-light{
   --shadow:0 12px 32px -8px rgba(15,23,42,.15);
   --shadow-lg:0 24px 60px -20px rgba(15,23,42,.25);
 }
-
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{height:100%;}
 body{
@@ -87,8 +85,7 @@ body::before{
    SIDEBAR
    ============================================================ */
 .sidebar{
-  width:var(--sidebar-w);
-  flex-shrink:0;
+  width:var(--sidebar-w);flex-shrink:0;
   background:color-mix(in srgb, var(--surface) 92%, transparent);
   border-right:1px solid var(--border);
   display:flex;flex-direction:column;
@@ -96,36 +93,18 @@ body::before{
   backdrop-filter:blur(20px);
   transition:background var(--transition),border-color var(--transition);
 }
-.brand{
-  display:flex;align-items:center;gap:.65rem;
-  padding:.5rem .5rem 1.5rem;
-  font-weight:800;font-size:1.15rem;letter-spacing:-.02em;
-}
-.brand-icon{
-  width:34px;height:34px;border-radius:10px;
-  background:linear-gradient(135deg,var(--primary),var(--accent));
-  display:grid;place-items:center;color:#fff;font-size:1rem;
-  box-shadow:0 8px 20px -6px var(--primary-glow);
-}
+.brand{display:flex;align-items:center;gap:.65rem;padding:.5rem .5rem 1.5rem;font-weight:800;font-size:1.15rem;letter-spacing:-.02em;}
+.brand-icon{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--accent));display:grid;place-items:center;color:#fff;font-size:1rem;box-shadow:0 8px 20px -6px var(--primary-glow);}
 .brand small{display:block;font-size:.65rem;color:var(--text-3);font-weight:500;letter-spacing:.04em;text-transform:uppercase;margin-top:1px;}
-
 .nav{display:flex;flex-direction:column;gap:.15rem;flex:1;overflow-y:auto;}
 .nav-section{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);font-weight:700;padding:1rem .75rem .4rem;}
-.nav-item{
-  display:flex;align-items:center;gap:.75rem;
-  padding:.6rem .75rem;border-radius:var(--radius-sm);
-  color:var(--text-2);font-size:.875rem;font-weight:500;
-  cursor:pointer;user-select:none;
-  transition:var(--transition);
-  border:1px solid transparent;
-}
+.nav-item{display:flex;align-items:center;gap:.75rem;padding:.6rem .75rem;border-radius:var(--radius-sm);color:var(--text-2);font-size:.875rem;font-weight:500;cursor:pointer;user-select:none;transition:var(--transition);border:1px solid transparent;}
 .nav-item i{width:18px;text-align:center;font-size:.95rem;color:var(--text-3);transition:var(--transition);}
 .nav-item:hover{background:var(--surface-2);color:var(--text);}
 .nav-item:hover i{color:var(--primary);}
 .nav-item.active{background:linear-gradient(90deg,color-mix(in srgb,var(--primary) 18%,transparent),transparent);color:var(--text);border-color:color-mix(in srgb,var(--primary) 30%,transparent);}
 .nav-item.active i{color:var(--primary);}
 .nav-badge{margin-left:auto;font-size:.65rem;background:var(--surface-3);color:var(--text-2);padding:.1rem .45rem;border-radius:var(--radius-pill);font-weight:600;}
-
 .sidebar-footer{padding-top:1rem;border-top:1px solid var(--border);margin-top:.5rem;}
 .user-chip{display:flex;align-items:center;gap:.65rem;padding:.5rem;border-radius:var(--radius-sm);cursor:pointer;transition:var(--transition);}
 .user-chip:hover{background:var(--surface-2);}
@@ -134,55 +113,22 @@ body::before{
 .user-info span{display:block;font-size:.7rem;color:var(--text-3);font-weight:500;}
 
 /* ============================================================
-   MAIN AREA
+   MAIN + TOPBAR
    ============================================================ */
-.main{
-  flex:1;display:flex;flex-direction:column;
-  overflow:hidden;
-}
-.topbar{
-  height:60px;flex-shrink:0;
-  display:flex;align-items:center;gap:1rem;
-  padding:0 1.5rem;
-  border-bottom:1px solid var(--border);
-  background:color-mix(in srgb,var(--surface) 88%, transparent);
-  backdrop-filter:blur(20px);
-  transition:background var(--transition),border-color var(--transition);
-}
-.search-box{
-  flex:1;max-width:420px;
-  display:flex;align-items:center;gap:.6rem;
-  background:var(--surface-2);border:1px solid var(--border);
-  border-radius:var(--radius-pill);
-  padding:.5rem 1rem;
-  transition:var(--transition);
-}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{height:60px;flex-shrink:0;display:flex;align-items:center;gap:1rem;padding:0 1.5rem;border-bottom:1px solid var(--border);background:color-mix(in srgb,var(--surface) 88%, transparent);backdrop-filter:blur(20px);transition:background var(--transition),border-color var(--transition);}
+.search-box{flex:1;max-width:420px;display:flex;align-items:center;gap:.6rem;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-pill);padding:.5rem 1rem;transition:var(--transition);}
 .search-box:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow);}
 .search-box i{color:var(--text-3);font-size:.9rem;}
 .search-box input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:.875rem;font-family:inherit;}
 .search-box input::placeholder{color:var(--text-3);}
 .topbar-right{display:flex;align-items:center;gap:.6rem;margin-left:auto;}
-.icon-btn{
-  width:36px;height:36px;border-radius:10px;
-  display:grid;place-items:center;
-  background:var(--surface-2);border:1px solid var(--border);
-  color:var(--text-2);cursor:pointer;transition:var(--transition);
-  position:relative;
-}
+.icon-btn{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--surface-2);border:1px solid var(--border);color:var(--text-2);cursor:pointer;transition:var(--transition);position:relative;}
 .icon-btn:hover{background:var(--surface-3);color:var(--text);border-color:var(--border-2);}
 .icon-btn .dot{position:absolute;top:8px;right:9px;width:6px;height:6px;background:var(--danger);border-radius:50%;border:2px solid var(--surface);}
-.btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
-  padding:.55rem 1rem;border-radius:var(--radius-pill);
-  background:var(--surface-2);border:1px solid var(--border);
-  color:var(--text);font-family:inherit;font-size:.85rem;font-weight:600;
-  cursor:pointer;transition:var(--transition);white-space:nowrap;
-}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.55rem 1rem;border-radius:var(--radius-pill);background:var(--surface-2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:.85rem;font-weight:600;cursor:pointer;transition:var(--transition);white-space:nowrap;}
 .btn:hover{background:var(--surface-3);border-color:var(--border-2);transform:translateY(-1px);}
-.btn-primary{
-  background:linear-gradient(135deg,var(--primary),var(--primary-2));
-  border:none;color:#fff;box-shadow:0 8px 20px -6px var(--primary-glow);
-}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-2));border:none;color:#fff;box-shadow:0 8px 20px -6px var(--primary-glow);}
 .btn-primary:hover{box-shadow:0 12px 28px -6px var(--primary-glow);}
 .btn-ghost{background:transparent;border:1px solid var(--border);}
 .btn-sm{padding:.4rem .75rem;font-size:.78rem;}
@@ -196,11 +142,9 @@ body::before{
 .pages::-webkit-scrollbar-track{background:transparent;}
 .pages::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:5px;border:2px solid var(--bg);}
 .pages::-webkit-scrollbar-thumb:hover{background:var(--border-2);}
-
 .page{display:none;animation:fadeIn .3s ease;}
 .page.active{display:block;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
-
 .page-header{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;}
 .page-header h1{font-size:1.75rem;font-weight:800;letter-spacing:-.03em;}
 .page-header p{color:var(--text-2);font-size:.9rem;margin-top:.2rem;}
@@ -215,15 +159,7 @@ body::before{
 @media(max-width:1400px){.grid-4{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:1100px){.grid-3{grid-template-columns:repeat(2,1fr);}.grid-2{grid-template-columns:1fr;}}
 @media(max-width:700px){.grid-3,.grid-4{grid-template-columns:1fr;}}
-
-.card{
-  background:color-mix(in srgb,var(--surface) 95%, transparent);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  padding:1.25rem;
-  transition:var(--transition);
-  backdrop-filter:blur(10px);
-}
+.card{background:color-mix(in srgb,var(--surface) 95%, transparent);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;transition:var(--transition);backdrop-filter:blur(10px);}
 .card:hover{border-color:var(--border-2);}
 .card-header{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:1rem;}
 .card-title{font-size:.95rem;font-weight:700;display:flex;align-items:center;gap:.55rem;letter-spacing:-.01em;}
@@ -233,17 +169,7 @@ body::before{
 /* ============================================================
    HERO
    ============================================================ */
-.hero{
-  position:relative;overflow:hidden;
-  background:
-    radial-gradient(900px 400px at 80% 10%, color-mix(in srgb,var(--primary) 25%,transparent), transparent 60%),
-    radial-gradient(700px 400px at 10% 90%, color-mix(in srgb,var(--accent) 20%,transparent), transparent 60%),
-    var(--surface);
-  border:1px solid var(--border);
-  border-radius:var(--radius-lg);
-  padding:2.25rem;
-  margin-bottom:1.5rem;
-}
+.hero{position:relative;overflow:hidden;background:radial-gradient(900px 400px at 80% 10%, color-mix(in srgb,var(--primary) 25%,transparent), transparent 60%),radial-gradient(700px 400px at 10% 90%, color-mix(in srgb,var(--accent) 20%,transparent), transparent 60%),var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2.25rem;margin-bottom:1.5rem;}
 .hero-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:2rem;align-items:center;}
 @media(max-width:900px){.hero-grid{grid-template-columns:1fr;}}
 .hero h1{font-size:2.4rem;font-weight:900;letter-spacing:-.04em;line-height:1.1;margin-bottom:.75rem;}
@@ -251,63 +177,27 @@ body::before{
 .hero p{color:var(--text-2);font-size:1rem;margin-bottom:1.5rem;max-width:520px;}
 .hero-actions{display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1.5rem;}
 .hero-chips{display:flex;gap:.5rem;flex-wrap:wrap;}
-.chip{
-  display:inline-flex;align-items:center;gap:.4rem;
-  padding:.35rem .75rem;border-radius:var(--radius-pill);
-  background:color-mix(in srgb,var(--surface-2) 90%, transparent);
-  border:1px solid var(--border);
-  font-size:.75rem;font-weight:600;color:var(--text-2);
-}
+.chip{display:inline-flex;align-items:center;gap:.4rem;padding:.35rem .75rem;border-radius:var(--radius-pill);background:color-mix(in srgb,var(--surface-2) 90%, transparent);border:1px solid var(--border);font-size:.75rem;font-weight:600;color:var(--text-2);}
 .chip i{color:var(--primary);font-size:.7rem;}
-.hero-visual{
-  position:relative;height:260px;
-  display:grid;place-items:center;
-}
-.pc-tower{
-  width:150px;height:230px;
-  background:linear-gradient(180deg,var(--surface-2),var(--surface));
-  border:1px solid var(--border-2);
-  border-radius:14px;
-  position:relative;
-  box-shadow:0 30px 60px -20px rgba(0,0,0,.7), inset 0 0 40px rgba(59,130,246,.08);
-}
-.pc-tower::before{
-  content:'';position:absolute;inset:12px;border-radius:8px;
-  background:repeating-linear-gradient(0deg,transparent,transparent 18px,color-mix(in srgb,var(--primary) 20%,transparent) 18px,color-mix(in srgb,var(--primary) 20%,transparent) 19px);
-  opacity:.6;
-}
-.pc-tower::after{
-  content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  width:60px;height:60px;border-radius:50%;
-  background:radial-gradient(circle,var(--primary),transparent 70%);
-  filter:blur(6px);animation:pulse 3s infinite;
-}
+.hero-visual{position:relative;height:260px;display:grid;place-items:center;}
+.pc-tower{width:150px;height:230px;background:linear-gradient(180deg,var(--surface-2),var(--surface));border:1px solid var(--border-2);border-radius:14px;position:relative;box-shadow:0 30px 60px -20px rgba(0,0,0,.7), inset 0 0 40px rgba(59,130,246,.08);}
+.pc-tower::before{content:'';position:absolute;inset:12px;border-radius:8px;background:repeating-linear-gradient(0deg,transparent,transparent 18px,color-mix(in srgb,var(--primary) 20%,transparent) 18px,color-mix(in srgb,var(--primary) 20%,transparent) 19px);opacity:.6;}
+.pc-tower::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:60px;height:60px;border-radius:50%;background:radial-gradient(circle,var(--primary),transparent 70%);filter:blur(6px);animation:pulse 3s infinite;}
 @keyframes pulse{0%,100%{opacity:.6;}50%{opacity:1;}}
 .pc-glow{position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,var(--primary-glow),transparent 60%);filter:blur(40px);z-index:-1;}
 
 /* ============================================================
-   BUILD PANEL (sidebar-style quick view)
+   BUILD PANEL
    ============================================================ */
-.build-panel{
-  display:grid;grid-template-columns:1.4fr 1fr;gap:1.25rem;
-  margin-bottom:1.5rem;
-}
+.build-panel{display:grid;grid-template-columns:1.4fr 1fr;gap:1.25rem;margin-bottom:1.5rem;}
 @media(max-width:1100px){.build-panel{grid-template-columns:1fr;}}
-
 .build-specs{display:flex;flex-direction:column;gap:.6rem;}
-.spec-row{
-  display:flex;align-items:center;gap:.75rem;
-  padding:.7rem .9rem;border-radius:var(--radius-sm);
-  background:var(--surface-2);border:1px solid var(--border);
-  transition:var(--transition);
-}
+.spec-row{display:flex;align-items:center;gap:.75rem;padding:.7rem .9rem;border-radius:var(--radius-sm);background:var(--surface-2);border:1px solid var(--border);transition:var(--transition);}
 .spec-row:hover{border-color:var(--primary);}
 .spec-icon{width:32px;height:32px;border-radius:8px;background:color-mix(in srgb,var(--primary) 15%,transparent);display:grid;place-items:center;color:var(--primary);font-size:.85rem;flex-shrink:0;}
 .spec-info{flex:1;min-width:0;}
 .spec-info .label{font-size:.65rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);font-weight:700;}
 .spec-info .value{font-size:.875rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.spec-edit{color:var(--text-3);cursor:pointer;font-size:.8rem;padding:.25rem;}
-.spec-edit:hover{color:var(--primary);}
 
 /* ============================================================
    SCORE RING
@@ -315,15 +205,8 @@ body::before{
 .score-ring{position:relative;width:130px;height:130px;flex-shrink:0;}
 .score-ring svg{transform:rotate(-90deg);}
 .score-ring .track{stroke:var(--surface-3);}
-.score-ring .progress{
-  stroke:url(#scoreGrad);
-  stroke-linecap:round;
-  transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1);
-}
-.score-value{
-  position:absolute;inset:0;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-}
+.score-ring .progress{stroke:url(#scoreGrad);stroke-linecap:round;transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1);}
+.score-value{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 .score-value .num{font-size:2rem;font-weight:800;letter-spacing:-.03em;line-height:1;}
 .score-value .max{font-size:.75rem;color:var(--text-3);font-weight:600;}
 
@@ -341,53 +224,167 @@ body::before{
 .meter-value{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;}
 
 /* ============================================================
-   GAME CARDS
+   GAME CARDS — matches screenshot exactly
    ============================================================ */
-.game-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;}
+.game-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:1rem;
+}
 .game-card{
-  background:var(--surface-2);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  padding:1rem;
+  background:#141b2b;
+  border:1px solid #1e293b;
+  border-radius:14px;
+  padding:1rem 1.1rem 1rem 1.1rem;
   cursor:pointer;
-  transition:var(--transition);
+  transition:all .18s ease;
+  position:relative;
+  display:grid;
+  grid-template-columns:1fr auto;
+  grid-template-rows:auto auto auto;
+  gap:.15rem .5rem;
+  min-height:105px;
+}
+body.theme-light .game-card{background:#ffffff;border-color:#e2e8f0;}
+.game-card:hover{transform:translateY(-2px);border-color:#3b82f6;box-shadow:0 12px 28px -10px rgba(59,130,246,.35);}
+.game-card .g-name{
+  font-weight:700;
+  font-size:.95rem;
+  letter-spacing:-.01em;
+  grid-column:1;
+  grid-row:1;
+  color:#fff;
+  line-height:1.2;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+body.theme-light .game-card .g-name{color:#0f172a;}
+.game-card .g-genre{
+  font-size:.7rem;
+  font-weight:600;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:#64748b;
+  grid-column:1;
+  grid-row:2;
+}
+.game-card .g-fps{
+  grid-column:2;
+  grid-row:1 / span 2;
+  text-align:right;
+  align-self:start;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  line-height:1;
+  margin-left:.5rem;
+}
+.game-card .g-fps .num{
+  font-size:1.65rem;
+  font-weight:800;
+  letter-spacing:-.03em;
+  color:#fff;
+  font-variant-numeric:tabular-nums;
+}
+body.theme-light .game-card .g-fps .num{color:#0f172a;}
+.game-card .g-fps .unit{
+  font-size:.65rem;
+  font-weight:600;
+  color:#64748b;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  margin-top:2px;
+}
+.game-card .g-badge{
+  grid-column:1;
+  grid-row:3;
+  justify-self:start;
+  align-self:end;
+  font-size:.65rem;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  padding:.25rem .65rem;
+  border-radius:6px;
+  border:1.5px solid;
+  margin-top:.4rem;
+}
+.game-card .g-preset{
+  grid-column:2;
+  grid-row:3;
+  justify-self:end;
+  align-self:end;
+  font-size:.7rem;
+  font-weight:600;
+  color:#64748b;
+  margin-top:.4rem;
+}
+/* badge colors */
+.badge-excellent{color:#22c55e;background:rgba(34,197,94,.08);border-color:#22c55e;}
+.badge-great{color:#06b6d4;background:rgba(6,182,212,.08);border-color:#06b6d4;}
+.badge-good{color:#3b82f6;background:rgba(59,130,246,.08);border-color:#3b82f6;}
+.badge-playable{color:#f59e0b;background:rgba(245,158,11,.08);border-color:#f59e0b;}
+.badge-poor{color:#ef4444;background:rgba(239,68,68,.08);border-color:#ef4444;}
+
+/* ============================================================
+   GAME BANNER STRIP (top of Games page)
+   ============================================================ */
+.game-banner-strip{
+  display:flex;
+  gap:.75rem;
+  overflow-x:auto;
+  padding:.25rem .25rem 1rem;
+  margin-bottom:.5rem;
+  scrollbar-width:thin;
+}
+.game-banner-strip::-webkit-scrollbar{height:6px;}
+.game-banner-strip::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:3px;}
+.banner-tile{
+  flex-shrink:0;
+  width:140px;
+  height:84px;
+  border-radius:12px;
+  cursor:pointer;
   position:relative;
   overflow:hidden;
+  border:1px solid var(--border);
+  transition:var(--transition);
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  padding:.55rem .65rem;
 }
-.game-card::before{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(135deg,transparent 60%,color-mix(in srgb,var(--primary) 12%,transparent));
-  opacity:0;transition:var(--transition);
+.banner-tile:hover{transform:translateY(-3px);border-color:var(--primary);box-shadow:0 10px 24px -8px rgba(59,130,246,.4);}
+.banner-tile::before{
+  content:'';
+  position:absolute;inset:0;
+  background:linear-gradient(180deg, transparent 40%, rgba(0,0,0,.85) 100%);
+  z-index:1;
 }
-.game-card:hover{transform:translateY(-3px);border-color:var(--primary);box-shadow:var(--shadow);}
-.game-card:hover::before{opacity:1;}
-.game-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.75rem;position:relative;}
-.game-name{font-weight:700;font-size:.9rem;letter-spacing:-.01em;}
-.game-genre{font-size:.7rem;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
-.game-fps{text-align:right;position:relative;}
-.game-fps .val{font-size:1.4rem;font-weight:800;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums;}
-.game-fps .unit{font-size:.7rem;color:var(--text-3);font-weight:600;}
-.game-meta{display:flex;justify-content:space-between;align-items:center;position:relative;font-size:.72rem;color:var(--text-3);}
-.quality-tag{
-  padding:.15rem .5rem;border-radius:var(--radius-pill);
-  font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
-  border:1px solid transparent;
+.banner-tile .b-title{
+  position:relative;z-index:2;
+  font-size:.75rem;
+  font-weight:800;
+  color:#fff;
+  letter-spacing:-.01em;
+  text-shadow:0 1px 2px rgba(0,0,0,.5);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.q-excellent{background:color-mix(in srgb,var(--success) 15%,transparent);color:var(--success);border-color:color-mix(in srgb,var(--success) 35%,transparent);}
-.q-great{background:color-mix(in srgb,var(--info) 15%,transparent);color:var(--info);border-color:color-mix(in srgb,var(--info) 35%,transparent);}
-.q-good{background:color-mix(in srgb,var(--primary) 15%,transparent);color:var(--primary);border-color:color-mix(in srgb,var(--primary) 35%,transparent);}
-.q-playable{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn);border-color:color-mix(in srgb,var(--warn) 35%,transparent);}
-.q-poor{background:color-mix(in srgb,var(--danger) 15%,transparent);color:var(--danger);border-color:color-mix(in srgb,var(--danger) 35%,transparent);}
+.banner-tile .b-fps{
+  position:relative;z-index:2;
+  font-size:.65rem;
+  font-weight:700;
+  color:#22c55e;
+  letter-spacing:.04em;
+}
+/* SVG-based art for each banner */
+.banner-tile svg{position:absolute;inset:0;width:100%;height:100%;}
 
 /* ============================================================
    BOTTLENECK
    ============================================================ */
-.bn-item{
-  display:flex;align-items:center;gap:.9rem;
-  padding:.85rem;border-radius:var(--radius-sm);
-  background:var(--surface-2);border:1px solid var(--border);
-  margin-bottom:.6rem;
-}
+.bn-item{display:flex;align-items:center;gap:.9rem;padding:.85rem;border-radius:var(--radius-sm);background:var(--surface-2);border:1px solid var(--border);margin-bottom:.6rem;}
 .bn-icon{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-size:1rem;flex-shrink:0;}
 .bn-icon.cpu{background:color-mix(in srgb,var(--danger) 15%,transparent);color:var(--danger);}
 .bn-icon.gpu{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn);}
@@ -400,21 +397,11 @@ body::before{
 /* ============================================================
    UPGRADE
    ============================================================ */
-.upgrade-path{
-  display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;
-  padding:1rem;border-radius:var(--radius-sm);
-  background:var(--surface-2);border:1px solid var(--border);margin-bottom:1rem;
-}
-.up-step{
-  padding:.5rem .85rem;border-radius:var(--radius-pill);
-  background:var(--surface-3);font-size:.8rem;font-weight:600;
-  border:1px solid var(--border);
-  display:flex;align-items:center;gap:.4rem;
-}
+.upgrade-path{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;padding:1rem;border-radius:var(--radius-sm);background:var(--surface-2);border:1px solid var(--border);margin-bottom:1rem;}
+.up-step{padding:.5rem .85rem;border-radius:var(--radius-pill);background:var(--surface-3);font-size:.8rem;font-weight:600;border:1px solid var(--border);display:flex;align-items:center;gap:.4rem;}
 .up-step.current{border-color:var(--primary);color:var(--primary);}
 .up-step.best{border-color:var(--success);color:var(--success);}
 .up-arrow{color:var(--text-3);font-size:.7rem;}
-
 table.data{width:100%;border-collapse:collapse;font-size:.82rem;}
 table.data th{text-align:left;font-weight:700;color:var(--text-3);text-transform:uppercase;font-size:.7rem;letter-spacing:.05em;padding:.5rem .5rem .5rem 0;border-bottom:1px solid var(--border);}
 table.data td{padding:.7rem .5rem .7rem 0;border-bottom:1px solid var(--border);font-weight:500;}
@@ -427,68 +414,90 @@ table.data tr:hover td{background:var(--surface-2);}
 .pill-gray{background:var(--surface-3);color:var(--text-2);}
 
 /* ============================================================
-   INPUTS
+   INPUTS (RAM + storage, both clean now)
    ============================================================ */
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.9rem;}
 .field{display:flex;flex-direction:column;gap:.35rem;}
 .field label{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);font-weight:700;}
-.field select,.field input{
-  background:var(--surface-2);border:1px solid var(--border);
-  border-radius:var(--radius-sm);padding:.6rem .75rem;
-  color:var(--text);font-family:inherit;font-size:.85rem;font-weight:500;
-  transition:var(--transition);
-}
+.field select,.field input{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.6rem .75rem;color:var(--text);font-family:inherit;font-size:.85rem;font-weight:500;transition:var(--transition);width:100%;}
 .field select:focus,.field input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow);}
 .field.full{grid-column:1/-1;}
 
-.storage-row{display:grid;grid-template-columns:1fr 1fr 100px 40px;gap:.5rem;align-items:center;margin-bottom:.5rem;}
-.storage-row select{width:100%;}
-.storage-row .remove{color:var(--danger);cursor:pointer;padding:.5rem;text-align:center;border-radius:var(--radius-sm);transition:var(--transition);}
-.storage-row .remove:hover{background:color-mix(in srgb,var(--danger) 15%,transparent);}
+/* Storage — clean row layout matching RAM */
+.storage-list{display:flex;flex-direction:column;gap:.75rem;}
+.storage-item{
+  display:grid;
+  grid-template-columns:auto 1fr 1fr auto;
+  gap:.75rem;
+  align-items:end;
+  padding:.85rem;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  transition:var(--transition);
+}
+.storage-item:hover{border-color:var(--border-2);}
+.storage-num{
+  width:32px;height:38px;
+  display:grid;place-items:center;
+  background:color-mix(in srgb,var(--primary) 12%,transparent);
+  color:var(--primary);
+  border-radius:8px;
+  font-weight:800;
+  font-size:.75rem;
+  align-self:end;
+}
+.storage-field{display:flex;flex-direction:column;gap:.35rem;}
+.storage-field label{font-size:.65rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);font-weight:700;}
+.storage-field select{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.55rem .7rem;color:var(--text);font-family:inherit;font-size:.82rem;font-weight:500;width:100%;transition:var(--transition);}
+.storage-field select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow);}
+.storage-remove{
+  width:38px;height:38px;
+  display:grid;place-items:center;
+  background:color-mix(in srgb,var(--danger) 12%,transparent);
+  color:var(--danger);
+  border:1px solid color-mix(in srgb,var(--danger) 30%,transparent);
+  border-radius:8px;
+  cursor:pointer;
+  transition:var(--transition);
+  align-self:end;
+}
+.storage-remove:hover{background:color-mix(in srgb,var(--danger) 22%,transparent);}
+.storage-remove.disabled{opacity:.35;cursor:not-allowed;}
+@media(max-width:700px){
+  .storage-item{grid-template-columns:auto 1fr auto;grid-template-areas:"num type remove" "num cap remove";}
+  .storage-item .storage-num{grid-area:num;}
+  .storage-item .s-type{grid-area:type;}
+  .storage-item .s-cap{grid-area:cap;}
+  .storage-item .storage-remove{grid-area:remove;}
+}
 
 /* ============================================================
    MODAL
    ============================================================ */
-.modal-backdrop{
-  position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);
-  display:none;align-items:center;justify-content:center;z-index:999;padding:1rem;
-  animation:fadeIn .2s ease;
-}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:999;padding:1rem;animation:fadeIn .2s ease;}
 .modal-backdrop.show{display:flex;}
-.modal{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius-lg);padding:1.75rem;
-  max-width:600px;width:100%;max-height:88vh;overflow-y:auto;
-  box-shadow:var(--shadow-lg);
-  animation:slideUp .3s cubic-bezier(.4,0,.2,1);
-}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.75rem;max-width:600px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:slideUp .3s cubic-bezier(.4,0,.2,1);}
 @keyframes slideUp{from{opacity:0;transform:translateY(20px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
 .modal h3{font-size:1.15rem;font-weight:800;margin-bottom:1.25rem;display:flex;align-items:center;gap:.55rem;letter-spacing:-.02em;}
 .modal h3 i{color:var(--primary);}
-.modal-close{position:absolute;top:1rem;right:1rem;}
 
+/* ============================================================
+   SETTINGS ROWS
+   ============================================================ */
 .setting-row{display:flex;align-items:center;justify-content:space-between;padding:.75rem 0;border-bottom:1px solid var(--border);gap:1rem;}
 .setting-row:last-of-type{border-bottom:none;}
 .setting-row > span{font-size:.875rem;font-weight:600;color:var(--text-2);}
 .setting-row > .controls{display:flex;gap:.5rem;align-items:center;}
-
 .theme-swatches{display:flex;gap:.5rem;}
-.swatch{
-  width:38px;height:38px;border-radius:10px;cursor:pointer;
-  border:2px solid var(--border);transition:var(--transition);
-  position:relative;
-}
+.swatch{width:38px;height:38px;border-radius:10px;cursor:pointer;border:2px solid var(--border);transition:var(--transition);position:relative;}
 .swatch:hover{transform:scale(1.08);}
 .swatch.active{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow);}
 .swatch.dark{background:linear-gradient(135deg,#0a0c14,#1a1f2c);}
 .swatch.light{background:linear-gradient(135deg,#f4f6fb,#e2e8f0);}
 .swatch.custom{background:linear-gradient(135deg,#3b82f6,#a78bfa);}
-
 .gradient-picker{display:flex;gap:.5rem;}
-.gradient-picker input[type=color]{
-  width:44px;height:36px;border:1px solid var(--border);border-radius:10px;
-  background:var(--surface-2);cursor:pointer;padding:3px;
-}
+.gradient-picker input[type=color]{width:44px;height:36px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);cursor:pointer;padding:3px;}
 input[type=color]::-webkit-color-swatch-wrapper{padding:0;}
 input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
 
@@ -496,41 +505,22 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
    TOASTS
    ============================================================ */
 .toast-container{position:fixed;bottom:1.5rem;right:1.5rem;z-index:1000;display:flex;flex-direction:column;gap:.5rem;}
-.toast{
-  background:var(--surface);border:1px solid var(--border);
-  border-left:3px solid var(--primary);
-  border-radius:var(--radius-sm);padding:.75rem 1rem;
-  font-size:.85rem;font-weight:500;
-  box-shadow:var(--shadow);min-width:240px;
-  animation:slideIn .3s cubic-bezier(.4,0,.2,1);
-  display:flex;align-items:center;gap:.6rem;
-}
+.toast{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--primary);border-radius:var(--radius-sm);padding:.75rem 1rem;font-size:.85rem;font-weight:500;box-shadow:var(--shadow);min-width:240px;animation:slideIn .3s cubic-bezier(.4,0,.2,1);display:flex;align-items:center;gap:.6rem;}
 .toast i{color:var(--primary);}
 @keyframes slideIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
 
 /* ============================================================
    MISC
    ============================================================ */
-.empty{
-  text-align:center;padding:2.5rem 1rem;color:var(--text-3);
-}
+.empty{text-align:center;padding:2.5rem 1rem;color:var(--text-3);}
 .empty i{font-size:2.5rem;opacity:.4;margin-bottom:.75rem;display:block;}
 .empty p{font-size:.875rem;}
 .text-muted{color:var(--text-2);font-size:.82rem;}
-.mb-1{margin-bottom:.5rem;}
-.mb-2{margin-bottom:1rem;}
-.mb-3{margin-bottom:1.5rem;}
-.mt-1{margin-top:.5rem;}
-.mt-2{margin-top:1rem;}
-.mt-3{margin-top:1.5rem;}
+.mb-1{margin-bottom:.5rem;}.mb-2{margin-bottom:1rem;}.mb-3{margin-bottom:1.5rem;}
+.mt-1{margin-top:.5rem;}.mt-2{margin-top:1rem;}.mt-3{margin-top:1.5rem;}
 .flex{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;}
 .flex-between{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;}
 .hidden{display:none !important;}
-
-.confidence{display:inline-flex;align-items:center;gap:.3rem;font-size:.7rem;color:var(--text-3);font-weight:600;}
-.confidence-dot{width:6px;height:6px;border-radius:50%;background:var(--success);}
-.confidence-dot.medium{background:var(--warn);}
-.confidence-dot.low{background:var(--danger);}
 
 /* ============================================================
    MOBILE
@@ -548,14 +538,11 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
 <body>
 <div id="app">
 
-  <!-- ============================ SIDEBAR ============================ -->
+  <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="brand">
       <div class="brand-icon"><i class="fas fa-microchip"></i></div>
-      <div>
-        PC Playground
-        <small>Know · Play · Upgrade</small>
-      </div>
+      <div>PC Playground<small>Know · Play · Upgrade</small></div>
     </div>
     <nav class="nav" id="nav">
       <div class="nav-section">Main</div>
@@ -579,10 +566,8 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
     </div>
   </aside>
 
-  <!-- ============================ MAIN ============================ -->
+  <!-- MAIN -->
   <main class="main">
-
-    <!-- TOPBAR -->
     <header class="topbar">
       <button class="icon-btn" id="menuBtn" style="display:none;"><i class="fas fa-bars"></i></button>
       <div class="search-box">
@@ -596,10 +581,9 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
       </div>
     </header>
 
-    <!-- PAGES -->
     <div class="pages" id="pages">
 
-      <!-- ============================ HOME ============================ -->
+      <!-- ============ HOME ============ -->
       <section class="page active" id="page-home">
         <div class="hero">
           <div class="hero-grid">
@@ -623,18 +607,14 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
           </div>
         </div>
 
-        <!-- BUILD PANEL -->
         <div class="build-panel">
           <div class="card">
             <div class="card-header">
               <div class="card-title"><i class="fas fa-desktop"></i> Your PC</div>
               <button class="btn btn-sm btn-ghost" onclick="navigate('mypc')"><i class="fas fa-pen"></i> Edit build</button>
             </div>
-            <div class="build-specs" id="buildSpecs">
-              <!-- injected -->
-            </div>
+            <div class="build-specs" id="buildSpecs"></div>
           </div>
-
           <div class="card" style="display:flex;align-items:center;gap:1.25rem;">
             <div class="score-ring">
               <svg width="130" height="130" viewBox="0 0 130 130">
@@ -660,31 +640,13 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
           </div>
         </div>
 
-        <!-- QUICK STATS -->
         <div class="grid grid-4 mb-3">
-          <div class="card">
-            <div class="card-title mb-1"><i class="fas fa-microchip"></i> CPU</div>
-            <div style="font-size:1.1rem;font-weight:700;" id="statCpuScore">—</div>
-            <div class="text-muted" id="statCpuName">Not selected</div>
-          </div>
-          <div class="card">
-            <div class="card-title mb-1"><i class="fas fa-display"></i> GPU</div>
-            <div style="font-size:1.1rem;font-weight:700;" id="statGpuScore">—</div>
-            <div class="text-muted" id="statGpuName">Not selected</div>
-          </div>
-          <div class="card">
-            <div class="card-title mb-1"><i class="fas fa-memory"></i> RAM</div>
-            <div style="font-size:1.1rem;font-weight:700;" id="statRamScore">—</div>
-            <div class="text-muted" id="statRamName">Not selected</div>
-          </div>
-          <div class="card">
-            <div class="card-title mb-1"><i class="fas fa-bolt"></i> Est. Power</div>
-            <div style="font-size:1.1rem;font-weight:700;" id="statPower">—</div>
-            <div class="text-muted">Total system draw</div>
-          </div>
+          <div class="card"><div class="card-title mb-1"><i class="fas fa-microchip"></i> CPU</div><div style="font-size:1.1rem;font-weight:700;" id="statCpuScore">—</div><div class="text-muted" id="statCpuName">Not selected</div></div>
+          <div class="card"><div class="card-title mb-1"><i class="fas fa-display"></i> GPU</div><div style="font-size:1.1rem;font-weight:700;" id="statGpuScore">—</div><div class="text-muted" id="statGpuName">Not selected</div></div>
+          <div class="card"><div class="card-title mb-1"><i class="fas fa-memory"></i> RAM</div><div style="font-size:1.1rem;font-weight:700;" id="statRamScore">—</div><div class="text-muted" id="statRamName">Not selected</div></div>
+          <div class="card"><div class="card-title mb-1"><i class="fas fa-bolt"></i> Est. Power</div><div style="font-size:1.1rem;font-weight:700;" id="statPower">—</div><div class="text-muted">Total system draw</div></div>
         </div>
 
-        <!-- BOTTLENECK + SCORE METERS -->
         <div class="grid grid-2 mb-3">
           <div class="card">
             <div class="card-header">
@@ -694,16 +656,11 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
             <div id="bnList"><div class="empty"><i class="fas fa-diagram-project"></i><p>Add your components to see bottleneck analysis.</p></div></div>
           </div>
           <div class="card">
-            <div class="card-header">
-              <div class="card-title"><i class="fas fa-chart-simple"></i> Performance Breakdown</div>
-            </div>
-            <div class="meter-group" id="meterGroup">
-              <div class="empty"><i class="fas fa-chart-simple"></i><p>Analysis pending.</p></div>
-            </div>
+            <div class="card-header"><div class="card-title"><i class="fas fa-chart-simple"></i> Performance Breakdown</div></div>
+            <div class="meter-group" id="meterGroup"><div class="empty"><i class="fas fa-chart-simple"></i><p>Analysis pending.</p></div></div>
           </div>
         </div>
 
-        <!-- TOP GAMES PREVIEW -->
         <div class="card mb-3">
           <div class="card-header">
             <div class="card-title"><i class="fas fa-gamepad"></i> What Can I Run?</div>
@@ -714,7 +671,6 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
           </div>
         </div>
 
-        <!-- UPGRADE TEASER -->
         <div class="card">
           <div class="card-header">
             <div class="card-title"><i class="fas fa-arrow-up"></i> Upgrade Path</div>
@@ -724,13 +680,10 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
         </div>
       </section>
 
-      <!-- ============================ MY PC ============================ -->
+      <!-- ============ MY PC ============ -->
       <section class="page" id="page-mypc">
         <div class="page-header">
-          <div>
-            <h1>My PC</h1>
-            <p>Configure your hardware and get a full performance analysis.</p>
-          </div>
+          <div><h1>My PC</h1><p>Configure your hardware and get a full performance analysis.</p></div>
           <div class="flex">
             <button class="btn btn-ghost" id="resetBuildBtn"><i class="fas fa-rotate-left"></i> Reset</button>
             <button class="btn btn-primary" id="analyzeBtn"><i class="fas fa-bolt"></i> Analyze</button>
@@ -740,53 +693,24 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
         <div class="card mb-3">
           <div class="card-header"><div class="card-title"><i class="fas fa-microchip"></i> CPU</div></div>
           <div class="form-grid">
-            <div class="field">
-              <label>Brand</label>
-              <select id="cpuBrand">
-                <option value="AMD">AMD</option>
-                <option value="Intel">Intel</option>
-              </select>
-            </div>
-            <div class="field" style="grid-column:span 2;">
-              <label>Model</label>
-              <select id="cpuSelect"></select>
-            </div>
+            <div class="field"><label>Brand</label><select id="cpuBrand"><option value="AMD">AMD</option><option value="Intel">Intel</option></select></div>
+            <div class="field" style="grid-column:span 2;"><label>Model</label><select id="cpuSelect"></select></div>
           </div>
         </div>
 
         <div class="card mb-3">
           <div class="card-header"><div class="card-title"><i class="fas fa-display"></i> Graphics Card</div></div>
           <div class="form-grid">
-            <div class="field">
-              <label>Brand</label>
-              <select id="gpuBrand">
-                <option value="NVIDIA">NVIDIA</option>
-                <option value="AMD">AMD</option>
-                <option value="Intel">Intel</option>
-              </select>
-            </div>
-            <div class="field" style="grid-column:span 2;">
-              <label>Model</label>
-              <select id="gpuSelect"></select>
-            </div>
+            <div class="field"><label>Brand</label><select id="gpuBrand"><option value="NVIDIA">NVIDIA</option><option value="AMD">AMD</option><option value="Intel">Intel</option></select></div>
+            <div class="field" style="grid-column:span 2;"><label>Model</label><select id="gpuSelect"></select></div>
           </div>
         </div>
 
         <div class="card mb-3">
           <div class="card-header"><div class="card-title"><i class="fas fa-memory"></i> Memory</div></div>
           <div class="form-grid">
-            <div class="field">
-              <label>Capacity & Type</label>
-              <select id="ramSelect"></select>
-            </div>
-            <div class="field">
-              <label>Speed (MHz)</label>
-              <select id="ramSpeed">
-                <option>2400</option><option>2666</option><option>3000</option>
-                <option>3200</option><option>3600</option><option>5200</option>
-                <option>6000</option><option>6400</option>
-              </select>
-            </div>
+            <div class="field"><label>Capacity & Type</label><select id="ramSelect"></select></div>
+            <div class="field"><label>Speed (MHz)</label><select id="ramSpeed"><option>2400</option><option>2666</option><option>3000</option><option>3200</option><option>3600</option><option>5200</option><option>6000</option><option>6400</option></select></div>
           </div>
         </div>
 
@@ -795,42 +719,21 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
             <div class="card-title"><i class="fas fa-hard-drive"></i> Storage <span class="card-sub" id="storageCount">0/4 drives</span></div>
             <button class="btn btn-sm btn-ghost" id="addStorage"><i class="fas fa-plus"></i> Add drive</button>
           </div>
-          <div id="storageContainer"></div>
+          <div class="storage-list" id="storageContainer"></div>
         </div>
 
         <div class="grid grid-2 mb-3">
           <div class="card">
             <div class="card-header"><div class="card-title"><i class="fas fa-plug"></i> Power Supply</div></div>
             <div class="form-grid">
-              <div class="field">
-                <label>Wattage</label>
-                <select id="psuWatt">
-                  <option>450</option><option>550</option><option>650</option>
-                  <option selected>750</option><option>850</option><option>1000</option><option>1200</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>Efficiency</label>
-                <select id="psuEff">
-                  <option>80+ White</option><option>80+ Bronze</option>
-                  <option selected>80+ Gold</option><option>80+ Platinum</option><option>80+ Titanium</option>
-                </select>
-              </div>
+              <div class="field"><label>Wattage</label><select id="psuWatt"><option>450</option><option>550</option><option>650</option><option selected>750</option><option>850</option><option>1000</option><option>1200</option></select></div>
+              <div class="field"><label>Efficiency</label><select id="psuEff"><option>80+ White</option><option>80+ Bronze</option><option selected>80+ Gold</option><option>80+ Platinum</option><option>80+ Titanium</option></select></div>
             </div>
           </div>
           <div class="card">
             <div class="card-header"><div class="card-title"><i class="fas fa-fan"></i> Cooling</div></div>
             <div class="form-grid">
-              <div class="field">
-                <label>Type</label>
-                <select id="coolerType">
-                  <option>Stock cooler</option>
-                  <option>Tower air</option>
-                  <option>Dual-tower air</option>
-                  <option selected>AIO 240mm</option>
-                  <option>AIO 360mm</option>
-                </select>
-              </div>
+              <div class="field"><label>Type</label><select id="coolerType"><option>Stock cooler</option><option>Tower air</option><option>Dual-tower air</option><option selected>AIO 240mm</option><option>AIO 360mm</option></select></div>
             </div>
           </div>
         </div>
@@ -841,13 +744,10 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
         </div>
       </section>
 
-      <!-- ============================ GAMES ============================ -->
+      <!-- ============ GAMES ============ -->
       <section class="page" id="page-games">
         <div class="page-header">
-          <div>
-            <h1>Games</h1>
-            <p>Personalized FPS estimates for your build. Click a game for details.</p>
-          </div>
+          <div><h1>Games</h1><p>Personalized FPS estimates for your build. Click a game for details.</p></div>
           <div class="flex">
             <select class="field" id="gameFilterQuality" style="padding:.5rem .75rem;border-radius:var(--radius-sm);background:var(--surface-2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:.82rem;">
               <option value="all">All qualities</option>
@@ -861,19 +761,19 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
             </select>
           </div>
         </div>
+
+        <!-- Game banner strip -->
+        <div class="game-banner-strip" id="gameBanners"></div>
+
         <div id="gamesList" class="game-grid"></div>
       </section>
 
-      <!-- ============================ COMPARE ============================ -->
+      <!-- ============ COMPARE ============ -->
       <section class="page" id="page-compare">
         <div class="page-header">
-          <div>
-            <h1>Compare Builds</h1>
-            <p>See how two configurations stack up head-to-head.</p>
-          </div>
+          <div><h1>Compare Builds</h1><p>See how two configurations stack up head-to-head.</p></div>
           <button class="btn btn-primary" id="runCompare"><i class="fas fa-code-compare"></i> Compare</button>
         </div>
-
         <div class="grid grid-2 mb-3">
           <div class="card">
             <div class="card-header"><div class="card-title"><i class="fas fa-desktop"></i> Build A</div></div>
@@ -892,20 +792,12 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
             </div>
           </div>
         </div>
-
-        <div class="card" id="compareResult">
-          <div class="empty"><i class="fas fa-code-compare"></i><p>Select two builds and hit Compare.</p></div>
-        </div>
+        <div class="card" id="compareResult"><div class="empty"><i class="fas fa-code-compare"></i><p>Select two builds and hit Compare.</p></div></div>
       </section>
 
-      <!-- ============================ UPGRADE ============================ -->
+      <!-- ============ UPGRADE ============ -->
       <section class="page" id="page-upgrade">
-        <div class="page-header">
-          <div>
-            <h1>Upgrade Path</h1>
-            <p>Get the most performance for your money.</p>
-          </div>
-        </div>
+        <div class="page-header"><div><h1>Upgrade Path</h1><p>Get the most performance for your money.</p></div></div>
         <div class="card mb-3">
           <div class="card-header"><div class="card-title"><i class="fas fa-route"></i> Your Upgrade Path</div></div>
           <div id="fullUpgrade"><div class="empty"><i class="fas fa-route"></i><p>Analyze your PC first.</p></div></div>
@@ -916,14 +808,9 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
         </div>
       </section>
 
-      <!-- ============================ BENCHMARKS ============================ -->
+      <!-- ============ BENCHMARKS ============ -->
       <section class="page" id="page-benchmarks">
-        <div class="page-header">
-          <div>
-            <h1>Benchmarks</h1>
-            <p>Compare your components against our reference database.</p>
-          </div>
-        </div>
+        <div class="page-header"><div><h1>Benchmarks</h1><p>Compare your components against our reference database.</p></div></div>
         <div class="card mb-3">
           <div class="card-header"><div class="card-title"><i class="fas fa-chart-bar"></i> CPU Benchmark (Cinebench R23 Multi)</div></div>
           <div id="cpuBench"><div class="empty"><i class="fas fa-microchip"></i><p>Select a CPU to see benchmark.</p></div></div>
@@ -938,77 +825,35 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
         </div>
       </section>
 
-      <!-- ============================ ADVISOR ============================ -->
+      <!-- ============ ADVISOR ============ -->
       <section class="page" id="page-advisor">
-        <div class="page-header">
-          <div>
-            <h1>PC Advisor</h1>
-            <p>Tell us your goal, and we'll recommend the smartest moves.</p>
-          </div>
-        </div>
-
+        <div class="page-header"><div><h1>PC Advisor</h1><p>Tell us your goal, and we'll recommend the smartest moves.</p></div></div>
         <div class="card mb-3">
           <div class="card-header"><div class="card-title"><i class="fas fa-bullseye"></i> What are you trying to do?</div></div>
           <div class="grid grid-3" id="advisorGoals">
-            <button class="btn" data-goal="fps" style="padding:1rem;flex-direction:column;height:auto;">
-              <i class="fas fa-gamepad" style="font-size:1.5rem;margin-bottom:.5rem;"></i>
-              <div style="font-weight:700;">Max FPS</div>
-              <div class="text-muted" style="font-size:.75rem;">Push frames in competitive games</div>
-            </button>
-            <button class="btn" data-goal="graphics" style="padding:1rem;flex-direction:column;height:auto;">
-              <i class="fas fa-palette" style="font-size:1.5rem;margin-bottom:.5rem;"></i>
-              <div style="font-weight:700;">Better Graphics</div>
-              <div class="text-muted" style="font-size:.75rem;">Ray tracing, high/ultra settings</div>
-            </button>
-            <button class="btn" data-goal="value" style="padding:1rem;flex-direction:column;height:auto;">
-              <i class="fas fa-dollar-sign" style="font-size:1.5rem;margin-bottom:.5rem;"></i>
-              <div style="font-weight:700;">Best Value</div>
-              <div class="text-muted" style="font-size:.75rem;">Most FPS per dollar</div>
-            </button>
-            <button class="btn" data-goal="fix" style="padding:1rem;flex-direction:column;height:auto;">
-              <i class="fas fa-wrench" style="font-size:1.5rem;margin-bottom:.5rem;"></i>
-              <div style="font-weight:700;">Fix Bottleneck</div>
-              <div class="text-muted" style="font-size:.75rem;">Balance the system</div>
-            </button>
-            <button class="btn" data-goal="upgrade" style="padding:1rem;flex-direction:column;height:auto;">
-              <i class="fas fa-arrow-up" style="font-size:1.5rem;margin-bottom:.5rem;"></i>
-              <div style="font-weight:700;">Upgrade PC</div>
-              <div class="text-muted" style="font-size:.75rem;">Plan the next big jump</div>
-            </button>
-            <button class="btn" data-goal="144" style="padding:1rem;flex-direction:column;height:auto;">
-              <i class="fas fa-gauge-high" style="font-size:1.5rem;margin-bottom:.5rem;"></i>
-              <div style="font-weight:700;">Reach 144 FPS</div>
-              <div class="text-muted" style="font-size:.75rem;">For high-refresh monitors</div>
-            </button>
+            <button class="btn" data-goal="fps" style="padding:1rem;flex-direction:column;height:auto;"><i class="fas fa-gamepad" style="font-size:1.5rem;margin-bottom:.5rem;"></i><div style="font-weight:700;">Max FPS</div><div class="text-muted" style="font-size:.75rem;">Push frames in competitive games</div></button>
+            <button class="btn" data-goal="graphics" style="padding:1rem;flex-direction:column;height:auto;"><i class="fas fa-palette" style="font-size:1.5rem;margin-bottom:.5rem;"></i><div style="font-weight:700;">Better Graphics</div><div class="text-muted" style="font-size:.75rem;">Ray tracing, high/ultra settings</div></button>
+            <button class="btn" data-goal="value" style="padding:1rem;flex-direction:column;height:auto;"><i class="fas fa-dollar-sign" style="font-size:1.5rem;margin-bottom:.5rem;"></i><div style="font-weight:700;">Best Value</div><div class="text-muted" style="font-size:.75rem;">Most FPS per dollar</div></button>
+            <button class="btn" data-goal="fix" style="padding:1rem;flex-direction:column;height:auto;"><i class="fas fa-wrench" style="font-size:1.5rem;margin-bottom:.5rem;"></i><div style="font-weight:700;">Fix Bottleneck</div><div class="text-muted" style="font-size:.75rem;">Balance the system</div></button>
+            <button class="btn" data-goal="upgrade" style="padding:1rem;flex-direction:column;height:auto;"><i class="fas fa-arrow-up" style="font-size:1.5rem;margin-bottom:.5rem;"></i><div style="font-weight:700;">Upgrade PC</div><div class="text-muted" style="font-size:.75rem;">Plan the next big jump</div></button>
+            <button class="btn" data-goal="144" style="padding:1rem;flex-direction:column;height:auto;"><i class="fas fa-gauge-high" style="font-size:1.5rem;margin-bottom:.5rem;"></i><div style="font-weight:700;">Reach 144 FPS</div><div class="text-muted" style="font-size:.75rem;">For high-refresh monitors</div></button>
           </div>
         </div>
-
-        <div class="card" id="advisorResult">
-          <div class="empty"><i class="fas fa-wand-magic-sparkles"></i><p>Pick a goal above to get recommendations.</p></div>
-        </div>
+        <div class="card" id="advisorResult"><div class="empty"><i class="fas fa-wand-magic-sparkles"></i><p>Pick a goal above to get recommendations.</p></div></div>
       </section>
 
-      <!-- ============================ BUILDS ============================ -->
+      <!-- ============ BUILDS ============ -->
       <section class="page" id="page-builds">
         <div class="page-header">
-          <div>
-            <h1>My Builds</h1>
-            <p>Save, load, and manage multiple configurations.</p>
-          </div>
+          <div><h1>My Builds</h1><p>Save, load, and manage multiple configurations.</p></div>
           <button class="btn btn-primary" id="saveBuildBtn"><i class="fas fa-save"></i> Save current build</button>
         </div>
         <div id="savedBuilds"><div class="empty"><i class="fas fa-cubes"></i><p>No saved builds yet.</p></div></div>
       </section>
 
-      <!-- ============================ SETTINGS ============================ -->
+      <!-- ============ SETTINGS ============ -->
       <section class="page" id="page-settings">
-        <div class="page-header">
-          <div>
-            <h1>Settings</h1>
-            <p>Customize your experience. Everything is stored in cookies.</p>
-          </div>
-        </div>
-
+        <div class="page-header"><div><h1>Settings</h1><p>Customize your experience. Everything is stored in cookies.</p></div></div>
         <div class="card mb-3">
           <div class="card-header"><div class="card-title"><i class="fas fa-palette"></i> Appearance</div></div>
           <div class="setting-row">
@@ -1021,93 +866,35 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
               </div>
             </div>
           </div>
-          <div class="setting-row">
-            <span>Accent color</span>
-            <div class="controls">
-              <input type="color" id="accentPicker" value="#3b82f6">
-            </div>
-          </div>
-          <div class="setting-row">
-            <span>Custom gradient</span>
-            <div class="controls gradient-picker">
-              <input type="color" id="grad1" value="#3b82f6">
-              <input type="color" id="grad2" value="#a78bfa">
-            </div>
-          </div>
+          <div class="setting-row"><span>Accent color</span><div class="controls"><input type="color" id="accentPicker" value="#3b82f6"></div></div>
+          <div class="setting-row"><span>Custom gradient</span><div class="controls gradient-picker"><input type="color" id="grad1" value="#3b82f6"><input type="color" id="grad2" value="#a78bfa"></div></div>
         </div>
-
         <div class="card mb-3">
           <div class="card-header"><div class="card-title"><i class="fas fa-gauge-high"></i> Performance Defaults</div></div>
-          <div class="setting-row">
-            <span>Default resolution</span>
-            <div class="controls">
-              <select id="defaultRes" style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.5rem .75rem;color:var(--text);font-family:inherit;">
-                <option>1080p</option><option>1440p</option><option>4K</option>
-              </select>
-            </div>
-          </div>
-          <div class="setting-row">
-            <span>Default FPS target</span>
-            <div class="controls">
-              <select id="defaultFps" style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.5rem .75rem;color:var(--text);font-family:inherit;">
-                <option>30</option><option>60</option><option>120</option><option>144</option><option>240</option>
-              </select>
-            </div>
-          </div>
-          <div class="setting-row">
-            <span>Default quality preset</span>
-            <div class="controls">
-              <select id="defaultQuality" style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.5rem .75rem;color:var(--text);font-family:inherit;">
-                <option>Low</option><option>Medium</option><option selected>High</option><option>Ultra</option>
-              </select>
-            </div>
-          </div>
+          <div class="setting-row"><span>Default resolution</span><div class="controls"><select id="defaultRes" style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.5rem .75rem;color:var(--text);font-family:inherit;"><option>1080p</option><option>1440p</option><option>4K</option></select></div></div>
+          <div class="setting-row"><span>Default FPS target</span><div class="controls"><select id="defaultFps" style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.5rem .75rem;color:var(--text);font-family:inherit;"><option>30</option><option>60</option><option>120</option><option>144</option><option>240</option></select></div></div>
+          <div class="setting-row"><span>Default quality preset</span><div class="controls"><select id="defaultQuality" style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.5rem .75rem;color:var(--text);font-family:inherit;"><option>Low</option><option>Medium</option><option selected>High</option><option>Ultra</option></select></div></div>
         </div>
-
         <div class="card mb-3">
           <div class="card-header"><div class="card-title"><i class="fas fa-database"></i> Data</div></div>
-          <div class="setting-row">
-            <span>Export build</span>
-            <div class="controls">
-              <button class="btn btn-sm" id="exportBtn"><i class="fas fa-download"></i> Download .pcp</button>
-            </div>
-          </div>
-          <div class="setting-row">
-            <span>Import build</span>
-            <div class="controls">
-              <input type="file" id="importFile" accept=".pcp,.json" style="display:none;">
-              <button class="btn btn-sm" id="importBtn"><i class="fas fa-upload"></i> Load file</button>
-            </div>
-          </div>
-          <div class="setting-row">
-            <span>Reset preferences</span>
-            <div class="controls">
-              <button class="btn btn-sm" id="resetPrefs"><i class="fas fa-rotate-left"></i> Reset</button>
-            </div>
-          </div>
-          <div class="setting-row">
-            <span>Clear all data</span>
-            <div class="controls">
-              <button class="btn btn-sm btn-danger" id="clearAll"><i class="fas fa-trash"></i> Clear everything</button>
-            </div>
-          </div>
+          <div class="setting-row"><span>Export build</span><div class="controls"><button class="btn btn-sm" id="exportBtn"><i class="fas fa-download"></i> Download .pcp</button></div></div>
+          <div class="setting-row"><span>Import build</span><div class="controls"><input type="file" id="importFile" accept=".pcp,.json" style="display:none;"><button class="btn btn-sm" id="importBtn"><i class="fas fa-upload"></i> Load file</button></div></div>
+          <div class="setting-row"><span>Reset preferences</span><div class="controls"><button class="btn btn-sm" id="resetPrefs"><i class="fas fa-rotate-left"></i> Reset</button></div></div>
+          <div class="setting-row"><span>Clear all data</span><div class="controls"><button class="btn btn-sm btn-danger" id="clearAll"><i class="fas fa-trash"></i> Clear everything</button></div></div>
         </div>
-
         <div class="card">
           <div class="card-header"><div class="card-title"><i class="fas fa-circle-info"></i> About</div></div>
-          <p class="text-muted mb-2">PC Playground is a client-side performance modeler. All estimates are algorithmic, based on a curated component database and relative-weight FPS model. For production use, plug a live benchmark API into <code>DATA_MODE</code>.</p>
-          <p class="text-muted" style="font-size:.75rem;">Version 3.0 · Built with vanilla HTML/CSS/JS · No tracking · No server.</p>
+          <p class="text-muted mb-2">PC Playground is a client-side performance modeler. All estimates are algorithmic, based on a curated component database and relative-weight FPS model.</p>
+          <p class="text-muted" style="font-size:.75rem;">Version 4.0 · Built with vanilla HTML/CSS/JS · No tracking · No server.</p>
         </div>
       </section>
-
     </div>
   </main>
 </div>
 
-<!-- ============================ TOASTS ============================ -->
 <div class="toast-container" id="toasts"></div>
 
-<!-- ============================ GAME MODAL ============================ -->
+<!-- GAME MODAL -->
 <div class="modal-backdrop" id="gameModal">
   <div class="modal">
     <h3><i class="fas fa-gamepad"></i> <span id="modalGameName">Game</span></h3>
@@ -1119,7 +906,7 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
   </div>
 </div>
 
-<!-- ============================ CONFIRM MODAL ============================ -->
+<!-- CONFIRM MODAL -->
 <div class="modal-backdrop" id="confirmModal">
   <div class="modal" style="max-width:420px;">
     <h3><i class="fas fa-triangle-exclamation" style="color:var(--warn);"></i> Confirm</h3>
@@ -1133,17 +920,14 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
 
 <script>
 /* ================================================================
-   PC PLAYGROUND — CORE ENGINE v3.0
+   PC PLAYGROUND — CORE ENGINE v4.0
    ================================================================ */
 
-/* ----------------------------------------------------------------
-   DATA LAYER
-   NOTE: All component performance multipliers are normalized to a
-   reference build (Ryzen 5 2600 + RX 580 + 16GB DDR4). Live data
-   can be plugged into DATA_MODE below by fetching a JSON endpoint.
-   ---------------------------------------------------------------- */
-const DATA_MODE = 'local'; // 'local' | 'remote'
+const DATA_MODE = 'local';
 
+/* ----------------------------------------------------------------
+   COMPONENT DATABASE
+   ---------------------------------------------------------------- */
 const CPUS = {
   AMD: [
     {name:'Ryzen 3 1200',         tier:'entry',    mult:0.75, tdp:65,  cores:'4C/4T',  clock:'3.1–3.4GHz', cb23:3800,  socket:'AM4',  gen:'Zen'},
@@ -1151,19 +935,19 @@ const CPUS = {
     {name:'Ryzen 5 3600',         tier:'mainstream',mult:1.22, tdp:65,  cores:'6C/12T', clock:'3.6–4.2GHz', cb23:9400,  socket:'AM4',  gen:'Zen 2'},
     {name:'Ryzen 5 5600X',        tier:'mainstream',mult:1.45, tdp:65,  cores:'6C/12T', clock:'3.7–4.6GHz', cb23:11400, socket:'AM4',  gen:'Zen 3'},
     {name:'Ryzen 7 5700X',        tier:'performance',mult:1.62, tdp:65,  cores:'8C/16T', clock:'3.4–4.6GHz', cb23:13800, socket:'AM4',  gen:'Zen 3'},
-    {name:'Ryzen 7 5800X3D',      tier:'gaming',    mult:1.85, tdp:105, cores:'8C/16T', clock:'3.4–4.5GHz', cb23:14200, socket:'AM4',  gen:'Zen 3 3D'},
+    {name:'Ryzen 7 5800X3D',      tier:'gaming',   mult:1.85, tdp:105, cores:'8C/16T', clock:'3.4–4.5GHz', cb23:14200, socket:'AM4',  gen:'Zen 3 3D'},
     {name:'Ryzen 5 7600X',        tier:'mainstream',mult:1.78, tdp:105, cores:'6C/12T', clock:'4.7–5.3GHz', cb23:15100, socket:'AM5',  gen:'Zen 4'},
     {name:'Ryzen 7 7700X',        tier:'performance',mult:1.98, tdp:105, cores:'8C/16T', clock:'4.5–5.4GHz', cb23:19100, socket:'AM5',  gen:'Zen 4'},
-    {name:'Ryzen 7 7800X3D',      tier:'gaming',    mult:2.10, tdp:120, cores:'8C/16T', clock:'4.2–5.0GHz', cb23:18200, socket:'AM5',  gen:'Zen 4 3D'},
+    {name:'Ryzen 7 7800X3D',      tier:'gaming',   mult:2.10, tdp:120, cores:'8C/16T', clock:'4.2–5.0GHz', cb23:18200, socket:'AM5',  gen:'Zen 4 3D'},
     {name:'Ryzen 9 7900X',        tier:'enthusiast',mult:2.25, tdp:170, cores:'12C/24T',clock:'4.7–5.6GHz', cb23:29300, socket:'AM5',  gen:'Zen 4'},
-    {name:'Ryzen 9 7950X3D',      tier:'flagship',  mult:2.55, tdp:120, cores:'16C/32T',clock:'4.2–5.7GHz', cb23:36400, socket:'AM5',  gen:'Zen 4 3D'},
+    {name:'Ryzen 9 7950X3D',      tier:'flagship', mult:2.55, tdp:120, cores:'16C/32T',clock:'4.2–5.7GHz', cb23:36400, socket:'AM5',  gen:'Zen 4 3D'},
     {name:'Ryzen 5 9600X',        tier:'mainstream',mult:1.88, tdp:65,  cores:'6C/12T', clock:'3.9–5.4GHz', cb23:16400, socket:'AM5',  gen:'Zen 5'},
     {name:'Ryzen 7 9700X',        tier:'performance',mult:2.06, tdp:65,  cores:'8C/16T', clock:'3.8–5.5GHz', cb23:21800, socket:'AM5',  gen:'Zen 5'},
     {name:'Ryzen 9 9900X',        tier:'enthusiast',mult:2.32, tdp:120, cores:'12C/24T',clock:'4.4–5.6GHz', cb23:31800, socket:'AM5',  gen:'Zen 5'},
-    {name:'Ryzen 9 9950X3D',      tier:'flagship',  mult:2.72, tdp:170, cores:'16C/32T',clock:'4.3–5.7GHz', cb23:41200, socket:'AM5',  gen:'Zen 5 3D'},
+    {name:'Ryzen 9 9950X3D',      tier:'flagship', mult:2.72, tdp:170, cores:'16C/32T',clock:'4.3–5.7GHz', cb23:41200, socket:'AM5',  gen:'Zen 5 3D'},
   ],
   Intel: [
-    {name:'Core i3-10100F',       tier:'entry',     mult:0.82, tdp:65,  cores:'4C/8T',  clock:'3.6–4.3GHz', cb23:5100,  socket:'LGA1200', gen:'Comet Lake'},
+    {name:'Core i3-10100F',       tier:'entry',    mult:0.82, tdp:65,  cores:'4C/8T',  clock:'3.6–4.3GHz', cb23:5100,  socket:'LGA1200', gen:'Comet Lake'},
     {name:'Core i5-10400F',       tier:'mainstream',mult:0.98, tdp:65,  cores:'6C/12T', clock:'2.9–4.3GHz', cb23:8200,  socket:'LGA1200', gen:'Comet Lake'},
     {name:'Core i5-11400F',       tier:'mainstream',mult:1.12, tdp:65,  cores:'6C/12T', clock:'2.6–4.4GHz', cb23:9500,  socket:'LGA1200', gen:'Rocket Lake'},
     {name:'Core i5-12400F',       tier:'mainstream',mult:1.55, tdp:65,  cores:'6C/12T', clock:'2.5–4.4GHz', cb23:12400, socket:'LGA1700', gen:'Alder Lake'},
@@ -1171,70 +955,70 @@ const CPUS = {
     {name:'Core i7-12700K',       tier:'performance',mult:1.98, tdp:125, cores:'12C/20T',clock:'3.6–5.0GHz', cb23:22000, socket:'LGA1700', gen:'Alder Lake'},
     {name:'Core i5-13600K',       tier:'performance',mult:2.05, tdp:125, cores:'14C/20T',clock:'3.5–5.1GHz', cb23:24000, socket:'LGA1700', gen:'Raptor Lake'},
     {name:'Core i7-13700K',       tier:'enthusiast',mult:2.30, tdp:125, cores:'16C/24T',clock:'3.4–5.4GHz', cb23:30000, socket:'LGA1700', gen:'Raptor Lake'},
-    {name:'Core i9-13900K',       tier:'flagship',  mult:2.52, tdp:253, cores:'24C/32T',clock:'3.0–5.8GHz', cb23:38500, socket:'LGA1700', gen:'Raptor Lake'},
-    {name:'Core i9-14900K',       tier:'flagship',  mult:2.62, tdp:253, cores:'24C/32T',clock:'3.2–6.0GHz', cb23:40500, socket:'LGA1700', gen:'Raptor Lake R'},
+    {name:'Core i9-13900K',       tier:'flagship', mult:2.52, tdp:253, cores:'24C/32T',clock:'3.0–5.8GHz', cb23:38500, socket:'LGA1700', gen:'Raptor Lake'},
+    {name:'Core i9-14900K',       tier:'flagship', mult:2.62, tdp:253, cores:'24C/32T',clock:'3.2–6.0GHz', cb23:40500, socket:'LGA1700', gen:'Raptor Lake R'},
     {name:'Core Ultra 5 245K',    tier:'performance',mult:2.10, tdp:125, cores:'14C/14T',clock:'4.2–5.2GHz', cb23:24500, socket:'LGA1851', gen:'Arrow Lake'},
     {name:'Core Ultra 7 265K',    tier:'enthusiast',mult:2.35, tdp:125, cores:'20C/20T',clock:'3.9–5.5GHz', cb23:33500, socket:'LGA1851', gen:'Arrow Lake'},
-    {name:'Core Ultra 9 285K',    tier:'flagship',  mult:2.58, tdp:250, cores:'24C/24T',clock:'3.7–5.7GHz', cb23:42000, socket:'LGA1851', gen:'Arrow Lake'},
+    {name:'Core Ultra 9 285K',    tier:'flagship', mult:2.58, tdp:250, cores:'24C/24T',clock:'3.7–5.7GHz', cb23:42000, socket:'LGA1851', gen:'Arrow Lake'},
   ]
 };
 
 const GPUS = {
   NVIDIA: [
-    {name:'GTX 1050 Ti',        tier:'entry',     mult:0.55, tdp:75,  vram:4,  ts:3100,  rt:false},
-    {name:'GTX 1060 6GB',       tier:'entry',     mult:0.78, tdp:120, vram:6,  ts:4200,  rt:false},
-    {name:'GTX 1660 Super',     tier:'mainstream',mult:1.15, tdp:125, vram:6,  ts:6300,  rt:false},
-    {name:'RTX 2060',           tier:'mainstream',mult:1.30, tdp:160, vram:6,  ts:7600,  rt:true},
-    {name:'RTX 3060 12GB',      tier:'mainstream',mult:1.62, tdp:170, vram:12, ts:8700,  rt:true},
-    {name:'RTX 3060 Ti',        tier:'performance',mult:1.95, tdp:200, vram:8,  ts:11200, rt:true},
-    {name:'RTX 3070',           tier:'performance',mult:2.10, tdp:220, vram:8,  ts:12700, rt:true},
-    {name:'RTX 3080 10GB',      tier:'enthusiast',mult:2.65, tdp:320, vram:10, ts:17600, rt:true},
-    {name:'RTX 3080 Ti',        tier:'enthusiast',mult:2.95, tdp:350, vram:12, ts:19500, rt:true},
-    {name:'RTX 3090',           tier:'flagship',  mult:3.05, tdp:350, vram:24, ts:20000, rt:true},
-    {name:'RTX 4060',           tier:'mainstream',mult:1.88, tdp:115, vram:8,  ts:10800, rt:true},
-    {name:'RTX 4060 Ti',        tier:'performance',mult:2.20, tdp:160, vram:8,  ts:13500, rt:true},
-    {name:'RTX 4070',           tier:'performance',mult:2.85, tdp:200, vram:12, ts:17800, rt:true},
-    {name:'RTX 4070 Super',     tier:'enthusiast',mult:3.15, tdp:220, vram:12, ts:19800, rt:true},
-    {name:'RTX 4070 Ti',        tier:'enthusiast',mult:3.25, tdp:285, vram:12, ts:20500, rt:true},
-    {name:'RTX 4070 Ti Super',  tier:'enthusiast',mult:3.45, tdp:285, vram:16, ts:22000, rt:true},
-    {name:'RTX 4080',           tier:'flagship',  mult:3.90, tdp:320, vram:16, ts:25500, rt:true},
-    {name:'RTX 4080 Super',     tier:'flagship',  mult:4.10, tdp:320, vram:16, ts:26800, rt:true},
-    {name:'RTX 4090',           tier:'flagship',  mult:4.65, tdp:450, vram:24, ts:30500, rt:true},
-    {name:'RTX 5070',           tier:'performance',mult:3.55, tdp:250, vram:12, ts:23000, rt:true},
-    {name:'RTX 5070 Ti',        tier:'enthusiast',mult:4.00, tdp:300, vram:16, ts:26000, rt:true},
-    {name:'RTX 5080',           tier:'flagship',  mult:4.35, tdp:360, vram:16, ts:28500, rt:true},
-    {name:'RTX 5090',           tier:'flagship',  mult:5.60, tdp:575, vram:32, ts:36500, rt:true},
+    {name:'GTX 1050 Ti',       tier:'entry',    mult:0.55, tdp:75,  vram:4,  ts:3100,  rt:false},
+    {name:'GTX 1060 6GB',      tier:'entry',    mult:0.78, tdp:120, vram:6,  ts:4200,  rt:false},
+    {name:'GTX 1660 Super',    tier:'mainstream',mult:1.15, tdp:125, vram:6,  ts:6300,  rt:false},
+    {name:'RTX 2060',          tier:'mainstream',mult:1.30, tdp:160, vram:6,  ts:7600,  rt:true},
+    {name:'RTX 3060 12GB',     tier:'mainstream',mult:1.62, tdp:170, vram:12, ts:8700,  rt:true},
+    {name:'RTX 3060 Ti',       tier:'performance',mult:1.95, tdp:200, vram:8,  ts:11200, rt:true},
+    {name:'RTX 3070',          tier:'performance',mult:2.10, tdp:220, vram:8,  ts:12700, rt:true},
+    {name:'RTX 3080 10GB',     tier:'enthusiast',mult:2.65, tdp:320, vram:10, ts:17600, rt:true},
+    {name:'RTX 3080 Ti',       tier:'enthusiast',mult:2.95, tdp:350, vram:12, ts:19500, rt:true},
+    {name:'RTX 3090',          tier:'flagship', mult:3.05, tdp:350, vram:24, ts:20000, rt:true},
+    {name:'RTX 4060',          tier:'mainstream',mult:1.88, tdp:115, vram:8,  ts:10800, rt:true},
+    {name:'RTX 4060 Ti',       tier:'performance',mult:2.20, tdp:160, vram:8,  ts:13500, rt:true},
+    {name:'RTX 4070',          tier:'performance',mult:2.85, tdp:200, vram:12, ts:17800, rt:true},
+    {name:'RTX 4070 Super',    tier:'enthusiast',mult:3.15, tdp:220, vram:12, ts:19800, rt:true},
+    {name:'RTX 4070 Ti',       tier:'enthusiast',mult:3.25, tdp:285, vram:12, ts:20500, rt:true},
+    {name:'RTX 4070 Ti Super', tier:'enthusiast',mult:3.45, tdp:285, vram:16, ts:22000, rt:true},
+    {name:'RTX 4080',          tier:'flagship', mult:3.90, tdp:320, vram:16, ts:25500, rt:true},
+    {name:'RTX 4080 Super',    tier:'flagship', mult:4.10, tdp:320, vram:16, ts:26800, rt:true},
+    {name:'RTX 4090',          tier:'flagship', mult:4.65, tdp:450, vram:24, ts:30500, rt:true},
+    {name:'RTX 5070',          tier:'performance',mult:3.55, tdp:250, vram:12, ts:23000, rt:true},
+    {name:'RTX 5070 Ti',       tier:'enthusiast',mult:4.00, tdp:300, vram:16, ts:26000, rt:true},
+    {name:'RTX 5080',          tier:'flagship', mult:4.35, tdp:360, vram:16, ts:28500, rt:true},
+    {name:'RTX 5090',          tier:'flagship', mult:5.60, tdp:575, vram:32, ts:36500, rt:true},
   ],
   AMD: [
-    {name:'RX 570 4GB',         tier:'entry',     mult:0.75, tdp:150, vram:4,  ts:3800,  rt:false},
-    {name:'RX 580 8GB',         tier:'entry',     mult:0.95, tdp:185, vram:8,  ts:4400,  rt:false},
-    {name:'RX 5500 XT 8GB',     tier:'entry',     mult:1.15, tdp:130, vram:8,  ts:5100,  rt:false},
-    {name:'RX 5600 XT',         tier:'mainstream',mult:1.45, tdp:150, vram:6,  ts:6800,  rt:false},
-    {name:'RX 5700 XT',         tier:'mainstream',mult:1.85, tdp:225, vram:8,  ts:8900,  rt:false},
-    {name:'RX 6600',            tier:'mainstream',mult:1.75, tdp:132, vram:8,  ts:8300,  rt:true},
-    {name:'RX 6600 XT',         tier:'mainstream',mult:1.95, tdp:160, vram:8,  ts:9800,  rt:true},
-    {name:'RX 6700 XT',         tier:'performance',mult:2.35, tdp:230, vram:12, ts:12300, rt:true},
-    {name:'RX 6750 XT',         tier:'performance',mult:2.55, tdp:250, vram:12, ts:13600, rt:true},
-    {name:'RX 6800',            tier:'enthusiast',mult:2.80, tdp:250, vram:16, ts:15900, rt:true},
-    {name:'RX 6800 XT',         tier:'enthusiast',mult:3.05, tdp:300, vram:16, ts:17600, rt:true},
-    {name:'RX 6900 XT',         tier:'flagship',  mult:3.30, tdp:300, vram:16, ts:18900, rt:true},
-    {name:'RX 6950 XT',         tier:'flagship',  mult:3.55, tdp:335, vram:16, ts:20200, rt:true},
-    {name:'RX 7600',            tier:'mainstream',mult:2.00, tdp:165, vram:8,  ts:10800, rt:true},
-    {name:'RX 7700 XT',         tier:'performance',mult:2.65, tdp:245, vram:12, ts:15300, rt:true},
-    {name:'RX 7800 XT',         tier:'enthusiast',mult:3.20, tdp:263, vram:16, ts:18600, rt:true},
-    {name:'RX 7900 GRE',        tier:'enthusiast',mult:3.55, tdp:260, vram:16, ts:21300, rt:true},
-    {name:'RX 7900 XT',         tier:'flagship',  mult:3.95, tdp:315, vram:20, ts:23800, rt:true},
-    {name:'RX 7900 XTX',        tier:'flagship',  mult:4.20, tdp:355, vram:24, ts:25700, rt:true},
-    {name:'RX 9070',            tier:'performance',mult:3.90, tdp:220, vram:16, ts:24600, rt:true},
-    {name:'RX 9070 XT',         tier:'flagship',  mult:4.55, tdp:300, vram:16, ts:28100, rt:true},
+    {name:'RX 570 4GB',        tier:'entry',    mult:0.75, tdp:150, vram:4,  ts:3800,  rt:false},
+    {name:'RX 580 8GB',        tier:'entry',    mult:0.95, tdp:185, vram:8,  ts:4400,  rt:false},
+    {name:'RX 5500 XT 8GB',    tier:'entry',    mult:1.15, tdp:130, vram:8,  ts:5100,  rt:false},
+    {name:'RX 5600 XT',        tier:'mainstream',mult:1.45, tdp:150, vram:6,  ts:6800,  rt:false},
+    {name:'RX 5700 XT',        tier:'mainstream',mult:1.85, tdp:225, vram:8,  ts:8900,  rt:false},
+    {name:'RX 6600',           tier:'mainstream',mult:1.75, tdp:132, vram:8,  ts:8300,  rt:true},
+    {name:'RX 6600 XT',        tier:'mainstream',mult:1.95, tdp:160, vram:8,  ts:9800,  rt:true},
+    {name:'RX 6700 XT',        tier:'performance',mult:2.35, tdp:230, vram:12, ts:12300, rt:true},
+    {name:'RX 6750 XT',        tier:'performance',mult:2.55, tdp:250, vram:12, ts:13600, rt:true},
+    {name:'RX 6800',           tier:'enthusiast',mult:2.80, tdp:250, vram:16, ts:15900, rt:true},
+    {name:'RX 6800 XT',        tier:'enthusiast',mult:3.05, tdp:300, vram:16, ts:17600, rt:true},
+    {name:'RX 6900 XT',        tier:'flagship', mult:3.30, tdp:300, vram:16, ts:18900, rt:true},
+    {name:'RX 6950 XT',        tier:'flagship', mult:3.55, tdp:335, vram:16, ts:20200, rt:true},
+    {name:'RX 7600',           tier:'mainstream',mult:2.00, tdp:165, vram:8,  ts:10800, rt:true},
+    {name:'RX 7700 XT',        tier:'performance',mult:2.65, tdp:245, vram:12, ts:15300, rt:true},
+    {name:'RX 7800 XT',        tier:'enthusiast',mult:3.20, tdp:263, vram:16, ts:18600, rt:true},
+    {name:'RX 7900 GRE',       tier:'enthusiast',mult:3.55, tdp:260, vram:16, ts:21300, rt:true},
+    {name:'RX 7900 XT',        tier:'flagship', mult:3.95, tdp:315, vram:20, ts:23800, rt:true},
+    {name:'RX 7900 XTX',       tier:'flagship', mult:4.20, tdp:355, vram:24, ts:25700, rt:true},
+    {name:'RX 9070',           tier:'performance',mult:3.90, tdp:220, vram:16, ts:24600, rt:true},
+    {name:'RX 9070 XT',        tier:'flagship', mult:4.55, tdp:300, vram:16, ts:28100, rt:true},
   ],
   Intel: [
-    {name:'Arc A380',           tier:'entry',     mult:0.85, tdp:75,  vram:6,  ts:4200,  rt:true},
-    {name:'Arc A580',           tier:'mainstream',mult:1.50, tdp:185, vram:8,  ts:8400,  rt:true},
-    {name:'Arc A750',           tier:'mainstream',mult:1.75, tdp:225, vram:8,  ts:9900,  rt:true},
-    {name:'Arc A770 16GB',      tier:'performance',mult:2.05, tdp:225, vram:16, ts:11500, rt:true},
-    {name:'Arc B580',           tier:'performance',mult:2.35, tdp:190, vram:12, ts:13400, rt:true},
-    {name:'Arc B770',           tier:'enthusiast',mult:3.10, tdp:280, vram:16, ts:17500, rt:true},
+    {name:'Arc A380',          tier:'entry',    mult:0.85, tdp:75,  vram:6,  ts:4200,  rt:true},
+    {name:'Arc A580',          tier:'mainstream',mult:1.50, tdp:185, vram:8,  ts:8400,  rt:true},
+    {name:'Arc A750',          tier:'mainstream',mult:1.75, tdp:225, vram:8,  ts:9900,  rt:true},
+    {name:'Arc A770 16GB',     tier:'performance',mult:2.05, tdp:225, vram:16, ts:11500, rt:true},
+    {name:'Arc B580',          tier:'performance',mult:2.35, tdp:190, vram:12, ts:13400, rt:true},
+    {name:'Arc B770',          tier:'enthusiast',mult:3.10, tdp:280, vram:16, ts:17500, rt:true},
   ]
 };
 
@@ -1252,69 +1036,75 @@ const RAMS = [
 ];
 
 const STORAGE_TYPES = [
-  {name:'HDD 7200RPM',    mult:0.65, tdp:6,  speed:150},
-  {name:'SATA SSD',       mult:1.00, tdp:3,  speed:550},
-  {name:'NVMe Gen3',      mult:1.20, tdp:5,  speed:3500},
-  {name:'NVMe Gen4',      mult:1.40, tdp:7,  speed:7000},
-  {name:'NVMe Gen5',      mult:1.60, tdp:10, speed:12000},
+  {name:'HDD 5400RPM',  mult:0.55, tdp:5,  speed:100},
+  {name:'HDD 7200RPM',  mult:0.65, tdp:6,  speed:150},
+  {name:'SATA SSD',     mult:1.00, tdp:3,  speed:550},
+  {name:'NVMe Gen3',    mult:1.20, tdp:5,  speed:3500},
+  {name:'NVMe Gen4',    mult:1.40, tdp:7,  speed:7000},
+  {name:'NVMe Gen5',    mult:1.60, tdp:10, speed:12000},
 ];
 
-const CAPACITIES = ['256GB','500GB','1TB','2TB','4TB','8TB'];
+const CAPACITIES = ['64GB','128GB','250GB','500GB','1TB','2TB','4TB','8TB'];
 
-/* Game DB — 40+ titles, weight-balanced. baseFps = FPS on reference build. */
+/* ----------------------------------------------------------------
+   GAME DATABASE — 47 titles
+   Each has: name, genre, baseFps (on reference build), cw/gw/rw weights,
+   preset, rt (ray tracing supported). For banner art, we generate
+   stylized SVG tiles programmatically.
+   ---------------------------------------------------------------- */
 const GAMES = [
-  {name:'Cyberpunk 2077',      genre:'RPG',      base:42,  cw:0.22, gw:0.68, rw:0.10, preset:'High', rt:true},
-  {name:'Cyberpunk 2077 RT',   genre:'RPG',      base:22,  cw:0.20, gw:0.72, rw:0.08, preset:'High + RT', rt:true},
-  {name:'GTA V',               genre:'Open World',base:98, cw:0.35, gw:0.55, rw:0.10, preset:'Very High', rt:false},
-  {name:'GTA VI (est.)',       genre:'Open World',base:48, cw:0.28, gw:0.62, rw:0.10, preset:'High', rt:true},
-  {name:'Minecraft (vanilla)', genre:'Sandbox',  base:142, cw:0.50, gw:0.40, rw:0.10, preset:'High', rt:false},
-  {name:'Minecraft RTX',       genre:'Sandbox',  base:58,  cw:0.30, gw:0.62, rw:0.08, preset:'RTX', rt:true},
-  {name:'Forza Horizon 5',     genre:'Racing',   base:78,  cw:0.25, gw:0.65, rw:0.10, preset:'High', rt:true},
-  {name:'Roblox',              genre:'Sandbox',  base:188, cw:0.55, gw:0.35, rw:0.10, preset:'High', rt:false},
-  {name:'Valorant',            genre:'FPS',      base:210, cw:0.60, gw:0.30, rw:0.10, preset:'High', rt:false},
-  {name:'Fortnite',            genre:'Battle Royale', base:112, cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:true},
-  {name:'Fortnite (RT)',       genre:'Battle Royale', base:62, cw:0.30, gw:0.62, rw:0.08, preset:'High + RT', rt:true},
-  {name:'Call of Duty: Warzone',genre:'Battle Royale', base:76, cw:0.30, gw:0.60, rw:0.10, preset:'Medium', rt:false},
-  {name:'Call of Duty: MW3',   genre:'FPS',      base:92,  cw:0.30, gw:0.60, rw:0.10, preset:'High', rt:true},
-  {name:'Elden Ring',          genre:'Action RPG',base:58, cw:0.25, gw:0.65, rw:0.10, preset:'High', rt:false},
-  {name:'Red Dead Redemption 2',genre:'Open World',base:64, cw:0.25, gw:0.65, rw:0.10, preset:'High', rt:false},
-  {name:'Apex Legends',        genre:'Battle Royale', base:124, cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:false},
-  {name:'Rocket League',       genre:'Sports',   base:196, cw:0.45, gw:0.45, rw:0.10, preset:'High', rt:false},
-  {name:'The Witcher 3',       genre:'Action RPG',base:72, cw:0.25, gw:0.65, rw:0.10, preset:'High', rt:false},
-  {name:'The Witcher 3 (RT)',  genre:'Action RPG',base:38, cw:0.22, gw:0.70, rw:0.08, preset:'High + RT', rt:true},
-  {name:'CS2',                 genre:'FPS',      base:240, cw:0.50, gw:0.40, rw:0.10, preset:'High', rt:false},
-  {name:'Dota 2',              genre:'MOBA',     base:180, cw:0.50, gw:0.40, rw:0.10, preset:'High', rt:false},
-  {name:'League of Legends',   genre:'MOBA',     base:200, cw:0.55, gw:0.35, rw:0.10, preset:'High', rt:false},
-  {name:'Overwatch 2',         genre:'FPS',      base:150, cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:false},
-  {name:'PUBG',                genre:'Battle Royale', base:88, cw:0.35, gw:0.55, rw:0.10, preset:'High', rt:false},
-  {name:'Rainbow Six Siege',   genre:'FPS',      base:180, cw:0.45, gw:0.45, rw:0.10, preset:'High', rt:false},
-  {name:'Starfield',           genre:'RPG',      base:48,  cw:0.30, gw:0.60, rw:0.10, preset:'Medium', rt:false},
-  {name:'Baldur\'s Gate 3',    genre:'RPG',      base:82,  cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:false},
-  {name:'Hogwarts Legacy',     genre:'Action RPG',base:58, cw:0.30, gw:0.60, rw:0.10, preset:'High', rt:true},
-  {name:'Diablo IV',           genre:'ARPG',     base:118, cw:0.35, gw:0.55, rw:0.10, preset:'High', rt:true},
-  {name:'Escape from Tarkov',  genre:'FPS',      base:78,  cw:0.45, gw:0.45, rw:0.10, preset:'High', rt:false},
-  {name:'Hunt: Showdown',      genre:'FPS',      base:96,  cw:0.35, gw:0.55, rw:0.10, preset:'High', rt:true},
-  {name:'F1 24',               genre:'Racing',   base:104, cw:0.28, gw:0.62, rw:0.10, preset:'High', rt:true},
-  {name:'Resident Evil 4',     genre:'Survival', base:88,  cw:0.28, gw:0.62, rw:0.10, preset:'High', rt:true},
-  {name:'God of War',          genre:'Action',   base:76,  cw:0.28, gw:0.62, rw:0.10, preset:'High', rt:false},
-  {name:'Horizon Zero Dawn',   genre:'Action RPG',base:68, cw:0.25, gw:0.65, rw:0.10, preset:'High', rt:false},
-  {name:'Death Stranding',     genre:'Adventure',base:98,  cw:0.30, gw:0.60, rw:0.10, preset:'High', rt:false},
-  {name:'Microsoft Flight Sim',genre:'Sim',      base:52,  cw:0.55, gw:0.35, rw:0.10, preset:'High', rt:false},
-  {name:'Cities: Skylines II', genre:'Sim',      base:38,  cw:0.60, gw:0.30, rw:0.10, preset:'Medium', rt:false},
-  {name:'Total War: Warhammer III',genre:'Strategy', base:74, cw:0.55, gw:0.35, rw:0.10, preset:'High', rt:false},
-  {name:'Civilization VI',     genre:'Strategy', base:112, cw:0.60, gw:0.30, rw:0.10, preset:'High', rt:false},
-  {name:'Stellaris',           genre:'Strategy', base:96,  cw:0.65, gw:0.25, rw:0.10, preset:'High', rt:false},
-  {name:'Rust',                genre:'Survival', base:88,  cw:0.35, gw:0.55, rw:0.10, preset:'High', rt:false},
-  {name:'Destiny 2',           genre:'FPS',      base:132, cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:false},
-  {name:'Warframe',            genre:'Action',   base:158, cw:0.45, gw:0.45, rw:0.10, preset:'High', rt:false},
-  {name:'Monster Hunter: World',genre:'Action RPG',base:82, cw:0.30, gw:0.60, rw:0.10, preset:'High', rt:false},
-  {name:'Palworld',            genre:'Survival', base:92,  cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:false},
-  {name:'Helldivers 2',        genre:'Co-op',    base:78,  cw:0.35, gw:0.55, rw:0.10, preset:'High', rt:false},
-  {name:'Deep Rock Galactic',  genre:'Co-op',    base:138, cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:false},
+  {name:'CS2',                  genre:'FPS',         base:240, cw:0.50, gw:0.40, rw:0.10, preset:'High', rt:false, color:'#f59e0b'},
+  {name:'Valorant',             genre:'FPS',         base:210, cw:0.60, gw:0.30, rw:0.10, preset:'High', rt:false, color:'#ef4444'},
+  {name:'League of Legends',    genre:'MOBA',        base:200, cw:0.55, gw:0.35, rw:0.10, preset:'High', rt:false, color:'#3b82f6'},
+  {name:'Rocket League',        genre:'Sports',      base:196, cw:0.45, gw:0.45, rw:0.10, preset:'High', rt:false, color:'#06b6d4'},
+  {name:'Roblox',               genre:'Sandbox',     base:188, cw:0.55, gw:0.35, rw:0.10, preset:'High', rt:false, color:'#dc2626'},
+  {name:'Dota 2',               genre:'MOBA',        base:180, cw:0.50, gw:0.40, rw:0.10, preset:'High', rt:false, color:'#b91c1c'},
+  {name:'Rainbow Six Siege',    genre:'FPS',         base:180, cw:0.45, gw:0.45, rw:0.10, preset:'High', rt:false, color:'#1e40af'},
+  {name:'Warframe',             genre:'Action',      base:158, cw:0.45, gw:0.45, rw:0.10, preset:'High', rt:false, color:'#0891b2'},
+  {name:'Overwatch 2',          genre:'FPS',         base:150, cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:false, color:'#f97316'},
+  {name:'Minecraft (vanilla)',  genre:'Sandbox',     base:142, cw:0.50, gw:0.40, rw:0.10, preset:'High', rt:false, color:'#16a34a'},
+  {name:'Deep Rock Galactic',   genre:'Co-op',       base:138, cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:false, color:'#ea580c'},
+  {name:'Destiny 2',            genre:'FPS',         base:132, cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:false, color:'#7c3aed'},
+  {name:'Apex Legends',         genre:'Battle Royale',base:124, cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:false, color:'#dc2626'},
+  {name:'Diablo IV',            genre:'ARPG',        base:118, cw:0.35, gw:0.55, rw:0.10, preset:'High', rt:true, color:'#7f1d1d'},
+  {name:'Civilization VI',      genre:'Strategy',    base:112, cw:0.60, gw:0.30, rw:0.10, preset:'High', rt:false, color:'#0d9488'},
+  {name:'Fortnite',             genre:'Battle Royale',base:112, cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:true, color:'#8b5cf6'},
+  {name:'F1 24',                genre:'Racing',      base:104, cw:0.28, gw:0.62, rw:0.10, preset:'High', rt:true, color:'#dc2626'},
+  {name:'GTA V',                genre:'Open World',  base:98,  cw:0.35, gw:0.55, rw:0.10, preset:'Very High', rt:false, color:'#fbbf24'},
+  {name:'Death Stranding',      genre:'Adventure',   base:98,  cw:0.30, gw:0.60, rw:0.10, preset:'High', rt:false, color:'#0ea5e9'},
+  {name:'Stellaris',            genre:'Strategy',    base:96,  cw:0.65, gw:0.25, rw:0.10, preset:'High', rt:false, color:'#1e3a8a'},
+  {name:'Hunt: Showdown',       genre:'FPS',         base:96,  cw:0.35, gw:0.55, rw:0.10, preset:'High', rt:true, color:'#78350f'},
+  {name:'Call of Duty: MW3',    genre:'FPS',         base:92,  cw:0.30, gw:0.60, rw:0.10, preset:'High', rt:true, color:'#166534'},
+  {name:'Palworld',             genre:'Survival',    base:92,  cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:false, color:'#0ea5e9'},
+  {name:'PUBG',                 genre:'Battle Royale',base:88, cw:0.35, gw:0.55, rw:0.10, preset:'High', rt:false, color:'#ca8a04'},
+  {name:'Rust',                 genre:'Survival',    base:88,  cw:0.35, gw:0.55, rw:0.10, preset:'High', rt:false, color:'#dc2626'},
+  {name:'Resident Evil 4',      genre:'Survival',    base:88,  cw:0.28, gw:0.62, rw:0.10, preset:'High', rt:true, color:'#7f1d1d'},
+  {name:'Baldur\'s Gate 3',     genre:'RPG',         base:82,  cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:false, color:'#a16207'},
+  {name:'Monster Hunter: World',genre:'Action RPG',  base:82,  cw:0.30, gw:0.60, rw:0.10, preset:'High', rt:false, color:'#166534'},
+  {name:'Helldivers 2',         genre:'Co-op',       base:78,  cw:0.35, gw:0.55, rw:0.10, preset:'High', rt:false, color:'#0891b2'},
+  {name:'Forza Horizon 5',      genre:'Racing',      base:78,  cw:0.25, gw:0.65, rw:0.10, preset:'High', rt:true, color:'#7c3aed'},
+  {name:'Escape from Tarkov',   genre:'FPS',         base:78,  cw:0.45, gw:0.45, rw:0.10, preset:'High', rt:false, color:'#525252'},
+  {name:'Call of Duty: Warzone',genre:'Battle Royale',base:76,cw:0.30, gw:0.60, rw:0.10, preset:'Medium', rt:false, color:'#3f6212'},
+  {name:'God of War',           genre:'Action',      base:76,  cw:0.28, gw:0.62, rw:0.10, preset:'High', rt:false, color:'#a3a3a3'},
+  {name:'Total War: Warhammer III',genre:'Strategy', base:74,  cw:0.55, gw:0.35, rw:0.10, preset:'High', rt:false, color:'#7f1d1d'},
+  {name:'The Witcher 3',        genre:'Action RPG',  base:72,  cw:0.25, gw:0.65, rw:0.10, preset:'High', rt:false, color:'#a16207'},
+  {name:'Horizon Zero Dawn',    genre:'Action RPG',  base:68,  cw:0.25, gw:0.65, rw:0.10, preset:'High', rt:false, color:'#ea580c'},
+  {name:'Red Dead Redemption 2',genre:'Open World',  base:64,  cw:0.25, gw:0.65, rw:0.10, preset:'High', rt:false, color:'#b91c1c'},
+  {name:'Fortnite (RT)',        genre:'Battle Royale',base:62,cw:0.30, gw:0.62, rw:0.08, preset:'High + RT', rt:true, color:'#8b5cf6'},
+  {name:'Elden Ring',           genre:'Action RPG',  base:58,  cw:0.25, gw:0.65, rw:0.10, preset:'High', rt:false, color:'#ca8a04'},
+  {name:'Minecraft RTX',        genre:'Sandbox',     base:58,  cw:0.30, gw:0.62, rw:0.08, preset:'RTX', rt:true, color:'#16a34a'},
+  {name:'Hogwarts Legacy',      genre:'Action RPG',  base:58,  cw:0.30, gw:0.60, rw:0.10, preset:'High', rt:true, color:'#78350f'},
+  {name:'Microsoft Flight Sim', genre:'Sim',         base:52,  cw:0.55, gw:0.35, rw:0.10, preset:'High', rt:false, color:'#0891b2'},
+  {name:'GTA VI (est.)',        genre:'Open World',  base:48,  cw:0.28, gw:0.62, rw:0.10, preset:'High', rt:true, color:'#db2777'},
+  {name:'Starfield',            genre:'RPG',         base:48,  cw:0.30, gw:0.60, rw:0.10, preset:'Medium', rt:false, color:'#0c4a6e'},
+  {name:'Cyberpunk 2077',       genre:'RPG',         base:42,  cw:0.22, gw:0.68, rw:0.10, preset:'High', rt:true, color:'#facc15'},
+  {name:'The Witcher 3 (RT)',   genre:'Action RPG',  base:38,  cw:0.22, gw:0.70, rw:0.08, preset:'High + RT', rt:true, color:'#a16207'},
+  {name:'Cities: Skylines II',  genre:'Sim',         base:38,  cw:0.60, gw:0.30, rw:0.10, preset:'Medium', rt:false, color:'#0891b2'},
+  {name:'Cyberpunk 2077 RT',    genre:'RPG',         base:22,  cw:0.20, gw:0.72, rw:0.08, preset:'High + RT', rt:true, color:'#facc15'},
 ];
 
 /* ----------------------------------------------------------------
-   COOKIE ENGINE
+   COOKIES
    ---------------------------------------------------------------- */
 const CK = {
   set(name, value, days=365){
@@ -1327,7 +1117,6 @@ const CK = {
     if(!m) return null;
     try{ return JSON.parse(decodeURIComponent(m[2])); }catch(e){ return null; }
   },
-  del(name){ document.cookie = name+'=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/'; },
   clearAll(){
     document.cookie.split(';').forEach(c=>{
       const name = c.split('=')[0].trim();
@@ -1343,29 +1132,22 @@ let state = {
   build: {
     cpuBrand:'AMD', cpu:'Ryzen 5 2600',
     gpuBrand:'NVIDIA', gpu:'RTX 3060 12GB',
-    ram:'16GB DDR4 3200',
-    ramSpeed:'3200',
+    ram:'16GB DDR4 3200', ramSpeed:'3200',
     storages:[{type:'NVMe Gen4', capacity:'1TB'}],
-    psuWatt:'750', psuEff:'80+ Gold',
-    coolerType:'AIO 240mm'
+    psuWatt:'750', psuEff:'80+ Gold', coolerType:'AIO 240mm'
   },
   settings: {
-    theme:'dark',
-    accent:'#3b82f6',
-    grad1:'#3b82f6',
-    grad2:'#a78bfa',
-    defaultRes:'1080p',
-    defaultFps:'144',
-    defaultQuality:'High'
+    theme:'dark', accent:'#3b82f6',
+    grad1:'#3b82f6', grad2:'#a78bfa',
+    defaultRes:'1080p', defaultFps:'144', defaultQuality:'High'
   },
   savedBuilds: [],
   analysis: null
 };
 
-/* Load state from cookies */
-const savedBuild = CK.get('pcp_build');
-const savedSettings = CK.get('pcp_settings');
-const savedBuildsList = CK.get('pcp_builds');
+const savedBuild = CK.get('pcp_build_v4');
+const savedSettings = CK.get('pcp_settings_v4');
+const savedBuildsList = CK.get('pcp_builds_v4');
 if(savedBuild) state.build = {...state.build, ...savedBuild};
 if(savedSettings) state.settings = {...state.settings, ...savedSettings};
 if(savedBuildsList) state.savedBuilds = savedBuildsList;
@@ -1373,17 +1155,17 @@ if(savedBuildsList) state.savedBuilds = savedBuildsList;
 /* ----------------------------------------------------------------
    HELPERS
    ---------------------------------------------------------------- */
-const $ = (sel, root=document)=>root.querySelector(sel);
-const $$ = (sel, root=document)=>Array.from(root.querySelectorAll(sel));
+const $ = (s, r=document)=>r.querySelector(s);
+const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
 const fmt = n => n.toLocaleString();
 const clamp = (n,min,max)=>Math.min(max,Math.max(min,n));
 
 function getCpuData(name){
-  for(const brand in CPUS){ const f = CPUS[brand].find(c=>c.name===name); if(f) return f; }
+  for(const b in CPUS){ const f = CPUS[b].find(c=>c.name===name); if(f) return f; }
   return CPUS.AMD[1];
 }
 function getGpuData(name){
-  for(const brand in GPUS){ const f = GPUS[brand].find(g=>g.name===name); if(f) return f; }
+  for(const b in GPUS){ const f = GPUS[b].find(g=>g.name===name); if(f) return f; }
   return GPUS.NVIDIA[4];
 }
 function getRamData(name){ return RAMS.find(r=>r.name===name) || RAMS[2]; }
@@ -1397,13 +1179,12 @@ function toast(msg, icon='fa-info-circle'){
 }
 
 /* ----------------------------------------------------------------
-   THEME ENGINE
+   THEME
    ---------------------------------------------------------------- */
 function applyTheme(){
   const s = state.settings;
   document.body.classList.remove('theme-light');
   const root = document.documentElement.style;
-
   if(s.theme === 'light'){
     document.body.classList.add('theme-light');
   } else if(s.theme === 'custom'){
@@ -1417,31 +1198,24 @@ function applyTheme(){
     root.setProperty('--bg-grad-1', 'rgba(59,130,246,.10)');
     root.setProperty('--bg-grad-2', 'rgba(168,85,247,.08)');
   }
-
   if(s.accent){
     root.setProperty('--primary', s.accent);
     root.setProperty('--primary-glow', hexToRgba(s.accent, 0.4));
   }
-
   const icon = s.theme==='dark' ? 'fa-moon' : s.theme==='light' ? 'fa-sun' : 'fa-palette';
   const qt = $('#quickTheme');
   if(qt) qt.innerHTML = `<i class="fas ${icon}"></i>`;
-
-  // Sync settings UI
   $$('#themeSwatches .swatch').forEach(el=>el.classList.toggle('active', el.dataset.theme===s.theme));
-  const ap = $('#accentPicker'); if(ap) ap.value = s.accent;
-  const g1 = $('#grad1'); if(g1) g1.value = s.grad1;
-  const g2 = $('#grad2'); if(g2) g2.value = s.grad2;
-  const dr = $('#defaultRes'); if(dr) dr.value = s.defaultRes;
-  const df = $('#defaultFps'); if(df) df.value = s.defaultFps;
-  const dq = $('#defaultQuality'); if(dq) dq.value = s.defaultQuality;
+  if($('#accentPicker')) $('#accentPicker').value = s.accent;
+  if($('#grad1')) $('#grad1').value = s.grad1;
+  if($('#grad2')) $('#grad2').value = s.grad2;
+  if($('#defaultRes')) $('#defaultRes').value = s.defaultRes;
+  if($('#defaultFps')) $('#defaultFps').value = s.defaultFps;
+  if($('#defaultQuality')) $('#defaultQuality').value = s.defaultQuality;
 }
 function hexToRgba(hex, a){
   const c = hex.replace('#','');
-  const r = parseInt(c.substring(0,2),16);
-  const g = parseInt(c.substring(2,4),16);
-  const b = parseInt(c.substring(4,6),16);
-  return `rgba(${r},${g},${b},${a})`;
+  return `rgba(${parseInt(c.substring(0,2),16)},${parseInt(c.substring(2,4),16)},${parseInt(c.substring(4,6),16)},${a})`;
 }
 
 /* ----------------------------------------------------------------
@@ -1460,7 +1234,7 @@ function navigate(page){
 $$('.nav-item').forEach(item=>item.addEventListener('click', ()=>navigate(item.dataset.page)));
 
 /* ----------------------------------------------------------------
-   BUILD UI
+   BUILD SELECTS
    ---------------------------------------------------------------- */
 function populateCpuSelect(){
   const brand = $('#cpuBrand').value;
@@ -1481,37 +1255,46 @@ function populateGpuSelect(){
 function populateRamSelect(){
   const sel = $('#ramSelect');
   sel.innerHTML = RAMS.map(r=>`<option value="${r.name}">${r.name} — ${r.capacity}GB ${r.type}</option>`).join('');
-  if(RAMS.some(r=>r.name===state.build.ram)) sel.value = state.build.ram;
-  else sel.value = RAMS[2].name;
+  sel.value = state.build.ram;
 }
+
+/* ----------------------------------------------------------------
+   STORAGE — clean RAM-style rows
+   ---------------------------------------------------------------- */
 function renderStorage(){
   const container = $('#storageContainer');
   const list = state.build.storages;
   $('#storageCount').textContent = `${list.length}/4 drives`;
-  container.innerHTML = '';
-  list.forEach((s, i)=>{
-    const row = document.createElement('div');
-    row.className = 'storage-row';
-    row.innerHTML = `
-      <select class="stg-type" data-i="${i}">
-        ${STORAGE_TYPES.map(t=>`<option value="${t.name}" ${t.name===s.type?'selected':''}>${t.name}</option>`).join('')}
-      </select>
-      <select class="stg-cap" data-i="${i}">
-        ${CAPACITIES.map(c=>`<option value="${c}" ${c===s.capacity?'selected':''}>${c}</option>`).join('')}
-      </select>
-      <span class="text-muted" style="text-align:right;font-size:.75rem;">Drive ${i+1}</span>
-      ${list.length>1?`<span class="remove" data-i="${i}"><i class="fas fa-trash"></i></span>`:''}
-    `;
-    container.appendChild(row);
-  });
+  container.innerHTML = list.map((s, i)=>`
+    <div class="storage-item">
+      <div class="storage-num">${i+1}</div>
+      <div class="storage-field s-type">
+        <label>Type</label>
+        <select class="stg-type" data-i="${i}">
+          ${STORAGE_TYPES.map(t=>`<option value="${t.name}" ${t.name===s.type?'selected':''}>${t.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="storage-field s-cap">
+        <label>Capacity</label>
+        <select class="stg-cap" data-i="${i}">
+          ${CAPACITIES.map(c=>`<option value="${c}" ${c===s.capacity?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <button class="storage-remove ${list.length<=1?'disabled':''}" data-i="${i}" ${list.length<=1?'disabled':''} title="${list.length<=1?'At least one drive required':'Remove drive'}">
+        <i class="fas fa-trash"></i>
+      </button>
+    </div>
+  `).join('');
+
   $$('.stg-type').forEach(el=>el.addEventListener('change', e=>{
     state.build.storages[+e.target.dataset.i].type = e.target.value;
   }));
   $$('.stg-cap').forEach(el=>el.addEventListener('change', e=>{
     state.build.storages[+e.target.dataset.i].capacity = e.target.value;
   }));
-  $$('.remove').forEach(el=>el.addEventListener('click', e=>{
-    state.build.storages.splice(+e.currentTarget.dataset.i,1);
+  $$('.storage-remove').forEach(el=>el.addEventListener('click', e=>{
+    if(state.build.storages.length<=1) return;
+    state.build.storages.splice(+e.currentTarget.dataset.i, 1);
     renderStorage();
   }));
 }
@@ -1521,7 +1304,6 @@ $('#addStorage').addEventListener('click', ()=>{
   renderStorage();
 });
 
-/* Input listeners */
 $('#cpuBrand').addEventListener('change', ()=>{ state.build.cpuBrand = $('#cpuBrand').value; populateCpuSelect(); });
 $('#gpuBrand').addEventListener('change', ()=>{ state.build.gpuBrand = $('#gpuBrand').value; populateGpuSelect(); });
 $('#cpuSelect').addEventListener('change', ()=>{ state.build.cpu = $('#cpuSelect').value; });
@@ -1536,7 +1318,6 @@ $('#coolerType').addEventListener('change', ()=>{ state.build.coolerType = $('#c
    ANALYSIS ENGINE
    ---------------------------------------------------------------- */
 function analyze(){
-  // Pull from UI
   state.build.cpu = $('#cpuSelect').value;
   state.build.gpu = $('#gpuSelect').value;
   state.build.ram = $('#ramSelect').value;
@@ -1549,7 +1330,6 @@ function analyze(){
   const gpu = getGpuData(state.build.gpu);
   const ram = getRamData(state.build.ram);
 
-  // Scores (0-100)
   const cpuScore = clamp(Math.round(cpu.mult * 42), 5, 100);
   const gpuScore = clamp(Math.round(gpu.mult * 30), 5, 100);
   const ramScore = clamp(Math.round(ram.mult * 78), 5, 100);
@@ -1560,64 +1340,53 @@ function analyze(){
     if(state.build.storages.some(s=>s.type.includes('SATA'))) return 65;
     return 40;
   })();
-
   const totalScore = Math.round(cpuScore*0.28 + gpuScore*0.42 + ramScore*0.18 + storageScore*0.12);
 
-  // Power estimate
   const power = cpu.tdp + gpu.tdp + ram.tdp
               + state.build.storages.reduce((sum,s)=>sum + (STORAGE_TYPES.find(t=>t.name===s.type)?.tdp || 5), 0)
-              + 75; // mobo, fans, misc
+              + 75;
   const psuWatt = +state.build.psuWatt;
   const psuHeadroom = psuWatt - power;
 
-  // Bottleneck detection
   const cw = cpu.mult, gw = gpu.mult, rw = ram.mult;
   const bottlenecks = [];
   const idealCpuForGpu = gw * 1.05;
   const idealGpuForCpu = cw * 0.95;
-
   if(cw < idealCpuForGpu * 0.75) bottlenecks.push({
-    component:'CPU', icon:'cpu', severity: cw/idealCpuForGpu < 0.6 ? 'high':'medium',
-    pct: Math.round((1 - cw/idealCpuForGpu)*100), desc:`Your CPU (${cpu.name}) is holding back your GPU (${gpu.name}). Consider a CPU upgrade.`
+    component:'CPU', icon:'cpu', pct: Math.round((1 - cw/idealCpuForGpu)*100),
+    desc:`Your CPU (${cpu.name}) is holding back your GPU (${gpu.name}).`
   });
   if(gw < idealGpuForCpu * 0.75) bottlenecks.push({
-    component:'GPU', icon:'gpu', severity: gw/idealGpuForCpu < 0.6 ? 'high':'medium',
-    pct: Math.round((1 - gw/idealGpuForCpu)*100), desc:`Your GPU (${gpu.name}) is the main limiter in most games.`
+    component:'GPU', icon:'gpu', pct: Math.round((1 - gw/idealGpuForCpu)*100),
+    desc:`Your GPU (${gpu.name}) is the main limiter in most games.`
   });
   if(rw < 0.95) bottlenecks.push({
-    component:'RAM', icon:'ram', severity: rw < 0.85 ? 'high':'medium',
-    pct: Math.round((1 - rw)*100), desc:`${ram.capacity}GB is limited for modern titles. 16GB+ recommended.`
+    component:'RAM', icon:'ram', pct: Math.round((1 - rw)*100),
+    desc:`${ram.capacity}GB is limited for modern titles.`
   });
 
-  // Game FPS
   const gameResults = GAMES.map(g=>{
     const fps = g.base * Math.pow(cw, g.cw) * Math.pow(gw, g.gw) * Math.pow(rw, g.rw);
-    // Adjust for storage bonus (small)
     const stgBonus = 1 + (storageScore - 75) / 1000;
     const finalFps = Math.round(fps * stgBonus);
-    // Confidence interval
     const ci = finalFps > 100 ? 0.06 : finalFps > 60 ? 0.09 : 0.12;
     const low = Math.round(finalFps * (1-ci));
     const high = Math.round(finalFps * (1+ci));
     let quality, qclass;
-    if(finalFps >= 144){ quality='Excellent'; qclass='q-excellent'; }
-    else if(finalFps >= 100){ quality='Great'; qclass='q-great'; }
-    else if(finalFps >= 60){ quality='Good'; qclass='q-good'; }
-    else if(finalFps >= 30){ quality='Playable'; qclass='q-playable'; }
-    else { quality='Poor'; qclass='q-poor'; }
+    if(finalFps >= 144){ quality='Excellent'; qclass='excellent'; }
+    else if(finalFps >= 100){ quality='Great'; qclass='great'; }
+    else if(finalFps >= 60){ quality='Good'; qclass='good'; }
+    else if(finalFps >= 30){ quality='Playable'; qclass='playable'; }
+    else { quality='Poor'; qclass='poor'; }
     return {...g, fps:finalFps, low, high, quality, qclass, confidence: ci<0.08?'High':ci<0.11?'Medium':'Low'};
   });
 
   state.analysis = {
     cpu, gpu, ram, cpuScore, gpuScore, ramScore, storageScore, totalScore,
-    power, psuWatt, psuHeadroom,
-    bottlenecks, gameResults
+    power, psuWatt, psuHeadroom, bottlenecks, gameResults
   };
 
-  // Persist
-  CK.set('pcp_build', state.build);
-
-  // Render everything
+  CK.set('pcp_build_v4', state.build);
   renderHome();
   renderBuildHealth();
   renderBenchmarksPage();
@@ -1667,12 +1436,10 @@ function renderHome(){
     $('#heroRam').textContent = state.build.ram;
     return;
   }
-  // Hero chips
   $('#heroCpu').textContent = a.cpu.name;
   $('#heroGpu').textContent = a.gpu.name;
   $('#heroRam').textContent = a.ram.name;
 
-  // Build specs
   $('#buildSpecs').innerHTML = `
     <div class="spec-row"><div class="spec-icon"><i class="fas fa-microchip"></i></div><div class="spec-info"><div class="label">CPU</div><div class="value">${a.cpu.name} · ${a.cpu.cores}</div></div></div>
     <div class="spec-row"><div class="spec-icon"><i class="fas fa-display"></i></div><div class="spec-info"><div class="label">GPU</div><div class="value">${a.gpu.name} · ${a.gpu.vram}GB</div></div></div>
@@ -1680,16 +1447,13 @@ function renderHome(){
     <div class="spec-row"><div class="spec-icon"><i class="fas fa-hard-drive"></i></div><div class="spec-info"><div class="label">Storage</div><div class="value">${state.build.storages.map(s=>s.capacity+' '+s.type.split(' ')[0]).join(' · ')}</div></div></div>
   `;
 
-  // Score ring
   const pct = a.totalScore/100;
   const circ = 2*Math.PI*54;
   $('#scoreRing').setAttribute('stroke-dashoffset', String(circ * (1-pct)));
   $('#scoreNum').textContent = a.totalScore;
-  $('#scoreLabel').textContent =
-    a.totalScore>=85?'Excellent':a.totalScore>=70?'Very Good':a.totalScore>=50?'Good':'Needs upgrade';
+  $('#scoreLabel').textContent = a.totalScore>=85?'Excellent':a.totalScore>=70?'Very Good':a.totalScore>=50?'Good':'Needs upgrade';
   $('#scoreHint').textContent = 'Based on your full configuration.';
 
-  // Quick stats
   $('#statCpuScore').textContent = a.cpuScore;
   $('#statCpuName').textContent = a.cpu.name;
   $('#statGpuScore').textContent = a.gpuScore;
@@ -1698,7 +1462,6 @@ function renderHome(){
   $('#statRamName').textContent = a.ram.name;
   $('#statPower').textContent = a.power + ' W';
 
-  // Bottleneck list
   if(a.bottlenecks.length === 0){
     $('#bnList').innerHTML = `<div class="empty" style="padding:1rem;"><i class="fas fa-circle-check" style="color:var(--success);"></i><p>No significant bottlenecks detected.</p></div>`;
     $('#bnSummary').textContent = 'Balanced';
@@ -1710,12 +1473,11 @@ function renderHome(){
           <div class="bn-head"><strong>${b.component} Limited</strong><span>${b.pct}% impact</span></div>
           <div class="bn-desc">${b.desc}</div>
         </div>
-        <button class="btn btn-sm btn-ghost" onclick="explainBn('${b.component}')"><i class="fas fa-circle-question"></i> Why?</button>
+        <button class="btn btn-sm btn-ghost" onclick="explainBn('${b.component}')"><i class="fas fa-circle-question"></i></button>
       </div>`).join('');
     $('#bnSummary').textContent = a.bottlenecks.length + ' issue' + (a.bottlenecks.length>1?'s':'');
   }
 
-  // Meters
   $('#meterGroup').innerHTML = `
     <div class="meter"><div class="meter-label"><i class="fas fa-microchip"></i> CPU</div><div class="meter-track"><div class="meter-fill ${a.cpuScore<50?'warn':a.cpuScore>=80?'good':''}" style="width:${a.cpuScore}%"></div></div><div class="meter-value">${a.cpuScore}</div></div>
     <div class="meter"><div class="meter-label"><i class="fas fa-display"></i> GPU</div><div class="meter-track"><div class="meter-fill ${a.gpuScore<50?'warn':a.gpuScore>=80?'good':''}" style="width:${a.gpuScore}%"></div></div><div class="meter-value">${a.gpuScore}</div></div>
@@ -1723,55 +1485,78 @@ function renderHome(){
     <div class="meter"><div class="meter-label"><i class="fas fa-hard-drive"></i> Storage</div><div class="meter-track"><div class="meter-fill ${a.storageScore<50?'warn':a.storageScore>=80?'good':''}" style="width:${a.storageScore}%"></div></div><div class="meter-value">${a.storageScore}</div></div>
   `;
 
-  // Home game preview
   const top8 = [...a.gameResults].sort((x,y)=>y.fps-x.fps).slice(0,8);
   $('#homeGames').innerHTML = top8.map(g=>gameCardHtml(g)).join('');
   $$('#homeGames .game-card').forEach((el,i)=>el.addEventListener('click',()=>openGameModal(top8[i])));
 
-  // Home upgrade preview
   $('#homeUpgrade').innerHTML = upgradeTeaserHtml(a);
 }
 
+/* ----------------------------------------------------------------
+   GAME CARD HTML — matches screenshot
+   ---------------------------------------------------------------- */
 function gameCardHtml(g){
   return `
     <div class="game-card">
-      <div class="game-top">
-        <div>
-          <div class="game-name">${g.name}</div>
-          <div class="game-genre">${g.genre}</div>
-        </div>
-        <div class="game-fps">
-          <div class="val">${g.fps}</div>
-          <div class="unit">FPS</div>
-        </div>
+      <div class="g-name">${g.name}</div>
+      <div class="g-fps">
+        <div class="num">${g.fps}</div>
+        <div class="unit">FPS</div>
       </div>
-      <div class="game-meta">
-        <span class="quality-tag ${g.qclass}">${g.quality}</span>
-        <span>${g.preset}</span>
-      </div>
+      <div class="g-genre">${g.genre}</div>
+      <div class="g-badge badge-${g.qclass}">${g.quality}</div>
+      <div class="g-preset">${g.preset}</div>
     </div>`;
 }
 
 function explainBn(component){
   const a = state.analysis;
   const msgs = {
-    CPU: `Your ${a.cpu.name} has ${a.cpu.cores} cores. In CPU-heavy titles, it can't feed your ${a.gpu.name} fast enough. Try 1440p or higher to reduce CPU load, or upgrade the CPU.`,
+    CPU: `Your ${a.cpu.name} has ${a.cpu.cores} cores. In CPU-heavy titles, it can't feed your ${a.gpu.name} fast enough. Try 1440p or higher to reduce CPU load.`,
     GPU: `Your ${a.gpu.name} is the primary limiter. Reducing settings or upgrading the GPU is the biggest single win.`,
-    RAM: `${a.ram.capacity}GB of ${a.ram.type} is limiting. Modern games increasingly need 16GB+, and CPU-heavy sims want 32GB.`
+    RAM: `${a.ram.capacity}GB of ${a.ram.type} is limiting. Modern games increasingly need 16GB+.`
   };
   toast(msgs[component], 'fa-circle-question');
 }
 
 /* ----------------------------------------------------------------
-   RENDER: GAMES PAGE
+   GAMES PAGE — with banner strip
    ---------------------------------------------------------------- */
+function renderBannerStrip(games){
+  const strip = $('#gameBanners');
+  const top = [...games].sort((a,b)=>b.fps-a.fps).slice(0,12);
+  strip.innerHTML = top.map((g,i)=>{
+    const initials = g.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    return `
+      <div class="banner-tile" data-i="${i}" title="${g.name}">
+        <svg viewBox="0 0 140 84" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="bg-${i}" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="${g.color}" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="${g.color}" stop-opacity="0.05"/>
+            </linearGradient>
+          </defs>
+          <rect width="140" height="84" fill="url(#bg-${i})"/>
+          <text x="10" y="60" font-family="Inter" font-weight="900" font-size="46" fill="${g.color}" opacity="0.28">${initials}</text>
+          <circle cx="118" cy="20" r="14" fill="${g.color}" opacity="0.15"/>
+        </svg>
+        <div class="b-title">${g.name}</div>
+        <div class="b-fps">${g.fps} FPS</div>
+      </div>
+    `;
+  }).join('');
+  $$('#gameBanners .banner-tile').forEach((el,i)=>el.addEventListener('click',()=>openGameModal(top[i])));
+}
+
 function renderGamesPage(){
   const a = state.analysis;
   if(!a){
     $('#gamesList').innerHTML = `<div class="empty"><i class="fas fa-gamepad"></i><p>Configure your PC first.</p></div>`;
+    $('#gameBanners').innerHTML = '';
     return;
   }
   $('#gamesCountBadge').textContent = a.gameResults.length;
+  renderBannerStrip(a.gameResults);
 
   const filter = $('#gameFilterQuality').value;
   const sort = $('#gameSort').value;
@@ -1817,12 +1602,12 @@ function openGameModal(g){
   const a = state.analysis;
   $('#modalGameBody').innerHTML = `
     <div class="grid grid-2 mb-2">
-      <div class="card-soft" style="background:var(--surface-2);padding:1rem;border-radius:var(--radius-sm);">
+      <div style="background:var(--surface-2);padding:1rem;border-radius:var(--radius-sm);">
         <div class="text-muted" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700;">Estimated FPS</div>
         <div style="font-size:2rem;font-weight:800;letter-spacing:-.03em;">${g.low}–${g.high}</div>
         <div class="text-muted" style="font-size:.78rem;">Confidence: <strong>${g.confidence}</strong></div>
       </div>
-      <div class="card-soft" style="background:var(--surface-2);padding:1rem;border-radius:var(--radius-sm);">
+      <div style="background:var(--surface-2);padding:1rem;border-radius:var(--radius-sm);">
         <div class="text-muted" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700;">Component Load</div>
         <div class="mt-1" style="font-size:.85rem;">GPU: <strong>${Math.min(99,Math.round(g.gw*100*(a.gpuScore/70)))}%</strong></div>
         <div style="font-size:.85rem;">CPU: <strong>${Math.min(99,Math.round(g.cw*100*(a.cpuScore/70)))}%</strong></div>
@@ -1847,11 +1632,11 @@ function closeModal(id){ document.getElementById(id).classList.remove('show'); }
 $$('.modal-backdrop').forEach(m=>m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('show'); }));
 
 /* ----------------------------------------------------------------
-   RENDER: BUILD HEALTH
+   BUILD HEALTH
    ---------------------------------------------------------------- */
 function renderBuildHealth(){
   const a = state.analysis;
-  if(!a){ return; }
+  if(!a) return;
   const checks = [];
   checks.push({ok:true, label:'CPU socket supported', desc:`${a.cpu.name} (${a.cpu.socket})`});
   checks.push({ok:true, label:'GPU PCIe compatible', desc:`${a.gpu.name} — PCIe 4.0 x16`});
@@ -1881,7 +1666,7 @@ function renderBuildHealth(){
 }
 
 /* ----------------------------------------------------------------
-   RENDER: UPGRADE PAGE
+   UPGRADE
    ---------------------------------------------------------------- */
 function renderUpgradePage(){
   const a = state.analysis;
@@ -1897,14 +1682,10 @@ function renderUpgradePage(){
   $('#priorityList').innerHTML = priorities.map(p=>`
     <div class="bn-item">
       <div class="bn-icon" style="background:color-mix(in srgb,var(--primary) 15%,transparent);color:var(--primary);"><i class="fas fa-${p.icon}"></i></div>
-      <div class="bn-body">
-        <div class="bn-head"><strong>${p.label}</strong><span>${p.impact} impact</span></div>
-        <div class="bn-desc">${p.detail}</div>
-      </div>
+      <div class="bn-body"><div class="bn-head"><strong>${p.label}</strong><span>${p.impact} impact</span></div><div class="bn-desc">${p.detail}</div></div>
     </div>`).join('');
 }
 function upgradeTeaserHtml(a, full=false){
-  // Determine upgrade suggestions based on current GPU tier
   const gpuTier = a.gpu.tier;
   const paths = {
     'entry':       {value:'RX 7600', high:'RTX 4070', enthusiast:'RTX 5080'},
@@ -1937,12 +1718,11 @@ function upgradeTeaserHtml(a, full=false){
 }
 
 /* ----------------------------------------------------------------
-   RENDER: BENCHMARKS PAGE
+   BENCHMARKS
    ---------------------------------------------------------------- */
 function renderBenchmarksPage(){
   const a = state.analysis;
-  if(!a){ return; }
-  // CPU benchmark
+  if(!a) return;
   const cpuRank = allCpus().sort((x,y)=>y.cb23-x.cb23).findIndex(c=>c.name===a.cpu.name)+1;
   const cpuTotal = allCpus().length;
   $('#cpuBench').innerHTML = `
@@ -1952,13 +1732,12 @@ function renderBenchmarksPage(){
     </div>
     <div class="meter mb-2"><div class="meter-label">Relative</div><div class="meter-track"><div class="meter-fill good" style="width:${Math.min(100,a.cpu.cb23/420*100)}%"></div></div><div class="meter-value">${Math.round(a.cpu.cb23/420*100)}</div></div>
     <div class="grid grid-2">
-      <div class="card-soft" style="background:var(--surface-2);padding:.75rem;border-radius:var(--radius-sm);"><div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">Cores</div><strong>${a.cpu.cores}</strong></div>
-      <div class="card-soft" style="background:var(--surface-2);padding:.75rem;border-radius:var(--radius-sm);"><div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">Clock</div><strong>${a.cpu.clock}</strong></div>
-      <div class="card-soft" style="background:var(--surface-2);padding:.75rem;border-radius:var(--radius-sm);"><div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">TDP</div><strong>${a.cpu.tdp}W</strong></div>
-      <div class="card-soft" style="background:var(--surface-2);padding:.75rem;border-radius:var(--radius-sm);"><div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">Socket</div><strong>${a.cpu.socket}</strong></div>
+      <div style="background:var(--surface-2);padding:.75rem;border-radius:var(--radius-sm);"><div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">Cores</div><strong>${a.cpu.cores}</strong></div>
+      <div style="background:var(--surface-2);padding:.75rem;border-radius:var(--radius-sm);"><div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">Clock</div><strong>${a.cpu.clock}</strong></div>
+      <div style="background:var(--surface-2);padding:.75rem;border-radius:var(--radius-sm);"><div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">TDP</div><strong>${a.cpu.tdp}W</strong></div>
+      <div style="background:var(--surface-2);padding:.75rem;border-radius:var(--radius-sm);"><div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">Socket</div><strong>${a.cpu.socket}</strong></div>
     </div>`;
 
-  // GPU benchmark
   const gpuRank = allGpus().sort((x,y)=>y.ts-x.ts).findIndex(g=>g.name===a.gpu.name)+1;
   const gpuTotal = allGpus().length;
   $('#gpuBench').innerHTML = `
@@ -1968,13 +1747,12 @@ function renderBenchmarksPage(){
     </div>
     <div class="meter mb-2"><div class="meter-label">Relative</div><div class="meter-track"><div class="meter-fill good" style="width:${Math.min(100,a.gpu.ts/365)}%"></div></div><div class="meter-value">${Math.round(a.gpu.ts/365)}</div></div>
     <div class="grid grid-2">
-      <div class="card-soft" style="background:var(--surface-2);padding:.75rem;border-radius:var(--radius-sm);"><div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">VRAM</div><strong>${a.gpu.vram} GB</strong></div>
-      <div class="card-soft" style="background:var(--surface-2);padding:.75rem;border-radius:var(--radius-sm);"><div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">TDP</div><strong>${a.gpu.tdp} W</strong></div>
-      <div class="card-soft" style="background:var(--surface-2);padding:.75rem;border-radius:var(--radius-sm);"><div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">Ray Tracing</div><strong>${a.gpu.rt?'Yes':'No'}</strong></div>
-      <div class="card-soft" style="background:var(--surface-2);padding:.75rem;border-radius:var(--radius-sm);"><div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">Tier</div><strong style="text-transform:capitalize;">${a.gpu.tier}</strong></div>
+      <div style="background:var(--surface-2);padding:.75rem;border-radius:var(--radius-sm);"><div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">VRAM</div><strong>${a.gpu.vram} GB</strong></div>
+      <div style="background:var(--surface-2);padding:.75rem;border-radius:var(--radius-sm);"><div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">TDP</div><strong>${a.gpu.tdp} W</strong></div>
+      <div style="background:var(--surface-2);padding:.75rem;border-radius:var(--radius-sm);"><div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">Ray Tracing</div><strong>${a.gpu.rt?'Yes':'No'}</strong></div>
+      <div style="background:var(--surface-2);padding:.75rem;border-radius:var(--radius-sm);"><div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">Tier</div><strong style="text-transform:capitalize;">${a.gpu.tier}</strong></div>
     </div>`;
 
-  // Database preview
   const topCpus = allCpus().sort((x,y)=>y.cb23-x.cb23).slice(0,5);
   const topGpus = allGpus().sort((x,y)=>y.ts-x.ts).slice(0,5);
   $('#benchDb').innerHTML = `
@@ -1995,10 +1773,9 @@ function populateCompareSelects(){
   const cpuOpts = allCpus().map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
   const gpuOpts = allGpus().map(g=>`<option value="${g.name}">${g.name}</option>`).join('');
   const ramOpts = RAMS.map(r=>`<option value="${r.name}">${r.name}</option>`).join('');
-  ['cmpACpu','cmpBCpu'].forEach(id=>{ const el=$('#'+id); if(el && !el.innerHTML) el.innerHTML = cpuOpts; });
-  ['cmpAGpu','cmpBGpu'].forEach(id=>{ const el=$('#'+id); if(el && !el.innerHTML) el.innerHTML = gpuOpts; });
-  ['cmpARam','cmpBRam'].forEach(id=>{ const el=$('#'+id); if(el && !el.innerHTML) el.innerHTML = ramOpts; });
-  // Preset defaults
+  ['cmpACpu','cmpBCpu'].forEach(id=>{ const el=$('#'+id); if(el && el.innerHTML==='') el.innerHTML = cpuOpts; });
+  ['cmpAGpu','cmpBGpu'].forEach(id=>{ const el=$('#'+id); if(el && el.innerHTML==='') el.innerHTML = gpuOpts; });
+  ['cmpARam','cmpBRam'].forEach(id=>{ const el=$('#'+id); if(el && el.innerHTML==='') el.innerHTML = ramOpts; });
   if($('#cmpACpu').value==='' ) $('#cmpACpu').value = state.build.cpu;
   if($('#cmpAGpu').value==='' ) $('#cmpAGpu').value = state.build.gpu;
   if($('#cmpARam').value==='' ) $('#cmpARam').value = state.build.ram;
@@ -2022,10 +1799,9 @@ function runCompare(){
   const ramDelta = ((B.ramScore - A.ramScore) / A.ramScore * 100);
   const winner = B.total > A.total ? 'B' : 'A';
   const diff = Math.abs(B.total - A.total);
-
   $('#compareResult').innerHTML = `
     <div class="grid grid-2 mb-3">
-      <div class="card-soft" style="background:var(--surface-2);padding:1.25rem;border-radius:var(--radius-sm);">
+      <div style="background:var(--surface-2);padding:1.25rem;border-radius:var(--radius-sm);">
         <div class="card-title mb-2"><i class="fas fa-desktop"></i> Build A</div>
         <div class="text-muted" style="font-size:.8rem;">${A.cpu.name}</div>
         <div class="text-muted" style="font-size:.8rem;">${A.gpu.name}</div>
@@ -2033,7 +1809,7 @@ function runCompare(){
         <div style="font-size:2.2rem;font-weight:800;letter-spacing:-.03em;">${A.total}<span style="font-size:1rem;color:var(--text-3);">/100</span></div>
         ${winner==='A'?'<span class="pill pill-green">Winner</span>':''}
       </div>
-      <div class="card-soft" style="background:var(--surface-2);padding:1.25rem;border-radius:var(--radius-sm);">
+      <div style="background:var(--surface-2);padding:1.25rem;border-radius:var(--radius-sm);">
         <div class="card-title mb-2"><i class="fas fa-desktop"></i> Build B</div>
         <div class="text-muted" style="font-size:.8rem;">${B.cpu.name}</div>
         <div class="text-muted" style="font-size:.8rem;">${B.gpu.name}</div>
@@ -2045,14 +1821,14 @@ function runCompare(){
     <table class="data">
       <thead><tr><th>Metric</th><th>Build A</th><th>Build B</th><th>Δ</th></tr></thead>
       <tbody>
-        <tr><td>CPU Score</td><td>${A.cpuScore}</td><td>${B.cpuScore}</td><td class="${cpuDelta>=0?'':'text-muted'}" style="color:${cpuDelta>=0?'var(--success)':'var(--danger)'};">${cpuDelta>=0?'+':''}${cpuDelta.toFixed(0)}%</td></tr>
+        <tr><td>CPU Score</td><td>${A.cpuScore}</td><td>${B.cpuScore}</td><td style="color:${cpuDelta>=0?'var(--success)':'var(--danger)'};">${cpuDelta>=0?'+':''}${cpuDelta.toFixed(0)}%</td></tr>
         <tr><td>GPU Score</td><td>${A.gpuScore}</td><td>${B.gpuScore}</td><td style="color:${gpuDelta>=0?'var(--success)':'var(--danger)'};">${gpuDelta>=0?'+':''}${gpuDelta.toFixed(0)}%</td></tr>
         <tr><td>RAM Score</td><td>${A.ramScore}</td><td>${B.ramScore}</td><td style="color:${ramDelta>=0?'var(--success)':'var(--danger)'};">${ramDelta>=0?'+':''}${ramDelta.toFixed(0)}%</td></tr>
       </tbody>
     </table>
     <div class="mt-3" style="padding:1rem;background:color-mix(in srgb,var(--primary) 8%,transparent);border-radius:var(--radius-sm);border-left:3px solid var(--primary);">
       <strong>🏆 Recommended: Build ${winner}</strong>
-      <p class="text-muted mt-1" style="font-size:.85rem;">Build ${winner} scores ${Math.max(A.total,B.total)} vs ${Math.min(A.total,B.total)} (${diff} point difference). ${winner==='B'?'Build B is significantly faster.':'Build A is the better performer.'}</p>
+      <p class="text-muted mt-1" style="font-size:.85rem;">Build ${winner} scores ${Math.max(A.total,B.total)} vs ${Math.min(A.total,B.total)} (${diff} point difference).</p>
     </div>
   `;
 }
@@ -2073,7 +1849,7 @@ $$('#advisorGoals button').forEach(btn=>btn.addEventListener('click', ()=>{
       <li>• Set graphics to <strong>Low/Medium</strong> in competitive titles.</li>
       <li>• Enable <strong>${a.gpu.rt?'DLSS/FSR Performance':'FSR'}</strong> if supported.</li>
       <li>• Disable ray tracing.</li>
-      <li>• Consider a <strong>CPU upgrade</strong> if you play at 1080p — your ${a.cpu.name} will cap frames first.</li>
+      <li>• Consider a <strong>CPU upgrade</strong> if you play at 1080p.</li>
     </ul>`;
   } else if(goal==='graphics'){
     html = `<div class="card-title mb-2"><i class="fas fa-palette"></i> Better Graphics Recommendation</div>
@@ -2082,7 +1858,6 @@ $$('#advisorGoals button').forEach(btn=>btn.addEventListener('click', ()=>{
       <li>• Target <strong>${a.gpu.tier==='flagship'?'4K':'1440p'}</strong> for the best balance.</li>
       <li>• Enable <strong>${a.gpu.rt?'DLSS/FSR Quality':'FSR Quality'}</strong>.</li>
       <li>• <strong>${a.gpu.rt?'Your GPU supports ray tracing.':'Your GPU does not support hardware ray tracing.'}</strong></li>
-      ${a.gpuScore<70?'<li>• A GPU upgrade would unlock Ultra + RT.</li>':''}
     </ul>`;
   } else if(goal==='value'){
     html = `<div class="card-title mb-2"><i class="fas fa-dollar-sign"></i> Best Value Recommendation</div>
@@ -2093,21 +1868,18 @@ $$('#advisorGoals button').forEach(btn=>btn.addEventListener('click', ()=>{
       ${a.ram.capacity<32?'<li>• <strong>RAM:</strong> 32GB kit — future-proofs modern games.</li>':''}
     </ul>`;
   } else if(goal==='fix'){
-    if(a.bottlenecks.length===0){ html = `<div class="card-title mb-2"><i class="fas fa-circle-check" style="color:var(--success);"></i> No Bottlenecks</div><p class="text-muted">Your system is well balanced. No fixes required.</p>`; }
+    if(a.bottlenecks.length===0){ html = `<div class="card-title mb-2"><i class="fas fa-circle-check" style="color:var(--success);"></i> No Bottlenecks</div><p class="text-muted">Your system is well balanced.</p>`; }
     else {
       html = `<div class="card-title mb-2"><i class="fas fa-wrench"></i> Fixing Your Bottleneck${a.bottlenecks.length>1?'s':''}</div>`;
       html += a.bottlenecks.map(b=>`<div class="bn-item mb-2"><div class="bn-icon ${b.icon}"><i class="fas fa-${b.component==='CPU'?'microchip':b.component==='GPU'?'display':'memory'}"></i></div><div class="bn-body"><div class="bn-head"><strong>${b.component}</strong></div><div class="bn-desc">${b.desc}</div></div></div>`).join('');
     }
   } else if(goal==='upgrade'){
-    html = `<div class="card-title mb-2"><i class="fas fa-arrow-up"></i> Upgrade Plan</div>
-    <p class="text-muted mb-2">Recommended progression from your current build:</p>
-    ${upgradeTeaserHtml(a)}`;
+    html = `<div class="card-title mb-2"><i class="fas fa-arrow-up"></i> Upgrade Plan</div>${upgradeTeaserHtml(a)}`;
   } else if(goal==='144'){
     const hits = a.gameResults.filter(g=>g.fps>=144).length;
     const misses = a.gameResults.filter(g=>g.fps<144).slice(0,5);
     html = `<div class="card-title mb-2"><i class="fas fa-gauge-high"></i> Reaching 144 FPS</div>
     <p class="text-muted mb-2">You hit 144+ FPS in <strong>${hits} of ${a.gameResults.length}</strong> titles.</p>
-    ${misses.length?'<p class="text-muted mb-1">Games that fall short:</p>':'<p class="text-muted">You hit 144 FPS in every game tested. Excellent!</p>'}
     ${misses.map(g=>`<div class="bn-item mb-1"><div class="bn-icon gpu"><i class="fas fa-gamepad"></i></div><div class="bn-body"><div class="bn-head"><strong>${g.name}</strong><span>${g.fps} FPS</span></div></div></div>`).join('')}`;
   }
   $('#advisorResult').innerHTML = html;
@@ -2119,9 +1891,8 @@ $$('#advisorGoals button').forEach(btn=>btn.addEventListener('click', ()=>{
 $('#saveBuildBtn').addEventListener('click', ()=>{
   const name = prompt('Name your build:', state.build.cpu.split(' ')[0] + ' + ' + state.build.gpu.split(' ').slice(0,2).join(' '));
   if(!name) return;
-  const entry = {id:Date.now(), name, build:JSON.parse(JSON.stringify(state.build)), date:new Date().toISOString()};
-  state.savedBuilds.push(entry);
-  CK.set('pcp_builds', state.savedBuilds);
+  state.savedBuilds.push({id:Date.now(), name, build:JSON.parse(JSON.stringify(state.build)), date:new Date().toISOString()});
+  CK.set('pcp_builds_v4', state.savedBuilds);
   renderSavedBuilds();
   toast('Build saved','fa-save');
 });
@@ -2150,7 +1921,7 @@ function loadBuild(id){
   const b = state.savedBuilds.find(x=>x.id===id);
   if(!b) return;
   state.build = JSON.parse(JSON.stringify(b.build));
-  CK.set('pcp_build', state.build);
+  CK.set('pcp_build_v4', state.build);
   syncBuildUI();
   analyze();
   navigate('home');
@@ -2160,13 +1931,13 @@ function dupBuild(id){
   const b = state.savedBuilds.find(x=>x.id===id);
   if(!b) return;
   state.savedBuilds.push({...b, id:Date.now(), name:b.name+' (copy)', date:new Date().toISOString()});
-  CK.set('pcp_builds', state.savedBuilds);
+  CK.set('pcp_builds_v4', state.savedBuilds);
   renderSavedBuilds();
 }
 function delBuild(id){
   confirmDialog('Delete this build?', ()=>{
     state.savedBuilds = state.savedBuilds.filter(x=>x.id!==id);
-    CK.set('pcp_builds', state.savedBuilds);
+    CK.set('pcp_builds_v4', state.savedBuilds);
     renderSavedBuilds();
     toast('Build deleted','fa-trash');
   });
@@ -2177,32 +1948,27 @@ function delBuild(id){
    ---------------------------------------------------------------- */
 $$('#themeSwatches .swatch').forEach(el=>el.addEventListener('click', ()=>{
   state.settings.theme = el.dataset.theme;
-  CK.set('pcp_settings', state.settings);
+  CK.set('pcp_settings_v4', state.settings);
   applyTheme();
 }));
-$('#accentPicker').addEventListener('input', e=>{
-  state.settings.accent = e.target.value;
-  CK.set('pcp_settings', state.settings);
-  applyTheme();
-});
-$('#grad1').addEventListener('input', e=>{ state.settings.grad1 = e.target.value; CK.set('pcp_settings', state.settings); applyTheme(); });
-$('#grad2').addEventListener('input', e=>{ state.settings.grad2 = e.target.value; CK.set('pcp_settings', state.settings); applyTheme(); });
-$('#defaultRes').addEventListener('change', e=>{ state.settings.defaultRes = e.target.value; CK.set('pcp_settings', state.settings); });
-$('#defaultFps').addEventListener('change', e=>{ state.settings.defaultFps = e.target.value; CK.set('pcp_settings', state.settings); });
-$('#defaultQuality').addEventListener('change', e=>{ state.settings.defaultQuality = e.target.value; CK.set('pcp_settings', state.settings); });
+$('#accentPicker').addEventListener('input', e=>{ state.settings.accent = e.target.value; CK.set('pcp_settings_v4', state.settings); applyTheme(); });
+$('#grad1').addEventListener('input', e=>{ state.settings.grad1 = e.target.value; CK.set('pcp_settings_v4', state.settings); applyTheme(); });
+$('#grad2').addEventListener('input', e=>{ state.settings.grad2 = e.target.value; CK.set('pcp_settings_v4', state.settings); applyTheme(); });
+$('#defaultRes').addEventListener('change', e=>{ state.settings.defaultRes = e.target.value; CK.set('pcp_settings_v4', state.settings); });
+$('#defaultFps').addEventListener('change', e=>{ state.settings.defaultFps = e.target.value; CK.set('pcp_settings_v4', state.settings); });
+$('#defaultQuality').addEventListener('change', e=>{ state.settings.defaultQuality = e.target.value; CK.set('pcp_settings_v4', state.settings); });
 
 $('#quickTheme').addEventListener('click', ()=>{
   const order = ['dark','light','custom'];
   const next = order[(order.indexOf(state.settings.theme)+1)%order.length];
   state.settings.theme = next;
-  CK.set('pcp_settings', state.settings);
+  CK.set('pcp_settings_v4', state.settings);
   applyTheme();
 });
 $('#quickSettings').addEventListener('click', ()=>navigate('settings'));
 
-/* Export/Import */
 $('#exportBtn').addEventListener('click', ()=>{
-  const payload = {version:3, build:state.build, settings:state.settings, builds:state.savedBuilds, exported:new Date().toISOString()};
+  const payload = {version:4, build:state.build, settings:state.settings, builds:state.savedBuilds, exported:new Date().toISOString()};
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -2218,9 +1984,9 @@ $('#importFile').addEventListener('change', e=>{
   reader.onload = ev=>{
     try{
       const data = JSON.parse(ev.target.result);
-      if(data.build) { state.build = data.build; CK.set('pcp_build', state.build); }
-      if(data.settings) { state.settings = {...state.settings, ...data.settings}; CK.set('pcp_settings', state.settings); }
-      if(data.builds) { state.savedBuilds = data.builds; CK.set('pcp_builds', state.savedBuilds); }
+      if(data.build) { state.build = data.build; CK.set('pcp_build_v4', state.build); }
+      if(data.settings) { state.settings = {...state.settings, ...data.settings}; CK.set('pcp_settings_v4', state.settings); }
+      if(data.builds) { state.savedBuilds = data.builds; CK.set('pcp_builds_v4', state.savedBuilds); }
       syncBuildUI(); applyTheme(); analyze(); renderSavedBuilds();
       toast('Build imported','fa-upload');
     }catch(err){ toast('Invalid file','fa-triangle-exclamation'); }
@@ -2230,19 +1996,15 @@ $('#importFile').addEventListener('change', e=>{
 $('#resetPrefs').addEventListener('click', ()=>{
   confirmDialog('Reset preferences?', ()=>{
     state.settings = {theme:'dark', accent:'#3b82f6', grad1:'#3b82f6', grad2:'#a78bfa', defaultRes:'1080p', defaultFps:'144', defaultQuality:'High'};
-    CK.set('pcp_settings', state.settings);
+    CK.set('pcp_settings_v4', state.settings);
     applyTheme();
     toast('Preferences reset','fa-rotate-left');
   });
 });
 $('#clearAll').addEventListener('click', ()=>{
-  confirmDialog('Clear ALL data (builds + settings)? This cannot be undone.', ()=>{
-    CK.clearAll();
-    location.reload();
-  });
+  confirmDialog('Clear ALL data (builds + settings)? This cannot be undone.', ()=>{ CK.clearAll(); location.reload(); });
 });
 
-/* Confirm dialog */
 let confirmCb = null;
 function confirmDialog(msg, cb){
   $('#confirmText').textContent = msg;
@@ -2253,19 +2015,14 @@ $('#confirmCancel').addEventListener('click', ()=>{ $('#confirmModal').classList
 $('#confirmOk').addEventListener('click', ()=>{ $('#confirmModal').classList.remove('show'); if(confirmCb) confirmCb(); confirmCb=null; });
 
 /* ----------------------------------------------------------------
-   GLOBAL SEARCH
+   SEARCH + MOBILE
    ---------------------------------------------------------------- */
 $('#globalSearch').addEventListener('input', e=>{
   const q = e.target.value.trim().toLowerCase();
-  if(!q){ return; }
-  // Simple behavior: if matches a page, hint at it. If matches a game, navigate to games.
+  if(!q) return;
   const game = GAMES.find(g=>g.name.toLowerCase().includes(q));
-  if(game){ toast('Try "Games" page to see: '+game.name, 'fa-gamepad'); }
+  if(game) toast('Try "Games" page to see: '+game.name, 'fa-gamepad');
 });
-
-/* ----------------------------------------------------------------
-   MOBILE MENU
-   ---------------------------------------------------------------- */
 function checkMobile(){
   const isMobile = window.innerWidth <= 760;
   $('#menuBtn').style.display = isMobile ? 'grid' : 'none';
@@ -2278,7 +2035,6 @@ $('#menuBtn').addEventListener('click', ()=>$('#sidebar').classList.toggle('open
    BOOT
    ---------------------------------------------------------------- */
 (function boot(){
-  // Sync UI from state
   $('#cpuBrand').value = state.build.cpuBrand;
   populateCpuSelect();
   $('#cpuSelect').value = state.build.cpu;
@@ -2296,16 +2052,14 @@ $('#menuBtn').addEventListener('click', ()=>$('#sidebar').classList.toggle('open
   populateCompareSelects();
   renderSavedBuilds();
 
-  // Auto-analyze if we have a saved build
   if(savedBuild){ analyze(); }
   else {
-    // Render initial empty state
     $('#heroCpu').textContent = state.build.cpu;
     $('#heroGpu').textContent = state.build.gpu;
     $('#heroRam').textContent = state.build.ram;
     $('#gamesCountBadge').textContent = GAMES.length;
   }
-  console.log('%cPC Playground v3.0','font-size:16px;font-weight:800;color:#3b82f6');
+  console.log('%cPC Playground v4.0','font-size:16px;font-weight:800;color:#3b82f6');
   console.log('Loaded:', allCpus().length, 'CPUs,', allGpus().length, 'GPUs,', GAMES.length, 'games');
 })();
 </script>
