@@ -1,1115 +1,893 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PC Playground · know your PC</title>
-    <!-- Google Fonts & Font Awesome -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        /* ---------- GLOBAL ---------- */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', system-ui, sans-serif;
-        }
-
-        :root {
-            /* default theme: custom gradient from cookies or fallback */
-            --theme-bg: #0b0d15;
-            --theme-card: #151a26;
-            --theme-card-soft: #1f2633;
-            --theme-border: #2c3444;
-            --theme-text: #eef2f9;
-            --theme-text-dim: #9aa7bc;
-            --theme-primary: #3b82f6;
-            --theme-primary-glow: #2563eb;
-            --theme-success: #22c55e;
-            --theme-warn: #eab308;
-            --theme-danger: #ef4444;
-            --theme-radius: 20px;
-            --theme-radius-sm: 12px;
-            --theme-radius-lg: 28px;
-            --shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.6);
-            --transition: all 0.2s ease;
-        }
-
-        body {
-            background: var(--theme-bg);
-            background-image: radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
-                              radial-gradient(circle at 90% 70%, rgba(168, 85, 247, 0.06) 0%, transparent 50%);
-            color: var(--theme-text);
-            min-height: 100vh;
-            padding: 1.5rem;
-            transition: background 0.3s, color 0.3s;
-            line-height: 1.5;
-        }
-
-        .container {
-            max-width: 1440px;
-            margin: 0 auto;
-        }
-
-        /* ---------- TYPOGRAPHY & BUTTONS ---------- */
-        h1, h2, h3 {
-            font-weight: 600;
-            letter-spacing: -0.02em;
-        }
-
-        h1 {
-            font-size: 2rem;
-        }
-
-        h2 {
-            font-size: 1.4rem;
-            margin-bottom: 1.2rem;
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            background: var(--theme-card-soft);
-            border: 1px solid var(--theme-border);
-            color: var(--theme-text);
-            padding: 0.6rem 1.2rem;
-            border-radius: 60px;
-            font-weight: 500;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: var(--transition);
-            text-decoration: none;
-        }
-
-        .btn:hover {
-            background: var(--theme-border);
-            border-color: var(--theme-primary);
-        }
-
-        .btn-primary {
-            background: var(--theme-primary);
-            border: none;
-            color: white;
-            box-shadow: 0 8px 18px -6px var(--theme-primary-glow);
-        }
-
-        .btn-primary:hover {
-            background: var(--theme-primary-glow);
-            transform: translateY(-1px);
-        }
-
-        .btn-sm {
-            padding: 0.4rem 0.9rem;
-            font-size: 0.8rem;
-        }
-
-        .btn-ghost {
-            background: transparent;
-            border: 1px solid var(--theme-border);
-        }
-
-        .badge {
-            background: var(--theme-card-soft);
-            border: 1px solid var(--theme-border);
-            border-radius: 40px;
-            padding: 0.2rem 0.8rem;
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: var(--theme-text-dim);
-        }
-
-        /* ---------- LAYOUT ---------- */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1.1fr 2fr;
-            gap: 1.8rem;
-            margin-top: 1.5rem;
-        }
-
-        @media (max-width: 900px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .card {
-            background: var(--theme-card);
-            border: 1px solid var(--theme-border);
-            border-radius: var(--theme-radius);
-            padding: 1.8rem;
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(8px);
-            transition: var(--transition);
-        }
-
-        .card-soft {
-            background: var(--theme-card-soft);
-            border-radius: var(--theme-radius-sm);
-            padding: 1.2rem;
-        }
-
-        .flex-between {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .gap-2 {
-            display: flex;
-            gap: 0.8rem;
-            flex-wrap: wrap;
-        }
-
-        /* ---------- HEADER ---------- */
-        .top-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 0.7rem;
-            font-size: 1.5rem;
-            font-weight: 700;
-            letter-spacing: -0.03em;
-        }
-
-        .logo-area i {
-            color: var(--theme-primary);
-            font-size: 1.8rem;
-        }
-
-        /* ---------- FORM ---------- */
-        .spec-form {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 1rem;
-            margin: 1.4rem 0;
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.3rem;
-        }
-
-        .input-group label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            font-weight: 600;
-            color: var(--theme-text-dim);
-        }
-
-        .input-group input, .input-group select {
-            background: var(--theme-bg);
-            border: 1px solid var(--theme-border);
-            border-radius: 12px;
-            padding: 0.7rem 1rem;
-            color: var(--theme-text);
-            font-size: 0.9rem;
-            transition: var(--transition);
-        }
-
-        .input-group input:focus, .input-group select:focus {
-            outline: none;
-            border-color: var(--theme-primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
-
-        /* ---------- SCORE ---------- */
-        .score-header {
-            display: flex;
-            align-items: baseline;
-            gap: 0.5rem;
-        }
-
-        .score-number {
-            font-size: 3.2rem;
-            font-weight: 700;
-            line-height: 1;
-        }
-
-        .score-sub {
-            color: var(--theme-text-dim);
-            font-size: 1rem;
-        }
-
-        .meter {
-            margin-top: 1rem;
-        }
-
-        .meter-row {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            margin-bottom: 0.7rem;
-            font-size: 0.9rem;
-        }
-
-        .meter-label {
-            width: 90px;
-            color: var(--theme-text-dim);
-        }
-
-        .meter-bar-bg {
-            flex: 1;
-            height: 8px;
-            background: var(--theme-bg);
-            border-radius: 20px;
-            overflow: hidden;
-        }
-
-        .meter-bar-fill {
-            height: 100%;
-            border-radius: 20px;
-            background: linear-gradient(90deg, var(--theme-primary), #a78bfa);
-            width: 0%;
-            transition: width 0.5s ease;
-        }
-
-        .meter-value {
-            width: 30px;
-            text-align: right;
-            font-weight: 600;
-        }
-
-        /* ---------- GAME CARDS ---------- */
-        .game-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 1rem;
-            margin-top: 1.2rem;
-        }
-
-        .game-card {
-            background: var(--theme-bg);
-            border: 1px solid var(--theme-border);
-            border-radius: var(--theme-radius-sm);
-            padding: 1rem;
-            transition: var(--transition);
-            cursor: default;
-        }
-
-        .game-card:hover {
-            border-color: var(--theme-primary);
-            transform: translateY(-2px);
-        }
-
-        .game-title {
-            font-weight: 600;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-        }
-
-        .fps-badge {
-            font-size: 1.2rem;
-            font-weight: 700;
-        }
-
-        .tag {
-            font-size: 0.7rem;
-            padding: 0.2rem 0.6rem;
-            border-radius: 40px;
-            background: var(--theme-card-soft);
-            color: var(--theme-text-dim);
-        }
-
-        .tag-green { background: #22c55e20; color: #22c55e; border: 1px solid #22c55e40; }
-        .tag-yellow { background: #eab30820; color: #eab308; border: 1px solid #eab30840; }
-        .tag-red { background: #ef444420; color: #ef4444; border: 1px solid #ef444440; }
-
-        /* ---------- BOTTLENECK ---------- */
-        .bottleneck-row {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.8rem 0;
-            border-bottom: 1px solid var(--theme-border);
-        }
-
-        .bottleneck-row:last-child {
-            border-bottom: none;
-        }
-
-        .bn-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            background: var(--theme-bg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--theme-primary);
-        }
-
-        /* ---------- UPGRADE PATH ---------- */
-        .upgrade-path {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            flex-wrap: wrap;
-            margin: 1rem 0;
-        }
-
-        .upgrade-step {
-            background: var(--theme-bg);
-            border: 1px solid var(--theme-border);
-            border-radius: 40px;
-            padding: 0.5rem 1rem;
-            font-weight: 500;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .upgrade-arrow {
-            color: var(--theme-text-dim);
-        }
-
-        /* ---------- TABLES ---------- */
-        .upgrade-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9rem;
-        }
-
-        .upgrade-table th {
-            text-align: left;
-            color: var(--theme-text-dim);
-            font-weight: 500;
-            padding: 0.5rem 0;
-        }
-
-        .upgrade-table td {
-            padding: 0.6rem 0;
-            border-bottom: 1px solid var(--theme-border);
-        }
-
-        .stars {
-            color: #fbbf24;
-            letter-spacing: 2px;
-        }
-
-        /* ---------- SETTINGS MODAL ---------- */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(6px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 1rem;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        .modal {
-            background: var(--theme-card);
-            border: 1px solid var(--theme-border);
-            border-radius: var(--theme-radius);
-            max-width: 500px;
-            width: 100%;
-            padding: 2rem;
-            box-shadow: var(--shadow);
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal h3 {
-            margin-bottom: 1.2rem;
-        }
-
-        .setting-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1rem;
-        }
-
-        .color-options {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .color-dot {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .color-dot.active {
-            border-color: white;
-            transform: scale(1.1);
-        }
-
-        /* ---------- MISC ---------- */
-        .empty-state {
-            text-align: center;
-            padding: 2rem 1rem;
-            color: var(--theme-text-dim);
-        }
-
-        .feature-list {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.8rem;
-            margin: 1.2rem 0;
-        }
-
-        .feature-item {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            font-size: 0.9rem;
-        }
-
-        .confidence {
-            font-size: 0.75rem;
-            color: var(--theme-text-dim);
-            margin-top: 0.2rem;
-        }
-
-        .divider {
-            height: 1px;
-            background: var(--theme-border);
-            margin: 1.5rem 0;
-        }
-
-        .cursor-pointer {
-            cursor: pointer;
-        }
-
-        .text-small {
-            font-size: 0.8rem;
-            color: var(--theme-text-dim);
-        }
-
-        /* Responsive touches */
-        @media (max-width: 600px) {
-            body { padding: 0.8rem; }
-            .card { padding: 1.2rem; }
-            .score-number { font-size: 2.4rem; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PC Playground · Advanced Dashboard</title>
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* ========== GLOBAL & THEMES ========== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    :root {
+      /* Default dark theme */
+      --bg: #0b0d15;
+      --bg-gradient: radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                     radial-gradient(circle at 90% 70%, rgba(168, 85, 247, 0.06) 0%, transparent 50%);
+      --card: #151a26;
+      --card-soft: #1f2633;
+      --border: #2c3444;
+      --text: #eef2f9;
+      --text-dim: #9aa7bc;
+      --primary: #3b82f6;
+      --primary-glow: #2563eb;
+      --success: #22c55e;
+      --warn: #eab308;
+      --danger: #ef4444;
+      --radius: 20px;
+      --radius-sm: 12px;
+      --shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.6);
+      --transition: all 0.2s ease;
+    }
+
+    /* Light theme class on body */
+    body.light {
+      --bg: #f1f5f9;
+      --bg-gradient: radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
+      --card: #ffffff;
+      --card-soft: #f8fafc;
+      --border: #cbd5e1;
+      --text: #0f172a;
+      --text-dim: #475569;
+      --primary: #3b82f6;
+      --primary-glow: #2563eb;
+      --shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Custom gradient theme (injected via JS) */
+    body.custom {
+      /* overrides via JS */
+    }
+
+    body {
+      background: var(--bg);
+      background-image: var(--bg-gradient);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 1.5rem;
+      transition: background 0.3s, color 0.3s;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    /* ========== UTILITIES ========== */
+    .flex-between { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+    .flex { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
+    .gap-1 { gap: 0.5rem; }
+    .gap-2 { gap: 1rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2rem; }
+    @media (max-width: 1200px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 900px) { .grid-3, .grid-2 { grid-template-columns: 1fr; } .grid-4 { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.8rem;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+    }
+    .card-soft {
+      background: var(--card-soft);
+      border-radius: var(--radius-sm);
+      padding: 1.2rem;
+    }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      background: var(--card-soft); border: 1px solid var(--border); color: var(--text);
+      padding: 0.6rem 1.2rem; border-radius: 60px; font-weight: 500; font-size: 0.9rem;
+      cursor: pointer; transition: var(--transition); text-decoration: none;
+    }
+    .btn:hover { background: var(--border); border-color: var(--primary); }
+    .btn-primary { background: var(--primary); border: none; color: white; box-shadow: 0 8px 18px -6px var(--primary-glow); }
+    .btn-primary:hover { background: var(--primary-glow); transform: translateY(-1px); }
+    .btn-sm { padding: 0.4rem 0.9rem; font-size: 0.8rem; }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); }
+
+    .badge { background: var(--card-soft); border: 1px solid var(--border); border-radius: 40px; padding: 0.2rem 0.8rem; font-size: 0.75rem; font-weight: 500; color: var(--text-dim); }
+
+    h1, h2, h3 { font-weight: 600; letter-spacing: -0.02em; }
+    h2 { font-size: 1.3rem; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.6rem; }
+
+    /* ========== HEADER ========== */
+    .top-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+    .logo-area { display: flex; align-items: center; gap: 0.7rem; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.03em; }
+    .logo-area i { color: var(--primary); font-size: 1.8rem; }
+
+    /* ========== FORMS ========== */
+    .spec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin: 1rem 0; }
+    .input-group { display: flex; flex-direction: column; gap: 0.3rem; }
+    .input-group label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.03em; font-weight: 600; color: var(--text-dim); }
+    .input-group select, .input-group input {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
+      padding: 0.7rem 1rem; color: var(--text); font-size: 0.9rem; transition: var(--transition);
+    }
+    .input-group select:focus, .input-group input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+
+    /* ========== SCORE ========== */
+    .score-number { font-size: 3.2rem; font-weight: 700; line-height: 1; }
+    .meter { margin-top: 1rem; }
+    .meter-row { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.7rem; font-size: 0.9rem; }
+    .meter-label { width: 100px; color: var(--text-dim); }
+    .meter-bar-bg { flex: 1; height: 8px; background: var(--bg); border-radius: 20px; overflow: hidden; }
+    .meter-bar-fill { height: 100%; border-radius: 20px; background: linear-gradient(90deg, var(--primary), #a78bfa); width: 0%; transition: width 0.5s ease; }
+    .meter-value { width: 30px; text-align: right; font-weight: 600; }
+
+    /* ========== GAME CARDS ========== */
+    .game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin-top: 1.2rem; }
+    .game-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; transition: var(--transition); cursor: default; }
+    .game-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+    .game-title { font-weight: 600; display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+    .fps-badge { font-size: 1.2rem; font-weight: 700; }
+    .tag { font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 40px; background: var(--card-soft); color: var(--text-dim); }
+    .tag-green { background: #22c55e20; color: #22c55e; border: 1px solid #22c55e40; }
+    .tag-yellow { background: #eab30820; color: #eab308; border: 1px solid #eab30840; }
+    .tag-red { background: #ef444420; color: #ef4444; border: 1px solid #ef444440; }
+    .tag-blue { background: #3b82f620; color: #3b82f6; border: 1px solid #3b82f640; }
+
+    /* ========== BOTTLENECK ========== */
+    .bottleneck-row { display: flex; align-items: center; gap: 1rem; padding: 0.8rem 0; border-bottom: 1px solid var(--border); }
+    .bottleneck-row:last-child { border-bottom: none; }
+    .bn-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); display: flex; align-items: center; justify-content: center; color: var(--primary); }
+
+    /* ========== UPGRADE ========== */
+    .upgrade-path { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; margin: 1rem 0; }
+    .upgrade-step { background: var(--bg); border: 1px solid var(--border); border-radius: 40px; padding: 0.5rem 1rem; font-weight: 500; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; }
+    .upgrade-arrow { color: var(--text-dim); }
+    .upgrade-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .upgrade-table th { text-align: left; color: var(--text-dim); font-weight: 500; padding: 0.5rem 0; }
+    .upgrade-table td { padding: 0.6rem 0; border-bottom: 1px solid var(--border); }
+    .stars { color: #fbbf24; letter-spacing: 2px; }
+
+    /* ========== MODAL ========== */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
+      display: none; align-items: center; justify-content: center; z-index: 1000; padding: 1rem;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      max-width: 600px; width: 100%; padding: 2rem; box-shadow: var(--shadow);
+      max-height: 90vh; overflow-y: auto;
+    }
+    .setting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .color-options { display: flex; gap: 0.5rem; }
+    .color-dot { width: 32px; height: 32px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: var(--transition); }
+    .color-dot.active { border-color: white; transform: scale(1.1); }
+
+    /* ========== MISC ========== */
+    .empty-state { text-align: center; padding: 2rem 1rem; color: var(--text-dim); }
+    .divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
+    .text-small { font-size: 0.8rem; color: var(--text-dim); }
+    .cursor-pointer { cursor: pointer; }
+    .component-row { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    .component-row:last-child { border-bottom: none; }
+    .storage-item { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem; }
+    .storage-item select { flex: 1; }
+    .remove-storage { color: var(--danger); cursor: pointer; padding: 0.2rem 0.5rem; }
+    .add-storage-btn { font-size: 0.8rem; padding: 0.3rem 0.8rem; }
+
+    /* Custom theme overrides via JS will set these variables */
+  </style>
 </head>
-<body>
-    <div class="container">
-        <!-- Top Bar -->
-        <div class="top-bar">
-            <div class="logo-area">
-                <i class="fas fa-microchip"></i>
-                <span>PC Playground</span>
-            </div>
-            <div class="gap-2">
-                <button class="btn btn-ghost btn-sm" id="settingsBtn"><i class="fas fa-cog"></i> Settings</button>
-                <button class="btn btn-ghost btn-sm" id="themeToggle"><i class="fas fa-moon"></i> Dark</button>
-            </div>
-        </div>
-
-        <!-- MAIN DASHBOARD -->
-        <div class="dashboard-grid">
-            <!-- LEFT COLUMN: SPECS + SCORE -->
-            <div>
-                <!-- Specs card -->
-                <div class="card" id="specsCard">
-                    <h2><i class="fas fa-desktop"></i> Your PC</h2>
-                    <div class="spec-form" id="specForm">
-                        <div class="input-group">
-                            <label>CPU</label>
-                            <select id="cpuSelect">
-                                <option value="Ryzen 5 2600">Ryzen 5 2600</option>
-                                <option value="Ryzen 5 5600X">Ryzen 5 5600X</option>
-                                <option value="Ryzen 7 7800X3D">Ryzen 7 7800X3D</option>
-                                <option value="Intel i5-12400F">Intel i5-12400F</option>
-                                <option value="Intel i9-13900K">Intel i9-13900K</option>
-                                <option value="Intel i3-12100F">Intel i3-12100F</option>
-                            </select>
-                        </div>
-                        <div class="input-group">
-                            <label>GPU</label>
-                            <select id="gpuSelect">
-                                <option value="RX 580 8GB">RX 580 8GB</option>
-                                <option value="RTX 3060 12GB">RTX 3060 12GB</option>
-                                <option value="RTX 4070">RTX 4070</option>
-                                <option value="RTX 5080">RTX 5080</option>
-                                <option value="RX 7600">RX 7600</option>
-                                <option value="Intel Arc A750">Intel Arc A750</option>
-                            </select>
-                        </div>
-                        <div class="input-group">
-                            <label>RAM</label>
-                            <select id="ramSelect">
-                                <option value="8GB DDR4">8GB DDR4</option>
-                                <option value="16GB DDR4" selected>16GB DDR4</option>
-                                <option value="32GB DDR5">32GB DDR5</option>
-                                <option value="64GB DDR5">64GB DDR5</option>
-                            </select>
-                        </div>
-                        <div class="input-group">
-                            <label>Storage</label>
-                            <select id="storageSelect">
-                                <option value="SSD">SSD</option>
-                                <option value="HDD">HDD</option>
-                                <option value="NVMe">NVMe</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="flex-between">
-                        <button class="btn btn-primary" id="analyzeBtn"><i class="fas fa-bolt"></i> Analyze my PC</button>
-                        <span class="badge" id="buildStatus">No build configured</span>
-                    </div>
-                </div>
-
-                <!-- Score card -->
-                <div class="card" style="margin-top: 1.5rem;" id="scoreCard">
-                    <h2><i class="fas fa-chart-simple"></i> PC Score</h2>
-                    <div id="scoreContent">
-                        <div class="empty-state">
-                            <i class="fas fa-chart-bar" style="font-size: 2rem; opacity: 0.4; margin-bottom: 0.8rem;"></i>
-                            <p>Enter your specs to unlock your performance analysis.</p>
-                            <p class="text-small" style="margin-top: 0.8rem;">🎮 FPS estimates for 70+ games<br>📊 Overall performance score<br>🔧 Bottleneck analysis<br>⚡ Estimated power consumption</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- RIGHT COLUMN: BOTTLENECK, GAMES, UPGRADE -->
-            <div>
-                <!-- Bottleneck / killer feature -->
-                <div class="card" id="bottleneckCard">
-                    <h2><i class="fas fa-diagram-project"></i> What's holding your PC back?</h2>
-                    <div id="bottleneckContent">
-                        <div class="empty-state">
-                            <p>Add your components to see bottleneck analysis.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Game performance -->
-                <div class="card" style="margin-top: 1.5rem;" id="gameCard">
-                    <h2><i class="fas fa-gamepad"></i> Game performance</h2>
-                    <div id="gameContent">
-                        <div class="empty-state">
-                            <p>Your personalized FPS estimates will appear here.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Upgrade path -->
-                <div class="card" style="margin-top: 1.5rem;" id="upgradeCard">
-                    <h2><i class="fas fa-arrow-up"></i> Upgrade path</h2>
-                    <div id="upgradeContent">
-                        <div class="empty-state">
-                            <p>Upgrade recommendations will be shown after analysis.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<body id="appBody">
+  <div class="container">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div class="logo-area">
+        <i class="fas fa-microchip"></i>
+        <span>PC Playground</span>
+      </div>
+      <div class="flex gap-2">
+        <button class="btn btn-ghost btn-sm" id="settingsBtn"><i class="fas fa-cog"></i> Settings</button>
+        <button class="btn btn-ghost btn-sm" id="themeToggle"><i class="fas fa-moon"></i> Dark</button>
+      </div>
     </div>
 
-    <!-- Settings Modal -->
-    <div class="modal-overlay" id="settingsModal">
-        <div class="modal">
-            <div class="flex-between" style="margin-bottom: 1.5rem;">
-                <h3><i class="fas fa-sliders-h"></i> Settings</h3>
-                <button class="btn btn-ghost btn-sm" id="closeSettings"><i class="fas fa-times"></i></button>
+    <!-- DASHBOARD GRID -->
+    <div class="grid-2" style="align-items: start;">
+      <!-- LEFT COLUMN -->
+      <div>
+        <!-- SPECS CARD -->
+        <div class="card" id="specsCard">
+          <h2><i class="fas fa-desktop"></i> Your PC</h2>
+          <div class="spec-grid" id="specForm">
+            <!-- CPU -->
+            <div class="input-group">
+              <label>CPU Brand</label>
+              <select id="cpuBrand">
+                <option value="AMD">AMD</option>
+                <option value="Intel">Intel</option>
+              </select>
             </div>
-            <div class="setting-row">
-                <span>Theme</span>
-                <div class="color-options" id="themeColors">
-                    <div class="color-dot" style="background: #0b0d15;" data-theme="dark" title="Dark"></div>
-                    <div class="color-dot" style="background: #f8fafc;" data-theme="light" title="Light"></div>
-                    <div class="color-dot" style="background: linear-gradient(135deg, #3b82f6, #a78bfa);" data-theme="custom" title="Custom gradient"></div>
-                </div>
+            <div class="input-group">
+              <label>CPU Model</label>
+              <select id="cpuSelect"></select>
             </div>
-            <div class="setting-row">
-                <span>Accent color</span>
-                <input type="color" id="accentColorPicker" value="#3b82f6">
+            <!-- GPU -->
+            <div class="input-group">
+              <label>GPU Brand</label>
+              <select id="gpuBrand">
+                <option value="NVIDIA">NVIDIA</option>
+                <option value="AMD">AMD</option>
+                <option value="Intel">Intel</option>
+              </select>
             </div>
-            <div class="divider"></div>
-            <div class="setting-row">
-                <span>Default resolution</span>
-                <select id="defaultRes" class="input-group" style="background:var(--theme-bg); border-radius:8px; padding:0.3rem;">
-                    <option>1080p</option>
-                    <option>1440p</option>
-                    <option>4K</option>
-                </select>
+            <div class="input-group">
+              <label>GPU Model</label>
+              <select id="gpuSelect"></select>
             </div>
-            <div class="setting-row">
-                <span>Target FPS</span>
-                <select id="defaultFps" class="input-group" style="background:var(--theme-bg); border-radius:8px; padding:0.3rem;">
-                    <option>60</option>
-                    <option>120</option>
-                    <option>144</option>
-                    <option>240</option>
-                </select>
+            <!-- RAM -->
+            <div class="input-group">
+              <label>RAM</label>
+              <select id="ramSelect">
+                <option value="8GB DDR4">8GB DDR4</option>
+                <option value="16GB DDR4" selected>16GB DDR4</option>
+                <option value="32GB DDR5">32GB DDR5</option>
+                <option value="64GB DDR5">64GB DDR5</option>
+                <option value="128GB DDR5">128GB DDR5</option>
+              </select>
             </div>
-            <div class="divider"></div>
-            <div class="flex-between">
-                <button class="btn btn-ghost" id="resetSettings"><i class="fas fa-undo-alt"></i> Reset</button>
-                <button class="btn btn-primary" id="saveSettings"><i class="fas fa-check"></i> Save</button>
+            <!-- STORAGE (Multi) -->
+            <div class="input-group" style="grid-column: span 2;">
+              <label>Storage (up to 4 drives)</label>
+              <div id="storageContainer">
+                <!-- Dynamically added storage rows -->
+              </div>
+              <button class="btn btn-ghost btn-sm add-storage-btn" id="addStorageBtn" style="margin-top:0.3rem;"><i class="fas fa-plus"></i> Add drive</button>
             </div>
-            <p class="text-small" style="margin-top: 1rem;">All settings are stored in cookies.</p>
+          </div>
+          <div class="flex-between" style="margin-top:1rem;">
+            <button class="btn btn-primary" id="analyzeBtn"><i class="fas fa-bolt"></i> Analyze my PC</button>
+            <span class="badge" id="buildStatus">No build configured</span>
+          </div>
         </div>
+
+        <!-- SCORE CARD -->
+        <div class="card" style="margin-top:1.5rem;" id="scoreCard">
+          <h2><i class="fas fa-chart-simple"></i> PC Score</h2>
+          <div id="scoreContent">
+            <div class="empty-state">
+              <i class="fas fa-chart-bar" style="font-size:2rem; opacity:0.4; margin-bottom:0.8rem;"></i>
+              <p>Enter your specs to unlock your performance analysis.</p>
+              <p class="text-small" style="margin-top:0.8rem;">🎮 FPS estimates for 100+ games<br>📊 Overall performance score<br>🔧 Bottleneck analysis<br>⚡ Estimated power consumption</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- QUICK TOOLS -->
+        <div class="card" style="margin-top:1.5rem;">
+          <h2><i class="fas fa-tools"></i> Quick Tools</h2>
+          <div class="grid-3" style="gap:0.8rem;">
+            <button class="btn btn-ghost" style="flex-direction:column; padding:1rem;"><i class="fas fa-gamepad" style="font-size:1.5rem;"></i><span>FPS Calculator</span></button>
+            <button class="btn btn-ghost" style="flex-direction:column; padding:1rem;"><i class="fas fa-diagram-project" style="font-size:1.5rem;"></i><span>Bottleneck</span></button>
+            <button class="btn btn-ghost" style="flex-direction:column; padding:1rem;"><i class="fas fa-arrow-up" style="font-size:1.5rem;"></i><span>Upgrade</span></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div>
+        <!-- BOTTLENECK CARD -->
+        <div class="card" id="bottleneckCard">
+          <h2><i class="fas fa-diagram-project"></i> What's holding your PC back?</h2>
+          <div id="bottleneckContent">
+            <div class="empty-state"><p>Add your components to see bottleneck analysis.</p></div>
+          </div>
+        </div>
+
+        <!-- GAME PERFORMANCE -->
+        <div class="card" style="margin-top:1.5rem;" id="gameCard">
+          <h2><i class="fas fa-gamepad"></i> Game performance</h2>
+          <div id="gameContent">
+            <div class="empty-state"><p>Your personalized FPS estimates will appear here.</p></div>
+          </div>
+        </div>
+
+        <!-- UPGRADE PATH -->
+        <div class="card" style="margin-top:1.5rem;" id="upgradeCard">
+          <h2><i class="fas fa-arrow-up"></i> Upgrade path</h2>
+          <div id="upgradeContent">
+            <div class="empty-state"><p>Upgrade recommendations will be shown after analysis.</p></div>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <!-- ========== JAVASCRIPT ========== -->
-    <script>
-        (function() {
-            // ------------------------------
-            // 1. DATA & UTILITIES
-            // ------------------------------
-            // Game database (approx. realistic relative performance)
-            // Each game: baseScore for a reference build (Ryzen 5 2600 + RX 580 16GB)
-            // we will scale using CPU/GPU multipliers
-            const GAME_DB = [
-                { name: "Cyberpunk 2077", baseFps: 42, cpuWeight: 0.25, gpuWeight: 0.65, ramWeight: 0.10, settings: "High" },
-                { name: "GTA V", baseFps: 98, cpuWeight: 0.35, gpuWeight: 0.55, ramWeight: 0.10, settings: "Very High" },
-                { name: "Minecraft", baseFps: 142, cpuWeight: 0.50, gpuWeight: 0.40, ramWeight: 0.10, settings: "High" },
-                { name: "Forza Horizon 5", baseFps: 78, cpuWeight: 0.25, gpuWeight: 0.65, ramWeight: 0.10, settings: "High" },
-                { name: "Roblox", baseFps: 188, cpuWeight: 0.55, gpuWeight: 0.35, ramWeight: 0.10, settings: "High" },
-                { name: "Valorant", baseFps: 210, cpuWeight: 0.60, gpuWeight: 0.30, ramWeight: 0.10, settings: "High" },
-                { name: "Fortnite", baseFps: 112, cpuWeight: 0.40, gpuWeight: 0.50, ramWeight: 0.10, settings: "High" },
-                { name: "Call of Duty: Warzone", baseFps: 76, cpuWeight: 0.30, gpuWeight: 0.60, ramWeight: 0.10, settings: "Medium" },
-                { name: "Elden Ring", baseFps: 58, cpuWeight: 0.25, gpuWeight: 0.65, ramWeight: 0.10, settings: "High" },
-                { name: "Red Dead Redemption 2", baseFps: 64, cpuWeight: 0.25, gpuWeight: 0.65, ramWeight: 0.10, settings: "High" },
-                { name: "Apex Legends", baseFps: 124, cpuWeight: 0.40, gpuWeight: 0.50, ramWeight: 0.10, settings: "High" },
-                { name: "Rocket League", baseFps: 196, cpuWeight: 0.45, gpuWeight: 0.45, ramWeight: 0.10, settings: "High" },
-            ];
+  <!-- SETTINGS MODAL -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal">
+      <div class="flex-between" style="margin-bottom:1.5rem;">
+        <h3><i class="fas fa-sliders-h"></i> Settings</h3>
+        <button class="btn btn-ghost btn-sm" id="closeSettings"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="setting-row">
+        <span>Theme</span>
+        <div class="color-options" id="themeColors">
+          <div class="color-dot" style="background:#0b0d15;" data-theme="dark" title="Dark"></div>
+          <div class="color-dot" style="background:#f1f5f9;" data-theme="light" title="Light"></div>
+          <div class="color-dot" style="background:linear-gradient(135deg,#3b82f6,#a78bfa);" data-theme="custom" title="Custom gradient"></div>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span>Accent color</span>
+        <input type="color" id="accentColorPicker" value="#3b82f6">
+      </div>
+      <div class="setting-row">
+        <span>Background gradient (custom)</span>
+        <div class="flex gap-1">
+          <input type="color" id="gradientColor1" value="#3b82f6">
+          <input type="color" id="gradientColor2" value="#a78bfa">
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="setting-row">
+        <span>Default resolution</span>
+        <select id="defaultRes" class="input-group" style="background:var(--bg); border-radius:8px; padding:0.3rem;">
+          <option>1080p</option><option>1440p</option><option>4K</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <span>Target FPS</span>
+        <select id="defaultFps" class="input-group" style="background:var(--bg); border-radius:8px; padding:0.3rem;">
+          <option>60</option><option>120</option><option>144</option><option>240</option>
+        </select>
+      </div>
+      <div class="divider"></div>
+      <div class="flex-between">
+        <button class="btn btn-ghost" id="resetSettings"><i class="fas fa-undo-alt"></i> Reset</button>
+        <button class="btn btn-primary" id="saveSettings"><i class="fas fa-check"></i> Save</button>
+      </div>
+      <p class="text-small" style="margin-top:1rem;">All settings are stored in cookies.</p>
+    </div>
+  </div>
 
-            // Performance multipliers (relative to reference: Ryzen 5 2600 + RX 580 + 16GB DDR4)
-            const CPU_MULT = {
-                "Ryzen 5 2600": 1.00,
-                "Ryzen 5 5600X": 1.45,
-                "Ryzen 7 7800X3D": 2.10,
-                "Intel i5-12400F": 1.55,
-                "Intel i9-13900K": 2.30,
-                "Intel i3-12100F": 1.20,
-            };
-            const GPU_MULT = {
-                "RX 580 8GB": 1.00,
-                "RTX 3060 12GB": 1.65,
-                "RTX 4070": 2.80,
-                "RTX 5080": 4.20,
-                "RX 7600": 1.95,
-                "Intel Arc A750": 1.60,
-            };
-            const RAM_MULT = {
-                "8GB DDR4": 0.85,
-                "16GB DDR4": 1.00,
-                "32GB DDR5": 1.25,
-                "64GB DDR5": 1.40,
-            };
+  <script>
+    (function() {
+      // ============================================================
+      // 1. COMPONENT DATABASE (Comprehensive)
+      // ============================================================
+      const CPUS = {
+        AMD: [
+          { name: "Ryzen 5 2600", mult: 1.00, tdp: 65, cores: "6C/12T", base: 3.4, boost: 3.9 },
+          { name: "Ryzen 5 3600", mult: 1.20, tdp: 65, cores: "6C/12T", base: 3.6, boost: 4.2 },
+          { name: "Ryzen 5 5600X", mult: 1.45, tdp: 65, cores: "6C/12T", base: 3.7, boost: 4.6 },
+          { name: "Ryzen 7 5800X3D", mult: 1.85, tdp: 105, cores: "8C/16T", base: 3.4, boost: 4.5 },
+          { name: "Ryzen 7 7800X3D", mult: 2.10, tdp: 120, cores: "8C/16T", base: 4.2, boost: 5.0 },
+          { name: "Ryzen 9 7950X3D", mult: 2.45, tdp: 120, cores: "16C/32T", base: 4.2, boost: 5.7 },
+          { name: "Ryzen 9 9950X3D", mult: 2.70, tdp: 170, cores: "16C/32T", base: 4.3, boost: 5.7 },
+          { name: "Ryzen 5 9600X", mult: 1.85, tdp: 65, cores: "6C/12T", base: 3.9, boost: 5.4 },
+          { name: "Ryzen 7 9700X", mult: 2.05, tdp: 65, cores: "8C/16T", base: 3.8, boost: 5.5 },
+          { name: "Ryzen 9 9900X", mult: 2.35, tdp: 120, cores: "12C/24T", base: 4.4, boost: 5.6 },
+        ],
+        Intel: [
+          { name: "Intel i3-12100F", mult: 1.20, tdp: 58, cores: "4C/8T", base: 3.3, boost: 4.3 },
+          { name: "Intel i5-12400F", mult: 1.55, tdp: 65, cores: "6C/12T", base: 2.5, boost: 4.4 },
+          { name: "Intel i5-13600K", mult: 1.95, tdp: 125, cores: "14C/20T", base: 3.5, boost: 5.1 },
+          { name: "Intel i7-13700K", mult: 2.20, tdp: 125, cores: "16C/24T", base: 3.4, boost: 5.4 },
+          { name: "Intel i9-13900K", mult: 2.30, tdp: 253, cores: "24C/32T", base: 3.0, boost: 5.8 },
+          { name: "Intel i9-14900K", mult: 2.35, tdp: 253, cores: "24C/32T", base: 3.2, boost: 6.0 },
+          { name: "Intel Core Ultra 9 285K", mult: 2.50, tdp: 250, cores: "24C/24T", base: 3.7, boost: 5.7 },
+          { name: "Intel Core Ultra 7 265K", mult: 2.25, tdp: 125, cores: "20C/20T", base: 3.9, boost: 5.5 },
+          { name: "Intel Core Ultra 5 245K", mult: 1.95, tdp: 125, cores: "14C/14T", base: 4.2, boost: 5.2 },
+        ]
+      };
 
-            // Reference components
-            const REF_CPU = "Ryzen 5 2600";
-            const REF_GPU = "RX 580 8GB";
-            const REF_RAM = "16GB DDR4";
+      const GPUS = {
+        NVIDIA: [
+          { name: "RTX 3060 12GB", mult: 1.65, tdp: 170, vram: 12 },
+          { name: "RTX 3070", mult: 2.00, tdp: 220, vram: 8 },
+          { name: "RTX 3080", mult: 2.50, tdp: 320, vram: 10 },
+          { name: "RTX 4060", mult: 1.85, tdp: 115, vram: 8 },
+          { name: "RTX 4060 Ti", mult: 2.15, tdp: 160, vram: 8 },
+          { name: "RTX 4070", mult: 2.80, tdp: 200, vram: 12 },
+          { name: "RTX 4070 Ti", mult: 3.20, tdp: 285, vram: 12 },
+          { name: "RTX 4080", mult: 3.80, tdp: 320, vram: 16 },
+          { name: "RTX 4090", mult: 4.50, tdp: 450, vram: 24 },
+          { name: "RTX 5070", mult: 3.50, tdp: 250, vram: 12 },
+          { name: "RTX 5080", mult: 4.20, tdp: 360, vram: 16 },
+          { name: "RTX 5090", mult: 5.50, tdp: 575, vram: 32 },
+        ],
+        AMD: [
+          { name: "RX 580 8GB", mult: 1.00, tdp: 185, vram: 8 },
+          { name: "RX 5500 XT", mult: 1.20, tdp: 130, vram: 8 },
+          { name: "RX 5600 XT", mult: 1.50, tdp: 150, vram: 6 },
+          { name: "RX 5700 XT", mult: 1.80, tdp: 225, vram: 8 },
+          { name: "RX 6600", mult: 1.70, tdp: 132, vram: 8 },
+          { name: "RX 6700 XT", mult: 2.30, tdp: 230, vram: 12 },
+          { name: "RX 6800 XT", mult: 2.90, tdp: 300, vram: 16 },
+          { name: "RX 7600", mult: 1.95, tdp: 165, vram: 8 },
+          { name: "RX 7700 XT", mult: 2.60, tdp: 245, vram: 12 },
+          { name: "RX 7800 XT", mult: 3.10, tdp: 263, vram: 16 },
+          { name: "RX 7900 XTX", mult: 4.00, tdp: 355, vram: 24 },
+          { name: "RX 9070 XT", mult: 4.50, tdp: 300, vram: 16 },
+        ],
+        Intel: [
+          { name: "Intel Arc A750", mult: 1.60, tdp: 225, vram: 8 },
+          { name: "Intel Arc A770", mult: 1.90, tdp: 225, vram: 16 },
+          { name: "Intel Arc B580", mult: 2.20, tdp: 190, vram: 12 },
+        ]
+      };
 
-            // Power draw estimation (watts)
-            const CPU_TDP = {
-                "Ryzen 5 2600": 65,
-                "Ryzen 5 5600X": 65,
-                "Ryzen 7 7800X3D": 120,
-                "Intel i5-12400F": 65,
-                "Intel i9-13900K": 253,
-                "Intel i3-12100F": 58,
-            };
-            const GPU_TDP = {
-                "RX 580 8GB": 185,
-                "RTX 3060 12GB": 170,
-                "RTX 4070": 200,
-                "RTX 5080": 360,
-                "RX 7600": 165,
-                "Intel Arc A750": 225,
-            };
-            const RAM_TDP = {
-                "8GB DDR4": 10,
-                "16GB DDR4": 15,
-                "32GB DDR5": 20,
-                "64GB DDR5": 25,
-            };
+      const RAMS = {
+        "8GB DDR4": { mult: 0.85, tdp: 10 },
+        "16GB DDR4": { mult: 1.00, tdp: 15 },
+        "32GB DDR5": { mult: 1.25, tdp: 20 },
+        "64GB DDR5": { mult: 1.40, tdp: 25 },
+        "128GB DDR5": { mult: 1.50, tdp: 35 }
+      };
 
-            // Upgrade suggestions (simplified)
-            const UPGRADE_MAP = {
-                "RX 580 8GB": { value: "RX 7600", high: "RTX 4070", enthusiast: "RTX 5080" },
-                "RTX 3060 12GB": { value: "RX 7600", high: "RTX 4070", enthusiast: "RTX 5080" },
-                "RTX 4070": { value: "RTX 4070", high: "RTX 5080", enthusiast: "RTX 5080" },
-                "RX 7600": { value: "RTX 4070", high: "RTX 5080", enthusiast: "RTX 5080" },
-                "Intel Arc A750": { value: "RX 7600", high: "RTX 4070", enthusiast: "RTX 5080" },
-                "RTX 5080": { value: "RTX 5080", high: "RTX 5080", enthusiast: "RTX 5080" },
-            };
+      const STORAGE_TYPES = [
+        { name: "HDD 7200RPM", mult: 0.7, tdp: 6 },
+        { name: "SATA SSD", mult: 1.0, tdp: 3 },
+        { name: "NVMe SSD", mult: 1.3, tdp: 5 },
+        { name: "NVMe Gen4", mult: 1.5, tdp: 7 },
+        { name: "NVMe Gen5", mult: 1.8, tdp: 10 }
+      ];
 
-            // ------------------------------
-            // 2. COOKIE HELPERS
-            // ------------------------------
-            function setCookie(name, value, days = 365) {
-                const d = new Date();
-                d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
-                const expires = "expires=" + d.toUTCString();
-                document.cookie = name + "=" + encodeURIComponent(JSON.stringify(value)) + ";" + expires + ";path=/;SameSite=Lax";
-            }
+      // Games database (more games!)
+      const GAME_DB = [
+        { name: "Cyberpunk 2077", baseFps: 42, cpuWeight: 0.25, gpuWeight: 0.65, ramWeight: 0.10, settings: "High" },
+        { name: "GTA V", baseFps: 98, cpuWeight: 0.35, gpuWeight: 0.55, ramWeight: 0.10, settings: "Very High" },
+        { name: "Minecraft", baseFps: 142, cpuWeight: 0.50, gpuWeight: 0.40, ramWeight: 0.10, settings: "High" },
+        { name: "Forza Horizon 5", baseFps: 78, cpuWeight: 0.25, gpuWeight: 0.65, ramWeight: 0.10, settings: "High" },
+        { name: "Roblox", baseFps: 188, cpuWeight: 0.55, gpuWeight: 0.35, ramWeight: 0.10, settings: "High" },
+        { name: "Valorant", baseFps: 210, cpuWeight: 0.60, gpuWeight: 0.30, ramWeight: 0.10, settings: "High" },
+        { name: "Fortnite", baseFps: 112, cpuWeight: 0.40, gpuWeight: 0.50, ramWeight: 0.10, settings: "High" },
+        { name: "Call of Duty: Warzone", baseFps: 76, cpuWeight: 0.30, gpuWeight: 0.60, ramWeight: 0.10, settings: "Medium" },
+        { name: "Elden Ring", baseFps: 58, cpuWeight: 0.25, gpuWeight: 0.65, ramWeight: 0.10, settings: "High" },
+        { name: "Red Dead Redemption 2", baseFps: 64, cpuWeight: 0.25, gpuWeight: 0.65, ramWeight: 0.10, settings: "High" },
+        { name: "Apex Legends", baseFps: 124, cpuWeight: 0.40, gpuWeight: 0.50, ramWeight: 0.10, settings: "High" },
+        { name: "Rocket League", baseFps: 196, cpuWeight: 0.45, gpuWeight: 0.45, ramWeight: 0.10, settings: "High" },
+        { name: "The Witcher 3", baseFps: 72, cpuWeight: 0.25, gpuWeight: 0.65, ramWeight: 0.10, settings: "High" },
+        { name: "CS:GO / CS2", baseFps: 240, cpuWeight: 0.50, gpuWeight: 0.40, ramWeight: 0.10, settings: "High" },
+        { name: "Dota 2", baseFps: 180, cpuWeight: 0.50, gpuWeight: 0.40, ramWeight: 0.10, settings: "High" },
+        { name: "League of Legends", baseFps: 200, cpuWeight: 0.55, gpuWeight: 0.35, ramWeight: 0.10, settings: "High" },
+        { name: "Overwatch 2", baseFps: 150, cpuWeight: 0.40, gpuWeight: 0.50, ramWeight: 0.10, settings: "High" },
+        { name: "PUBG", baseFps: 88, cpuWeight: 0.35, gpuWeight: 0.55, ramWeight: 0.10, settings: "High" },
+        { name: "Rainbow Six Siege", baseFps: 180, cpuWeight: 0.45, gpuWeight: 0.45, ramWeight: 0.10, settings: "High" },
+        { name: "Starfield", baseFps: 48, cpuWeight: 0.30, gpuWeight: 0.60, ramWeight: 0.10, settings: "Medium" },
+      ];
 
-            function getCookie(name) {
-                const nameEQ = name + "=";
-                const ca = document.cookie.split(';');
-                for (let i = 0; i < ca.length; i++) {
-                    let c = ca[i];
-                    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-                    if (c.indexOf(nameEQ) === 0) {
-                        try {
-                            return JSON.parse(decodeURIComponent(c.substring(nameEQ.length, c.length)));
-                        } catch (e) {
-                            return null;
-                        }
-                    }
-                }
-                return null;
-            }
+      // ============================================================
+      // 2. COOKIE HELPERS
+      // ============================================================
+      function setCookie(name, value, days = 365) {
+        const d = new Date();
+        d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+        document.cookie = name + "=" + encodeURIComponent(JSON.stringify(value)) + ";expires=" + d.toUTCString() + ";path=/;SameSite=Lax";
+      }
 
-            // ------------------------------
-            // 3. STATE
-            // ------------------------------
-            let currentBuild = {
-                cpu: "Ryzen 5 2600",
-                gpu: "RX 580 8GB",
-                ram: "16GB DDR4",
-                storage: "SSD"
-            };
+      function getCookie(name) {
+        const nameEQ = name + "=";
+        const ca = document.cookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+          let c = ca[i];
+          while (c.charAt(0) === ' ') c = c.substring(1);
+          if (c.indexOf(nameEQ) === 0) {
+            try { return JSON.parse(decodeURIComponent(c.substring(nameEQ.length))); } catch(e) { return null; }
+          }
+        }
+        return null;
+      }
 
-            // Load saved build from cookie
-            const savedBuild = getCookie('pcBuild');
-            if (savedBuild) {
-                currentBuild = { ...currentBuild, ...savedBuild };
-            }
+      // ============================================================
+      // 3. STATE & DOM REFERENCES
+      // ============================================================
+      let currentBuild = {
+        cpu: "Ryzen 5 2600",
+        gpu: "RTX 3060 12GB",
+        ram: "16GB DDR4",
+        storages: [{ type: "NVMe SSD", capacity: "1TB" }]
+      };
 
-            // Load settings
-            const settings = getCookie('pcSettings') || {
-                theme: 'dark',
-                accent: '#3b82f6',
-                defaultRes: '1080p',
-                defaultFps: '144'
-            };
+      // Load from cookie
+      const savedBuild = getCookie('pcBuildAdvanced');
+      if (savedBuild) currentBuild = { ...currentBuild, ...savedBuild };
 
-            // Apply saved theme on load
-            function applyTheme(theme, accent) {
-                const root = document.documentElement;
-                if (theme === 'light') {
-                    root.style.setProperty('--theme-bg', '#f1f5f9');
-                    root.style.setProperty('--theme-card', '#ffffff');
-                    root.style.setProperty('--theme-card-soft', '#f8fafc');
-                    root.style.setProperty('--theme-border', '#cbd5e1');
-                    root.style.setProperty('--theme-text', '#0f172a');
-                    root.style.setProperty('--theme-text-dim', '#475569');
-                    document.body.style.backgroundImage = 'radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.05) 0%, transparent 50%)';
-                } else if (theme === 'custom') {
-                    root.style.setProperty('--theme-bg', '#0b0d15');
-                    root.style.setProperty('--theme-card', '#151a26');
-                    root.style.setProperty('--theme-card-soft', '#1f2633');
-                    root.style.setProperty('--theme-border', '#2c3444');
-                    root.style.setProperty('--theme-text', '#eef2f9');
-                    root.style.setProperty('--theme-text-dim', '#9aa7bc');
-                    document.body.style.backgroundImage = 'radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 50%), radial-gradient(circle at 90% 70%, rgba(168, 85, 247, 0.12) 0%, transparent 50%)';
-                } else {
-                    // dark default
-                    root.style.setProperty('--theme-bg', '#0b0d15');
-                    root.style.setProperty('--theme-card', '#151a26');
-                    root.style.setProperty('--theme-card-soft', '#1f2633');
-                    root.style.setProperty('--theme-border', '#2c3444');
-                    root.style.setProperty('--theme-text', '#eef2f9');
-                    root.style.setProperty('--theme-text-dim', '#9aa7bc');
-                    document.body.style.backgroundImage = 'radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 50%), radial-gradient(circle at 90% 70%, rgba(168, 85, 247, 0.06) 0%, transparent 50%)';
-                }
-                if (accent) {
-                    root.style.setProperty('--theme-primary', accent);
-                    root.style.setProperty('--theme-primary-glow', accent + 'cc');
-                }
-            }
+      const settings = getCookie('pcSettingsAdvanced') || {
+        theme: 'dark', accent: '#3b82f6',
+        gradient1: '#3b82f6', gradient2: '#a78bfa',
+        defaultRes: '1080p', defaultFps: '144'
+      };
 
-            applyTheme(settings.theme, settings.accent);
+      // DOM elements
+      const body = document.getElementById('appBody');
+      const cpuBrand = document.getElementById('cpuBrand');
+      const cpuSelect = document.getElementById('cpuSelect');
+      const gpuBrand = document.getElementById('gpuBrand');
+      const gpuSelect = document.getElementById('gpuSelect');
+      const ramSelect = document.getElementById('ramSelect');
+      const storageContainer = document.getElementById('storageContainer');
+      const addStorageBtn = document.getElementById('addStorageBtn');
+      const analyzeBtn = document.getElementById('analyzeBtn');
+      const buildStatus = document.getElementById('buildStatus');
+      const scoreContent = document.getElementById('scoreContent');
+      const bottleneckContent = document.getElementById('bottleneckContent');
+      const gameContent = document.getElementById('gameContent');
+      const upgradeContent = document.getElementById('upgradeContent');
 
-            // ------------------------------
-            // 4. DOM ELEMENTS
-            // ------------------------------
-            const cpuSelect = document.getElementById('cpuSelect');
-            const gpuSelect = document.getElementById('gpuSelect');
-            const ramSelect = document.getElementById('ramSelect');
-            const storageSelect = document.getElementById('storageSelect');
-            const analyzeBtn = document.getElementById('analyzeBtn');
-            const buildStatus = document.getElementById('buildStatus');
-            const scoreContent = document.getElementById('scoreContent');
-            const bottleneckContent = document.getElementById('bottleneckContent');
-            const gameContent = document.getElementById('gameContent');
-            const upgradeContent = document.getElementById('upgradeContent');
+      // ============================================================
+      // 4. THEME & SETTINGS
+      // ============================================================
+      function applyTheme() {
+        body.classList.remove('light', 'custom');
+        if (settings.theme === 'light') {
+          body.classList.add('light');
+          // Reset variables to light defaults
+          document.documentElement.style.setProperty('--bg', '#f1f5f9');
+          document.documentElement.style.setProperty('--bg-gradient', 'radial-gradient(circle at 20% 20%, rgba(59,130,246,0.05) 0%, transparent 50%)');
+          document.documentElement.style.setProperty('--card', '#ffffff');
+          document.documentElement.style.setProperty('--card-soft', '#f8fafc');
+          document.documentElement.style.setProperty('--border', '#cbd5e1');
+          document.documentElement.style.setProperty('--text', '#0f172a');
+          document.documentElement.style.setProperty('--text-dim', '#475569');
+        } else if (settings.theme === 'custom') {
+          body.classList.add('custom');
+          // Apply full custom gradient to body background
+          document.documentElement.style.setProperty('--bg', '#0b0d15');
+          document.documentElement.style.setProperty('--bg-gradient', 
+            `radial-gradient(circle at 20% 20%, ${settings.gradient1}20 0%, transparent 50%),
+             radial-gradient(circle at 90% 70%, ${settings.gradient2}20 0%, transparent 50%)`);
+          document.documentElement.style.setProperty('--card', '#151a26');
+          document.documentElement.style.setProperty('--card-soft', '#1f2633');
+          document.documentElement.style.setProperty('--border', '#2c3444');
+          document.documentElement.style.setProperty('--text', '#eef2f9');
+          document.documentElement.style.setProperty('--text-dim', '#9aa7bc');
+        } else {
+          // dark
+          document.documentElement.style.setProperty('--bg', '#0b0d15');
+          document.documentElement.style.setProperty('--bg-gradient', 
+            'radial-gradient(circle at 20% 20%, rgba(59,130,246,0.08) 0%, transparent 50%), radial-gradient(circle at 90% 70%, rgba(168,85,247,0.06) 0%, transparent 50%)');
+          document.documentElement.style.setProperty('--card', '#151a26');
+          document.documentElement.style.setProperty('--card-soft', '#1f2633');
+          document.documentElement.style.setProperty('--border', '#2c3444');
+          document.documentElement.style.setProperty('--text', '#eef2f9');
+          document.documentElement.style.setProperty('--text-dim', '#9aa7bc');
+        }
+        if (settings.accent) {
+          document.documentElement.style.setProperty('--primary', settings.accent);
+          document.documentElement.style.setProperty('--primary-glow', settings.accent + 'cc');
+        }
+        // Update theme toggle icon
+        const toggle = document.getElementById('themeToggle');
+        toggle.innerHTML = settings.theme === 'dark' ? '<i class="fas fa-moon"></i> Dark' : 
+                          settings.theme === 'light' ? '<i class="fas fa-sun"></i> Light' : 
+                          '<i class="fas fa-palette"></i> Custom';
+      }
 
-            // Set dropdowns to current build
-            cpuSelect.value = currentBuild.cpu;
-            gpuSelect.value = currentBuild.gpu;
-            ramSelect.value = currentBuild.ram;
-            storageSelect.value = currentBuild.storage;
+      applyTheme();
 
-            // ------------------------------
-            // 5. CORE ANALYSIS FUNCTIONS
-            // ------------------------------
-            function analyze() {
-                // Read current selection
-                const cpu = cpuSelect.value;
-                const gpu = gpuSelect.value;
-                const ram = ramSelect.value;
-                const storage = storageSelect.value;
+      // ============================================================
+      // 5. BUILD UI HELPERS
+      // ============================================================
+      function populateCpuModels() {
+        const brand = cpuBrand.value;
+        const models = CPUS[brand] || CPUS.AMD;
+        cpuSelect.innerHTML = models.map(m => `<option value="${m.name}">${m.name} (${m.cores}, ${m.base}-${m.boost}GHz)</option>`).join('');
+        // Try to select saved
+        if (currentBuild.cpu && models.some(m => m.name === currentBuild.cpu)) {
+          cpuSelect.value = currentBuild.cpu;
+        } else {
+          cpuSelect.value = models[0].name;
+          currentBuild.cpu = models[0].name;
+        }
+      }
 
-                // Save to cookie
-                currentBuild = { cpu, gpu, ram, storage };
-                setCookie('pcBuild', currentBuild);
-                buildStatus.textContent = `${cpu} + ${gpu}`;
+      function populateGpuModels() {
+        const brand = gpuBrand.value;
+        const models = GPUS[brand] || GPUS.NVIDIA;
+        gpuSelect.innerHTML = models.map(m => `<option value="${m.name}">${m.name} (${m.vram}GB, ${m.tdp}W)</option>`).join('');
+        if (currentBuild.gpu && models.some(m => m.name === currentBuild.gpu)) {
+          gpuSelect.value = currentBuild.gpu;
+        } else {
+          gpuSelect.value = models[0].name;
+          currentBuild.gpu = models[0].name;
+        }
+      }
 
-                // Calculate multipliers
-                const cpuMult = CPU_MULT[cpu] || 1;
-                const gpuMult = GPU_MULT[gpu] || 1;
-                const ramMult = RAM_MULT[ram] || 1;
+      function renderStorages() {
+        storageContainer.innerHTML = '';
+        currentBuild.storages.forEach((s, idx) => {
+          const div = document.createElement('div');
+          div.className = 'storage-item';
+          div.innerHTML = `
+            <select class="storage-type" data-index="${idx}">
+              ${STORAGE_TYPES.map(t => `<option value="${t.name}" ${t.name === s.type ? 'selected' : ''}>${t.name}</option>`).join('')}
+            </select>
+            <select class="storage-capacity" data-index="${idx}">
+              ${['256GB','512GB','1TB','2TB','4TB','8TB'].map(c => `<option value="${c}" ${c === s.capacity ? 'selected' : ''}>${c}</option>`).join('')}
+            </select>
+            ${currentBuild.storages.length > 1 ? `<span class="remove-storage" data-index="${idx}"><i class="fas fa-trash"></i></span>` : ''}
+          `;
+          storageContainer.appendChild(div);
+        });
+        // Attach events
+        document.querySelectorAll('.storage-type').forEach(sel => {
+          sel.addEventListener('change', (e) => {
+            const idx = e.target.dataset.index;
+            currentBuild.storages[idx].type = e.target.value;
+          });
+        });
+        document.querySelectorAll('.storage-capacity').forEach(sel => {
+          sel.addEventListener('change', (e) => {
+            const idx = e.target.dataset.index;
+            currentBuild.storages[idx].capacity = e.target.value;
+          });
+        });
+        document.querySelectorAll('.remove-storage').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const idx = parseInt(e.target.closest('.remove-storage').dataset.index);
+            currentBuild.storages.splice(idx, 1);
+            renderStorages();
+          });
+        });
+      }
 
-                // Compute score (0-100) – rough blend
-                const cpuScore = Math.min(100, Math.round(cpuMult * 50));
-                const gpuScore = Math.min(100, Math.round(gpuMult * 40));
-                const ramScore = Math.min(100, Math.round(ramMult * 70));
-                const totalScore = Math.round((cpuScore * 0.3 + gpuScore * 0.5 + ramScore * 0.2));
+      addStorageBtn.addEventListener('click', () => {
+        if (currentBuild.storages.length >= 4) return alert('Maximum 4 drives');
+        currentBuild.storages.push({ type: 'NVMe SSD', capacity: '1TB' });
+        renderStorages();
+      });
 
-                // Determine best/worst component
-                const scores = { CPU: cpuScore, GPU: gpuScore, RAM: ramScore };
-                const best = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
-                const worst = Object.keys(scores).reduce((a, b) => scores[a] < scores[b] ? a : b);
+      // Brand change listeners
+      cpuBrand.addEventListener('change', () => { populateCpuModels(); });
+      gpuBrand.addEventListener('change', () => { populateGpuModels(); });
 
-                // Render score card
-                const ratingText = totalScore >= 85 ? "Excellent" : totalScore >= 70 ? "Very Good" : totalScore >= 50 ? "Good" : "Needs upgrade";
-                scoreContent.innerHTML = `
-                    <div class="score-header">
-                        <span class="score-number">${totalScore}</span>
-                        <span class="score-sub">/ 100</span>
-                    </div>
-                    <p style="margin-bottom: 1.2rem; color: var(--theme-text-dim);">${ratingText}</p>
-                    <div class="meter">
-                        <div class="meter-row">
-                            <span class="meter-label">Gaming</span>
-                            <div class="meter-bar-bg"><div class="meter-bar-fill" style="width:${gpuScore}%"></div></div>
-                            <span class="meter-value">${gpuScore}</span>
-                        </div>
-                        <div class="meter-row">
-                            <span class="meter-label">CPU</span>
-                            <div class="meter-bar-bg"><div class="meter-bar-fill" style="width:${cpuScore}%"></div></div>
-                            <span class="meter-value">${cpuScore}</span>
-                        </div>
-                        <div class="meter-row">
-                            <span class="meter-label">RAM</span>
-                            <div class="meter-bar-bg"><div class="meter-bar-fill" style="width:${ramScore}%"></div></div>
-                            <span class="meter-value">${ramScore}</span>
-                        </div>
-                    </div>
-                    <p style="margin-top: 1.2rem; font-size: 0.9rem;">Your <strong>${best}</strong> is currently your strongest component. <strong>${worst}</strong> is your biggest limitation.</p>
-                `;
+      // Initialize selects
+      populateCpuModels();
+      populateGpuModels();
+      ramSelect.value = currentBuild.ram;
+      renderStorages();
 
-                // Bottleneck analysis
-                const bottleneckItems = [];
-                if (cpuMult < 0.8) bottleneckItems.push({ icon: 'fa-microchip', label: 'CPU', pct: 45, desc: 'Your CPU is limiting performance in CPU-heavy games.' });
-                if (gpuMult < 0.8) bottleneckItems.push({ icon: 'fa-display', label: 'GPU', pct: 65, desc: 'Your GPU is limiting performance in most GPU-heavy games.' });
-                if (ramMult < 0.9) bottleneckItems.push({ icon: 'fa-memory', label: 'RAM', pct: 30, desc: 'Some newer games may benefit from additional memory.' });
+      // ============================================================
+      // 6. CORE ANALYSIS
+      // ============================================================
+      function analyze() {
+        // Read selections
+        currentBuild.cpu = cpuSelect.value;
+        currentBuild.gpu = gpuSelect.value;
+        currentBuild.ram = ramSelect.value;
+        // storages already in currentBuild
+        setCookie('pcBuildAdvanced', currentBuild);
+        buildStatus.textContent = `${currentBuild.cpu} + ${currentBuild.gpu}`;
 
-                if (bottleneckItems.length === 0) {
-                    bottleneckContent.innerHTML = `<p>✅ No major bottlenecks detected. Your system is well balanced.</p>`;
-                } else {
-                    let html = '';
-                    bottleneckItems.forEach(item => {
-                        html += `
-                            <div class="bottleneck-row">
-                                <div class="bn-icon"><i class="fas ${item.icon}"></i></div>
-                                <div style="flex:1;">
-                                    <div class="flex-between"><strong>${item.label}</strong> <span>${item.pct}% of games</span></div>
-                                    <div class="text-small">${item.desc}</div>
-                                </div>
-                                <button class="btn btn-ghost btn-sm why-btn" data-component="${item.label}">Why?</button>
-                            </div>
-                        `;
-                    });
-                    bottleneckContent.innerHTML = html;
-                    document.querySelectorAll('.why-btn').forEach(btn => {
-                        btn.addEventListener('click', (e) => {
-                            const comp = e.target.dataset.component;
-                            alert(`Your ${comp} has a moderate impact. In CPU-heavy games, the GPU can finish frames faster than the CPU can prepare them. Upgrading would help, but so would tweaking settings.`);
-                        });
-                    });
-                }
+        // Get component data
+        let cpuData, gpuData;
+        for (let brand in CPUS) {
+          const found = CPUS[brand].find(c => c.name === currentBuild.cpu);
+          if (found) { cpuData = found; break; }
+        }
+        for (let brand in GPUS) {
+          const found = GPUS[brand].find(g => g.name === currentBuild.gpu);
+          if (found) { gpuData = found; break; }
+        }
+        if (!cpuData) cpuData = CPUS.AMD[0];
+        if (!gpuData) gpuData = GPUS.NVIDIA[0];
 
-                // Game estimates
-                let gameHtml = '<div class="game-grid">';
-                GAME_DB.slice(0, 8).forEach(game => {
-                    // Estimate FPS: baseFps * (cpuMult^cpuWeight * gpuMult^gpuWeight * ramMult^ramWeight)
-                    const estimated = Math.round(game.baseFps * Math.pow(cpuMult, game.cpuWeight) * Math.pow(gpuMult, game.gpuWeight) * Math.pow(ramMult, game.ramWeight));
-                    const confidence = estimated > 120 ? 'High' : estimated > 60 ? 'Medium' : 'Low';
-                    const tagClass = estimated >= 100 ? 'tag-green' : estimated >= 50 ? 'tag-yellow' : 'tag-red';
-                    const quality = estimated >= 100 ? 'Excellent' : estimated >= 50 ? 'Playable' : 'Lower settings';
-                    gameHtml += `
-                        <div class="game-card">
-                            <div class="game-title">${game.name} <span class="fps-badge">~${estimated}</span></div>
-                            <div class="flex-between">
-                                <span class="tag ${tagClass}">${quality}</span>
-                                <span class="text-small">${game.settings}</span>
-                            </div>
-                            <div class="confidence">Confidence: ${confidence}</div>
-                        </div>
-                    `;
-                });
-                gameHtml += '</div>';
-                gameContent.innerHTML = gameHtml;
+        const ramData = RAMS[currentBuild.ram] || RAMS["16GB DDR4"];
 
-                // Upgrade path
-                const upgrades = UPGRADE_MAP[gpu] || UPGRADE_MAP["RX 580 8GB"];
-                upgradeContent.innerHTML = `
-                    <div class="upgrade-path">
-                        <div class="upgrade-step"><i class="fas fa-circle" style="font-size:8px; color:var(--theme-primary);"></i> Current: ${gpu}</div>
-                        <i class="fas fa-arrow-right upgrade-arrow"></i>
-                        <div class="upgrade-step">Best value: ${upgrades.value}</div>
-                        <i class="fas fa-arrow-right upgrade-arrow"></i>
-                        <div class="upgrade-step">High-end: ${upgrades.high}</div>
-                        <i class="fas fa-arrow-right upgrade-arrow"></i>
-                        <div class="upgrade-step">Enthusiast: ${upgrades.enthusiast}</div>
-                    </div>
-                    <table class="upgrade-table">
-                        <thead><tr><th>Upgrade</th><th>FPS gain</th><th>Cost</th><th>Value</th></tr></thead>
-                        <tbody>
-                            <tr><td>Option A (${upgrades.value})</td><td>+42%</td><td>$</td><td class="stars">★★★★★</td></tr>
-                            <tr><td>Option B (${upgrades.high})</td><td>+86%</td><td>$$</td><td class="stars">★★★★</td></tr>
-                            <tr><td>Option C (${upgrades.enthusiast})</td><td>+145%</td><td>$$$$</td><td class="stars">★★★</td></tr>
-                        </tbody>
-                    </table>
-                    <p class="text-small" style="margin-top:1rem;">Best upgrade per dollar: <strong>GPU</strong> (RX 7600 class)</p>
-                `;
-            }
+        // Calculate scores
+        const cpuScore = Math.min(100, Math.round(cpuData.mult * 45));
+        const gpuScore = Math.min(100, Math.round(gpuData.mult * 35));
+        const ramScore = Math.min(100, Math.round(ramData.mult * 70));
+        const totalScore = Math.round((cpuScore * 0.3 + gpuScore * 0.5 + ramScore * 0.2));
 
-            // Attach analyze event
-            analyzeBtn.addEventListener('click', analyze);
+        const best = cpuScore > gpuScore ? (cpuScore > ramScore ? 'CPU' : 'RAM') : (gpuScore > ramScore ? 'GPU' : 'RAM');
+        const worst = cpuScore < gpuScore ? (cpuScore < ramScore ? 'CPU' : 'RAM') : (gpuScore < ramScore ? 'GPU' : 'RAM');
 
-            // Auto-analyze if build exists in cookie
-            if (savedBuild) {
-                analyze();
-            }
+        // Score card
+        const ratingText = totalScore >= 85 ? "Excellent" : totalScore >= 70 ? "Very Good" : totalScore >= 50 ? "Good" : "Needs upgrade";
+        scoreContent.innerHTML = `
+          <div class="score-header">
+            <span class="score-number">${totalScore}</span>
+            <span class="score-sub">/ 100</span>
+          </div>
+          <p style="margin-bottom:1.2rem; color:var(--text-dim);">${ratingText}</p>
+          <div class="meter">
+            <div class="meter-row"><span class="meter-label">Gaming</span><div class="meter-bar-bg"><div class="meter-bar-fill" style="width:${gpuScore}%"></div></div><span class="meter-value">${gpuScore}</span></div>
+            <div class="meter-row"><span class="meter-label">CPU</span><div class="meter-bar-bg"><div class="meter-bar-fill" style="width:${cpuScore}%"></div></div><span class="meter-value">${cpuScore}</span></div>
+            <div class="meter-row"><span class="meter-label">RAM</span><div class="meter-bar-bg"><div class="meter-bar-fill" style="width:${ramScore}%"></div></div><span class="meter-value">${ramScore}</span></div>
+          </div>
+          <p style="margin-top:1.2rem; font-size:0.9rem;">Your <strong>${best}</strong> is strongest. <strong>${worst}</strong> is the biggest limitation.</p>
+        `;
 
-            // ------------------------------
-            // 6. SETTINGS MODAL
-            // ------------------------------
-            const settingsModal = document.getElementById('settingsModal');
-            const settingsBtn = document.getElementById('settingsBtn');
-            const closeSettings = document.getElementById('closeSettings');
-            const themeColors = document.querySelectorAll('.color-dot');
-            const accentColorPicker = document.getElementById('accentColorPicker');
-            const defaultRes = document.getElementById('defaultRes');
-            const defaultFps = document.getElementById('defaultFps');
-            const resetSettings = document.getElementById('resetSettings');
-            const saveSettings = document.getElementById('saveSettings');
+        // Bottleneck
+        const bottlenecks = [];
+        if (cpuData.mult < 0.9) bottlenecks.push({ icon: 'fa-microchip', label: 'CPU', pct: 45, desc: 'CPU limiting in CPU-heavy games.' });
+        if (gpuData.mult < 0.9) bottlenecks.push({ icon: 'fa-display', label: 'GPU', pct: 65, desc: 'GPU limiting in most GPU-heavy games.' });
+        if (ramData.mult < 0.9) bottlenecks.push({ icon: 'fa-memory', label: 'RAM', pct: 30, desc: 'More memory may help newer games.' });
 
-            // Set current settings in modal
-            accentColorPicker.value = settings.accent || '#3b82f6';
-            defaultRes.value = settings.defaultRes || '1080p';
-            defaultFps.value = settings.defaultFps || '144';
-
-            settingsBtn.addEventListener('click', () => {
-                settingsModal.classList.add('active');
+        if (bottlenecks.length === 0) {
+          bottleneckContent.innerHTML = `<p>✅ No major bottlenecks detected. Your system is well balanced.</p>`;
+        } else {
+          bottleneckContent.innerHTML = bottlenecks.map(b => `
+            <div class="bottleneck-row">
+              <div class="bn-icon"><i class="fas ${b.icon}"></i></div>
+              <div style="flex:1;">
+                <div class="flex-between"><strong>${b.label}</strong> <span>${b.pct}% of games</span></div>
+                <div class="text-small">${b.desc}</div>
+              </div>
+              <button class="btn btn-ghost btn-sm why-btn" data-component="${b.label}">Why?</button>
+            </div>
+          `).join('');
+          document.querySelectorAll('.why-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              alert(`Your ${e.target.dataset.component} is a limiting factor. Consider upgrading or adjusting settings.`);
             });
+          });
+        }
 
-            closeSettings.addEventListener('click', () => {
-                settingsModal.classList.remove('active');
-            });
+        // Games
+        let gameHtml = '<div class="game-grid">';
+        GAME_DB.slice(0, 12).forEach(game => {
+          const estimated = Math.round(game.baseFps * Math.pow(cpuData.mult, game.cpuWeight) * Math.pow(gpuData.mult, game.gpuWeight) * Math.pow(ramData.mult, game.ramWeight));
+          const tagClass = estimated >= 100 ? 'tag-green' : estimated >= 50 ? 'tag-yellow' : 'tag-red';
+          const quality = estimated >= 100 ? 'Excellent' : estimated >= 50 ? 'Playable' : 'Lower settings';
+          gameHtml += `
+            <div class="game-card">
+              <div class="game-title">${game.name} <span class="fps-badge">~${estimated}</span></div>
+              <div class="flex-between">
+                <span class="tag ${tagClass}">${quality}</span>
+                <span class="text-small">${game.settings}</span>
+              </div>
+              <div class="text-small" style="margin-top:0.3rem;">Confidence: ${estimated > 120 ? 'High' : estimated > 60 ? 'Medium' : 'Low'}</div>
+            </div>
+          `;
+        });
+        gameHtml += '</div>';
+        gameContent.innerHTML = gameHtml;
 
-            settingsModal.addEventListener('click', (e) => {
-                if (e.target === settingsModal) settingsModal.classList.remove('active');
-            });
+        // Upgrade path (improved)
+        const currentGpu = currentBuild.gpu;
+        let upgradeValue = 'RX 7600', upgradeHigh = 'RTX 4070', upgradeEnthusiast = 'RTX 5080';
+        if (currentGpu.includes('580')) { upgradeValue = 'RX 7600'; upgradeHigh = 'RTX 4070'; upgradeEnthusiast = 'RTX 5080'; }
+        else if (currentGpu.includes('3060')) { upgradeValue = 'RX 7600'; upgradeHigh = 'RTX 4070'; upgradeEnthusiast = 'RTX 5080'; }
+        else if (currentGpu.includes('4070')) { upgradeValue = 'RTX 4070'; upgradeHigh = 'RTX 5080'; upgradeEnthusiast = 'RTX 5090'; }
+        else if (currentGpu.includes('7600')) { upgradeValue = 'RTX 4070'; upgradeHigh = 'RTX 5080'; upgradeEnthusiast = 'RTX 5090'; }
+        else if (currentGpu.includes('5080')) { upgradeValue = 'RTX 5080'; upgradeHigh = 'RTX 5090'; upgradeEnthusiast = 'RTX 5090'; }
+        else if (currentGpu.includes('5090')) { upgradeValue = 'RTX 5090'; upgradeHigh = 'RTX 5090'; upgradeEnthusiast = 'RTX 5090'; }
+        else { upgradeValue = 'RTX 4070'; upgradeHigh = 'RTX 5080'; upgradeEnthusiast = 'RTX 5090'; }
 
-            themeColors.forEach(dot => {
-                dot.addEventListener('click', () => {
-                    themeColors.forEach(d => d.classList.remove('active'));
-                    dot.classList.add('active');
-                });
-            });
+        upgradeContent.innerHTML = `
+          <div class="upgrade-path">
+            <div class="upgrade-step"><i class="fas fa-circle" style="font-size:8px; color:var(--primary);"></i> Current: ${currentGpu}</div>
+            <i class="fas fa-arrow-right upgrade-arrow"></i>
+            <div class="upgrade-step">Best value: ${upgradeValue}</div>
+            <i class="fas fa-arrow-right upgrade-arrow"></i>
+            <div class="upgrade-step">High-end: ${upgradeHigh}</div>
+            <i class="fas fa-arrow-right upgrade-arrow"></i>
+            <div class="upgrade-step">Enthusiast: ${upgradeEnthusiast}</div>
+          </div>
+          <table class="upgrade-table">
+            <thead><tr><th>Upgrade</th><th>FPS gain</th><th>Cost</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td>Option A (${upgradeValue})</td><td>+42%</td><td>$</td><td class="stars">★★★★★</td></tr>
+              <tr><td>Option B (${upgradeHigh})</td><td>+86%</td><td>$$</td><td class="stars">★★★★</td></tr>
+              <tr><td>Option C (${upgradeEnthusiast})</td><td>+145%</td><td>$$$$</td><td class="stars">★★★</td></tr>
+            </tbody>
+          </table>
+          <p class="text-small" style="margin-top:1rem;">Best upgrade per dollar: <strong>GPU</strong></p>
+        `;
+      }
 
-            // Highlight current theme dot
-            themeColors.forEach(dot => {
-                if (dot.dataset.theme === settings.theme) dot.classList.add('active');
-            });
+      analyzeBtn.addEventListener('click', analyze);
 
-            saveSettings.addEventListener('click', () => {
-                const newSettings = {
-                    theme: document.querySelector('.color-dot.active')?.dataset.theme || 'dark',
-                    accent: accentColorPicker.value,
-                    defaultRes: defaultRes.value,
-                    defaultFps: defaultFps.value,
-                };
-                setCookie('pcSettings', newSettings);
-                applyTheme(newSettings.theme, newSettings.accent);
-                settingsModal.classList.remove('active');
-            });
+      // Auto-analyze if saved build exists
+      if (savedBuild) {
+        // Set UI values
+        cpuBrand.value = currentBuild.cpu.includes('Ryzen') ? 'AMD' : 'Intel';
+        populateCpuModels();
+        cpuSelect.value = currentBuild.cpu;
+        gpuBrand.value = currentBuild.gpu.includes('RTX') ? 'NVIDIA' : currentBuild.gpu.includes('RX') ? 'AMD' : 'Intel';
+        populateGpuModels();
+        gpuSelect.value = currentBuild.gpu;
+        ramSelect.value = currentBuild.ram;
+        renderStorages();
+        analyze();
+      }
 
-            resetSettings.addEventListener('click', () => {
-                if (confirm('Reset all settings to default?')) {
-                    const defaults = {
-                        theme: 'dark',
-                        accent: '#3b82f6',
-                        defaultRes: '1080p',
-                        defaultFps: '144'
-                    };
-                    setCookie('pcSettings', defaults);
-                    applyTheme(defaults.theme, defaults.accent);
-                    location.reload();
-                }
-            });
+      // ============================================================
+      // 7. SETTINGS MODAL
+      // ============================================================
+      const settingsModal = document.getElementById('settingsModal');
+      const settingsBtn = document.getElementById('settingsBtn');
+      const closeSettings = document.getElementById('closeSettings');
+      const themeColors = document.querySelectorAll('.color-dot');
+      const accentColorPicker = document.getElementById('accentColorPicker');
+      const gradientColor1 = document.getElementById('gradientColor1');
+      const gradientColor2 = document.getElementById('gradientColor2');
+      const defaultRes = document.getElementById('defaultRes');
+      const defaultFps = document.getElementById('defaultFps');
+      const resetSettings = document.getElementById('resetSettings');
+      const saveSettings = document.getElementById('saveSettings');
 
-            // Theme toggle quick button
-            const themeToggle = document.getElementById('themeToggle');
-            themeToggle.addEventListener('click', () => {
-                const current = getCookie('pcSettings')?.theme || 'dark';
-                const newTheme = current === 'dark' ? 'light' : 'dark';
-                const newSettings = { ...settings, theme: newTheme };
-                setCookie('pcSettings', newSettings);
-                applyTheme(newTheme, settings.accent);
-                themeToggle.innerHTML = newTheme === 'dark' ? '<i class="fas fa-moon"></i> Dark' : '<i class="fas fa-sun"></i> Light';
-            });
+      // Set current settings in modal
+      accentColorPicker.value = settings.accent || '#3b82f6';
+      gradientColor1.value = settings.gradient1 || '#3b82f6';
+      gradientColor2.value = settings.gradient2 || '#a78bfa';
+      defaultRes.value = settings.defaultRes || '1080p';
+      defaultFps.value = settings.defaultFps || '144';
 
-            // Update toggle button text
-            const currentTheme = getCookie('pcSettings')?.theme || 'dark';
-            themeToggle.innerHTML = currentTheme === 'dark' ? '<i class="fas fa-moon"></i> Dark' : '<i class="fas fa-sun"></i> Light';
+      settingsBtn.addEventListener('click', () => settingsModal.classList.add('active'));
+      closeSettings.addEventListener('click', () => settingsModal.classList.remove('active'));
+      settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) settingsModal.classList.remove('active'); });
 
-            // ------------------------------
-            // 7. STORAGE OF MULTIPLE BUILDS (simplified – save current on analyze)
-            // ------------------------------
-            // Already saved in analyze() with setCookie('pcBuild')
-            // For "My Builds" feature we could expand, but this satisfies the core requirement.
+      themeColors.forEach(dot => {
+        dot.addEventListener('click', () => {
+          themeColors.forEach(d => d.classList.remove('active'));
+          dot.classList.add('active');
+        });
+        if (dot.dataset.theme === settings.theme) dot.classList.add('active');
+      });
 
-            console.log('PC Playground ready.');
-        })();
-    </script>
+      saveSettings.addEventListener('click', () => {
+        const newSettings = {
+          theme: document.querySelector('.color-dot.active')?.dataset.theme || 'dark',
+          accent: accentColorPicker.value,
+          gradient1: gradientColor1.value,
+          gradient2: gradientColor2.value,
+          defaultRes: defaultRes.value,
+          defaultFps: defaultFps.value,
+        };
+        setCookie('pcSettingsAdvanced', newSettings);
+        Object.assign(settings, newSettings);
+        applyTheme();
+        settingsModal.classList.remove('active');
+      });
+
+      resetSettings.addEventListener('click', () => {
+        if (confirm('Reset all settings to default?')) {
+          const defaults = { theme: 'dark', accent: '#3b82f6', gradient1: '#3b82f6', gradient2: '#a78bfa', defaultRes: '1080p', defaultFps: '144' };
+          setCookie('pcSettingsAdvanced', defaults);
+          Object.assign(settings, defaults);
+          applyTheme();
+          location.reload();
+        }
+      });
+
+      // Theme toggle quick button
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        const current = settings.theme || 'dark';
+        const newTheme = current === 'dark' ? 'light' : current === 'light' ? 'custom' : 'dark';
+        settings.theme = newTheme;
+        setCookie('pcSettingsAdvanced', settings);
+        applyTheme();
+      });
+
+      // ============================================================
+      // 8. MISC: update UI after brand change
+      // ============================================================
+      // (already handled by listeners)
+
+      console.log('PC Playground Advanced ready.');
+    })();
+  </script>
 </body>
 </html>
