@@ -2737,120 +2737,6 @@ function setBapcStorageQty(n){
   renderBapcCostTable();
   renderBapcWarnings();
 }
-
-/* ================================================================
-   BUILD A PC — VISUAL CASE BUILDER (Paste 5b-2)
-   Renders the case SVG, drops in component icons, wires up
-   drag-to-rotate and compatibility glow.
-   ================================================================ */
-
-/* ---------- viewport transform state ---------- */
-bapc.view = {
-  rotY: -14,      // yaw in degrees
-  rotX: 8,        // pitch in degrees
-  dragging: false,
-  startX: 0,
-  startY: 0,
-  startRotY: -14,
-  startRotX: 8
-};
-
-/* ---------- main scene renderer ---------- */
-let b3dBooted = false;
-function renderBapcScene(){
-  const svg = $('#bapcSvg');
-  const vp  = $('#bapcViewport');
-  if(!svg || !vp) return;
-
-  // Always rebuild the scene from current bapc state
-  const objects = window.caseBuilder
-    ? window.caseBuilder.build(bapc.case)
-    : [];
-
-  if(!b3dBooted){
-    b3d.init(vp, svg);
-    b3dBooted = true;
-  }
-
-  b3d.setScene(objects);
-
-  // Auto-frame the camera based on case size
-  const dims = caseDims(bapc.case);
-  if(dims){
-    b3d._state.camera.dist = Math.max(dims.w, dims.h, dims.d) * 7.5;
-  }
-}
-
-function caseDims(c){
-  if(!c) return null;
-  switch(c.form){
-    case 'ITX':   return { w:1.4, h:2.4, d:2.2 };
-    case 'mATX':  return { w:1.7, h:3.2, d:3.0 };
-    case 'ATX':   return { w:1.9, h:3.8, d:3.6 };
-    case 'E-ATX': return { w:2.1, h:4.4, d:4.0 };
-    default:      return { w:1.9, h:3.8, d:3.6 };
-  }
-}
-
-/* ---------- drag-to-rotate ---------- */
-(function wireBapcRotation(){
-  const viewport = $('#bapcViewport');
-  if(!viewport) return;
-
-  let pointerId = null;
-
-  viewport.addEventListener('pointerdown', (e)=>{
-    /* ignore if user is on a select / button inside the viewport */
-    if(e.target.closest('button, select, input, a')) return;
-    pointerId = e.pointerId;
-    viewport.setPointerCapture(pointerId);
-    bapc.view.dragging = true;
-    bapc.view.startX = e.clientX;
-    bapc.view.startY = e.clientY;
-    bapc.view.startRotY = bapc.view.rotY;
-    bapc.view.startRotX = bapc.view.rotX;
-  });
-
-  viewport.addEventListener('pointermove', (e)=>{
-    if(!bapc.view.dragging || e.pointerId !== pointerId) return;
-    const dx = e.clientX - bapc.view.startX;
-    const dy = e.clientY - bapc.view.startY;
-    bapc.view.rotY = clamp(bapc.view.startRotY + dx * 0.4, -60, 60);
-    bapc.view.rotX = clamp(bapc.view.startRotX - dy * 0.2, -20, 30);
-    const svg = $('#bapcSvg');
-    if(svg){
-      svg.style.transform = `perspective(1200px) rotateX(${bapc.view.rotX}deg) rotateY(${bapc.view.rotY}deg)`;
-    }
-  });
-
-  viewport.addEventListener('pointerup', (e)=>{
-    if(e.pointerId !== pointerId) return;
-    bapc.view.dragging = false;
-    pointerId = null;
-  });
-
-  viewport.addEventListener('pointercancel', ()=>{
-    bapc.view.dragging = false;
-    pointerId = null;
-  });
-})();
-
-/* ---------- re-render scene whenever a bapc field changes ---------- */
-document.addEventListener('change', (e)=>{
-  if(!e.target || !e.target.id) return;
-  if(!e.target.id.startsWith('bapc')) return;
-  renderBapcScene();
-});
-
-/* ---------- re-render scene on window resize (keeps crisp) ---------- */
-let bapcResizeT = null;
-window.addEventListener('resize', ()=>{
-  clearTimeout(bapcResizeT);
-  bapcResizeT = setTimeout(()=>{
-    if($('#page-buildapc')?.classList.contains('active')) renderBapcScene();
-  }, 120);
-});
-
 /* inject mini icons into Parts labels */
 (function injectBapcMiniIcons(){
   document.querySelectorAll('.bapc-mini-icon').forEach(el=>{
@@ -2898,752 +2784,243 @@ window.addEventListener('resize', ()=>{
 })();
 
 /* ================================================================
-   5c-1  —  3D RENDERER CORE
+   B-1  —  Three.js scene manager for Build-A-PC
    ----------------------------------------------------------------
-   Pure-JS 3D pipeline: vectors, matrices, projection, face sort,
-   painter's algorithm rendering to SVG. No libraries.
-
-   Public API used by later stages:
-     b3d.init(viewportEl, svgEl)
-     b3d.setScene(objectsArray)
-     b3d.reset()
+   Boots a Three.js WebGL renderer into the existing #bapcSvg's
+   parent viewport. Manages camera orbit, resize, and lifecycle.
    ================================================================ */
-const b3d = (function(){
+const bScene = (function(){
+  let renderer, scene, camera, controls, container;
+  let rafId = null;
+  let booted = false;
+  let currentObjects = [];
 
-  /* --------------------------------------------------------------
-     MATH — vec3, mat4
-     -------------------------------------------------------------- */
-  const V = {
-    sub: (a,b) => [a[0]-b[0], a[1]-b[1], a[2]-b[2]],
-    add: (a,b) => [a[0]+b[0], a[1]+b[1], a[2]+b[2]],
-    scale: (a,s) => [a[0]*s, a[1]*s, a[2]*s],
-    dot: (a,b) => a[0]*b[0] + a[1]*b[1] + a[2]*b[2],
-    cross: (a,b) => [
-      a[1]*b[2] - a[2]*b[1],
-      a[2]*b[0] - a[0]*b[2],
-      a[0]*b[1] - a[1]*b[0]
-    ],
-    len: a => Math.sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]),
-    norm: a => {
-      const l = V.len(a) || 1;
-      return [a[0]/l, a[1]/l, a[2]/l];
-    }
-  };
-
-    const M = {
-    ident: () => [
-      1,0,0,0,
-      0,1,0,0,
-      0,0,1,0,
-      0,0,0,1
-    ],
-    rotX: (rad) => {
-      const c = Math.cos(rad), s = Math.sin(rad);
-      return [
-        1,0,0,0,
-        0,c,-s,0,
-        0,s,c,0,
-        0,0,0,1
-      ];
-    },
-    rotY: (rad) => {
-      const c = Math.cos(rad), s = Math.sin(rad);
-      return [
-        c,0,s,0,
-        0,1,0,0,
-        -s,0,c,0,
-        0,0,0,1
-      ];
-    },
-    perspective: (fovDeg, aspect, near, far) => {
-      const f = 1 / Math.tan((fovDeg * Math.PI / 180) / 2);
-      const nf = 1 / (near - far);
-      return [
-        f/aspect, 0, 0, 0,
-        0, f, 0, 0,
-        0, 0, (far + near) * nf, -1,
-        0, 0, 2 * far * near * nf, 0
-      ];
-    },
-    trans: (x,y,z) => [
-      1,0,0,0,
-      0,1,0,0,
-      0,0,1,0,
-      x,y,z,1
-    ],
-    mul: (a,b) => {
-      const r = new Array(16);
-      for(let i = 0; i < 4; i++){
-        for(let j = 0; j < 4; j++){
-          let s = 0;
-          for(let k = 0; k < 4; k++){
-            s += a[k*4+j] * b[i*4+k];
-          }
-          r[i*4+j] = s;
-        }
-      }
-      return r;
-    },
-    apply: (m,v) => [
-      m[0]*v[0] + m[4]*v[1] + m[8]*v[2]  + m[12]*v[3],
-      m[1]*v[0] + m[5]*v[1] + m[9]*v[2]  + m[13]*v[3],
-      m[2]*v[0] + m[6]*v[1] + m[10]*v[2] + m[14]*v[3],
-      m[3]*v[0] + m[7]*v[1] + m[11]*v[2] + m[15]*v[3]
-    ]
-  };
-
-  /* --------------------------------------------------------------
-     MESH BUILDERS — these return {verts, faces}
-     verts: array of [x,y,z]
-     faces: array of { idx:[a,b,c,d], color, ...meta }
-     -------------------------------------------------------------- */
-  function boxMesh(w, h, d, color, opts){
-    opts = opts || {};
-    const x = w/2, y = h/2, z = d/2;
-    const verts = [
-      [-x,-y,-z], [ x,-y,-z], [ x, y,-z], [-x, y,-z], // back   (0-3)
-      [-x,-y, z], [ x,-y, z], [ x, y, z], [-x, y, z]  // front  (4-7)
-    ];
-    const shade = opts.shade !== false;
-    const base = color || '#3b82f6';
-    // six faces; colors shaded slightly per direction for depth cue
-    const faces = [
-      { idx:[4,5,6,7], color: base,                     // front
-        normal:[0,0,1], meta: opts.meta || {} },
-      { idx:[1,0,3,2], color: shadeHex(base, 0.75),     // back
-        normal:[0,0,-1], meta: opts.meta || {} },
-      { idx:[0,4,7,3], color: shadeHex(base, 0.88),     // left
-        normal:[-1,0,0], meta: opts.meta || {} },
-      { idx:[5,1,2,6], color: shadeHex(base, 0.92),     // right
-        normal:[1,0,0], meta: opts.meta || {} },
-      { idx:[3,7,6,2], color: shadeHex(base, 1.10),     // top
-        normal:[0,1,0], meta: opts.meta || {} },
-      { idx:[0,1,5,4], color: shadeHex(base, 0.70),     // bottom
-        normal:[0,-1,0], meta: opts.meta || {} }
-    ];
-    return { verts, faces };
-  }
-
-  function shadeHex(hex, factor){
-    // factor 1 = original, <1 darker, >1 lighter
-    const c = hex.replace('#','');
-    let r = parseInt(c.substring(0,2),16);
-    let g = parseInt(c.substring(2,4),16);
-    let b = parseInt(c.substring(4,6),16);
-    if(factor > 1){
-      r = Math.min(255, Math.round(r + (255-r) * (factor-1)));
-      g = Math.min(255, Math.round(g + (255-g) * (factor-1)));
-      b = Math.min(255, Math.round(b + (255-b) * (factor-1)));
-    } else {
-      r = Math.round(r * factor);
-      g = Math.round(g * factor);
-      b = Math.round(b * factor);
-    }
-    const h = n => n.toString(16).padStart(2,'0');
-    return '#' + h(r) + h(g) + h(b);
-  }
-
-  /* --------------------------------------------------------------
-     STATE
-     -------------------------------------------------------------- */
-  const state = {
-    viewport: null,
-    svg: null,
-    objects: [],       // each: { mesh, pos:[x,y,z], rot:[rx,ry,rz], scale, id }
-    camera: {
-      rotY: -30 * Math.PI/180,
-      rotX: 20 * Math.PI/180,
-      dist: 20,         // camera distance from origin (for zoom)
-      fov: 45
-    },
-    drag: {
-      active: false,
-      startX: 0,
-      startY: 0,
-      startRotY: 0,
-      startRotX: 0
-    },
-    W: 800,
-    H: 500,
+  // Simple orbit implementation (no OrbitControls import needed)
+  const orbit = {
+    theta: -0.6,     // yaw
+    phi:   1.15,     // pitch
+    radius: 6,
+    target: new THREE.Vector3(0, 0, 0),
+    dragging: false,
+    lastX: 0,
+    lastY: 0,
     autoRotate: true,
-    autoRotSpeed: 0.12   // degrees per frame
+    autoSpeed: 0.15
   };
 
-  /* --------------------------------------------------------------
-     PUBLIC API
-     -------------------------------------------------------------- */
-  function init(viewportEl, svgEl){
-    state.viewport = viewportEl;
-    state.svg = svgEl;
-    if(!state.svg) return;
-    const vb = state.svg.getAttribute('viewBox') || '0 0 800 500';
-    const parts = vb.split(' ').map(Number);
-    state.W = parts[2] || 800;
-    state.H = parts[3] || 500;
-    state.svg.setAttribute('viewBox', `0 0 ${state.W} ${state.H}`);
-    state.svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-    state.svg.style.transform = 'none';
-    wireInput();
+  function init(viewportEl){
+    if(booted) return;
+    booted = true;
+    container = viewportEl;
+
+    // wipe the placeholder SVG — Three.js draws into a canvas
+    const oldSvg = container.querySelector('svg');
+    if(oldSvg) oldSvg.style.display = 'none';
+
+    // create canvas
+    const canvas = document.createElement('canvas');
+    canvas.style.position = 'absolute';
+    canvas.style.inset = '0';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.display = 'block';
+    canvas.style.cursor = 'grab';
+    canvas.style.borderRadius = 'var(--radius)';
+    container.appendChild(canvas);
+
+    // renderer
+    renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      alpha: true
+    });
+    renderer.setPixelRatio(window.devicePixelRatio || 1);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    // scene
+    scene = new THREE.Scene();
+    scene.background = null;
+
+    // camera
+    camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+
+    // lights
+    const ambient = new THREE.AmbientLight(0xffffff, 0.55);
+    scene.add(ambient);
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.1);
+    keyLight.position.set(5, 8, 6);
+    keyLight.castShadow = true;
+    scene.add(keyLight);
+
+    const rimLight = new THREE.DirectionalLight(0x88aaff, 0.45);
+    rimLight.position.set(-6, 3, -5);
+    scene.add(rimLight);
+
+    const fillLight = new THREE.DirectionalLight(0xffbb88, 0.25);
+    fillLight.position.set(0, -5, 3);
+    scene.add(fillLight);
+
+    // ground reflection (subtle)
+    const hemi = new THREE.HemisphereLight(0x445577, 0x0a0c14, 0.35);
+    scene.add(hemi);
+
+    // input
+    wireInput(canvas);
+
+    // resize
+    window.addEventListener('resize', resize);
+    resize();
+
+    // start loop
     startLoop();
   }
 
-  function setScene(objects){
-    state.objects = objects || [];
-  }
-
-  function reset(){
-    state.camera.rotY = -30 * Math.PI/180;
-    state.camera.rotX = 20 * Math.PI/180;
-    state.camera.dist = 8;
-  }
-
-  /* --------------------------------------------------------------
-     INPUT — drag to orbit, scroll to zoom, dbl-click reset
-     -------------------------------------------------------------- */
-  function wireInput(){
-    const vp = state.viewport;
-    if(!vp) return;
-    if(vp.dataset.b3dWired) return;
-    vp.dataset.b3dWired = '1';
-
-    let pointerId = null;
-
-    vp.addEventListener('pointerdown', (e)=>{
-      if(e.target.closest('button, select, input, a')) return;
-      pointerId = e.pointerId;
-      vp.setPointerCapture(pointerId);
-      state.drag.active = true;
-      state.drag.startX = e.clientX;
-      state.drag.startY = e.clientY;
-      state.drag.startRotY = state.camera.rotY;
-      state.drag.startRotX = state.camera.rotX;
-      state.autoRotate = false;
+  function wireInput(canvas){
+    canvas.addEventListener('pointerdown', (e)=>{
+      orbit.dragging = true;
+      orbit.lastX = e.clientX;
+      orbit.lastY = e.clientY;
+      orbit.autoRotate = false;
+      canvas.style.cursor = 'grabbing';
+      canvas.setPointerCapture(e.pointerId);
     });
 
-    vp.addEventListener('pointermove', (e)=>{
-      if(!state.drag.active || e.pointerId !== pointerId) return;
-      const dx = e.clientX - state.drag.startX;
-      const dy = e.clientY - state.drag.startY;
-      state.camera.rotY = state.drag.startRotY + dx * 0.008;
-      state.camera.rotX = clamp(state.drag.startRotX + dy * 0.006, -Math.PI/3, Math.PI/2.5);
+    canvas.addEventListener('pointermove', (e)=>{
+      if(!orbit.dragging) return;
+      const dx = e.clientX - orbit.lastX;
+      const dy = e.clientY - orbit.lastY;
+      orbit.theta -= dx * 0.008;
+      orbit.phi = Math.max(0.35, Math.min(1.5, orbit.phi - dy * 0.006));
+      orbit.lastX = e.clientX;
+      orbit.lastY = e.clientY;
     });
 
-    vp.addEventListener('pointerup', (e)=>{
-      if(e.pointerId !== pointerId) return;
-      state.drag.active = false;
-      pointerId = null;
+    canvas.addEventListener('pointerup', (e)=>{
+      orbit.dragging = false;
+      canvas.style.cursor = 'grab';
+      setTimeout(()=>{ orbit.autoRotate = true; }, 1500);
     });
 
-    vp.addEventListener('pointercancel', ()=>{
-      state.drag.active = false;
-      pointerId = null;
+    canvas.addEventListener('pointercancel', ()=>{
+      orbit.dragging = false;
+      canvas.style.cursor = 'grab';
     });
 
-    vp.addEventListener('wheel', (e)=>{
+    canvas.addEventListener('wheel', (e)=>{
       e.preventDefault();
-      state.camera.dist = clamp(state.camera.dist + e.deltaY * 0.006, 3, 20);
-    }, { passive:false });
+      orbit.radius = Math.max(2.5, Math.min(20, orbit.radius + e.deltaY * 0.003));
+    }, { passive: false });
 
-    vp.addEventListener('dblclick', ()=>{
-      reset();
-      state.autoRotate = true;
-    });
-
-    // resume auto-rotate when idle for 2s
-    let idleTimer = null;
-    vp.addEventListener('pointerup', ()=>{
-      clearTimeout(idleTimer);
-      idleTimer = setTimeout(()=>{ state.autoRotate = true; }, 2000);
+    canvas.addEventListener('dblclick', ()=>{
+      orbit.theta = -0.6;
+      orbit.phi = 1.15;
+      orbit.radius = 6;
+      orbit.autoRotate = true;
     });
   }
 
-  /* --------------------------------------------------------------
-     RENDER LOOP
-     -------------------------------------------------------------- */
-  let rafId = null;
-  let lastT = 0;
+  function resize(){
+    if(!container || !renderer) return;
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    if(w === 0 || h === 0) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+
+  function updateCamera(){
+    const r = orbit.radius;
+    const x = r * Math.sin(orbit.phi) * Math.sin(orbit.theta);
+    const y = r * Math.cos(orbit.phi);
+    const z = r * Math.sin(orbit.phi) * Math.cos(orbit.theta);
+    camera.position.set(x, y, z);
+    camera.lookAt(orbit.target);
+  }
 
   function startLoop(){
     if(rafId) return;
-    const tick = (t)=>{
+    const tick = ()=>{
       rafId = requestAnimationFrame(tick);
-      const dt = Math.min(50, t - lastT) / 1000;
-      lastT = t;
-      if(state.autoRotate){
-        state.camera.rotY += state.autoRotSpeed * dt;
-      }
-      render();
+      if(orbit.autoRotate) orbit.theta += orbit.autoSpeed * 0.016;
+      updateCamera();
+      renderer.render(scene, camera);
     };
     rafId = requestAnimationFrame(tick);
   }
 
-  function render(){
-    if(!state.svg) return;
-
-    // camera basis: rotate world by -rotY, -rotX around origin
-    // then translate back by -dist along Z
-    const Ry = M.rotY(-state.camera.rotY);
-    const Rx = M.rotX(-state.camera.rotX);
-    const T  = M.trans(0, 0, -state.camera.dist);
-
-    // model-view: translate view = T * Rx * Ry
-    const view = M.mul(T, M.mul(Rx, Ry));
-
-    // projection
-    const proj = M.perspective(
-      state.camera.fov,
-      state.W / state.H,
-      0.1,
-      100
-    );
-
-    const mvp = M.mul(proj, view);
-
-    // gather all faces
-    const polys = [];
-    const cx = state.W / 2;
-    const cy = state.H / 2;
-
-    for(const obj of state.objects){
-      const mesh = obj.mesh;
-      if(!mesh) continue;
-      const objMat = M.mul(
-        M.trans(obj.pos[0], obj.pos[1], obj.pos[2]),
-        M.mul(M.rotY(obj.rot[1]), M.rotX(obj.rot[0]))
-      );
-      const mat = M.mul(mvp, objMat);
-
-      // project every vertex of this object
-      const projected = mesh.verts.map(v=>{
-        const p = M.apply(mat, [v[0], v[1], v[2], 1]);
-        if(p[3] <= 0.0001) return null;   // behind camera
-        const inv = 1 / p[3];
-        const scale = state.H * 0.5;
-        return {
-          x: cx + (p[0] * inv) * scale,
-          y: cy - (p[1] * inv) * scale,
-          z: p[2] * inv
-        };
-      });
-
-      for(const face of mesh.faces){
-        const pts = face.idx.map(i=>projected[i]);
-        if(pts.some(p=>!p)) continue;
-
-        // back-face culling: skip faces pointing away from camera
-        let area = 0;
-        for(let k = 0; k < pts.length; k++){
-          const a = pts[k];
-          const b = pts[(k+1) % pts.length];
-          area += (a.x * b.y - b.x * a.y);
-        }
-        if(area >= 0) continue;
-
-        let z = 0;
-        for(const p of pts) z += p.z;
-        z /= pts.length;
-        polys.push({
-          pts,
-          z,
-          color: face.color,
-          stroke: face.stroke || 'rgba(0,0,0,0.35)',
-          strokeWidth: face.strokeWidth || 1,
-          meta: face.meta || {}
-        });
+  // Public API
+  function clearScene(){
+    if(!scene) return;
+    currentObjects.forEach(o=>{
+      scene.remove(o);
+      if(o.geometry) o.geometry.dispose();
+      if(o.material){
+        if(Array.isArray(o.material)) o.material.forEach(m=>m.dispose());
+        else o.material.dispose();
       }
-    }
-
-    // painter's algorithm: draw far to near (larger z first, since z is depth)
-    polys.sort((a,b)=> b.z - a.z);
-
-    // emit SVG
-    const parts = [ `<g>` ];
-    for(const p of polys){
-      const d = p.pts.map((pt,i)=> `${i===0?'M':'L'} ${pt.x.toFixed(2)} ${pt.y.toFixed(2)}`).join(' ') + ' Z';
-      parts.push(
-        `<path d="${d}" fill="${p.color}" stroke="${p.stroke}" stroke-width="${p.strokeWidth}" stroke-linejoin="round"/>`
-      );
-    }
-    parts.push('</g>');
-    state.svg.innerHTML = parts.join('');
+    });
+    currentObjects = [];
   }
 
-  /* --------------------------------------------------------------
-     CLAMP HELPER (may already exist as `clamp` at top of app.js;
-     redeclaring inside IIFE is safe)
-     -------------------------------------------------------------- */
-  function clamp(n, min, max){ return Math.min(max, Math.max(min, n)); }
+  function addObject(obj){
+    scene.add(obj);
+    currentObjects.push(obj);
+  }
 
-  /* --------------------------------------------------------------
-     TEST SCENE — a cube + a smaller cube to prove depth sort
-     -------------------------------------------------------------- */
-  function demoTriangle(){ /* unused */ }
-
-  function demoScene(){
-    const cube = boxMesh(2, 2, 2, '#3b82f6');
-    const cube2 = boxMesh(1, 1, 1, '#f59e0b');
-    return [
-      { mesh: cube,  pos:[0,0,0],   rot:[0,0,0] },
-      { mesh: cube2, pos:[1.6,1.0,0.4], rot:[0.4,0.6,0] }
-    ];
+  function setRadius(r){
+    orbit.radius = r;
   }
 
   return {
     init,
-    setScene,
-    reset,
-    demoScene,
-    _state: state,
-    _math: { V, M },
-    _mesh: { box: boxMesh }
+    clearScene,
+    addObject,
+    setRadius,
+    _orbit: orbit,
+    get scene(){ return scene; },
+    get camera(){ return camera; }
   };
 })();
 
-/* ================================================================
-   5c-2  —  CASE CHASSIS BUILDER
-   ----------------------------------------------------------------
-   Builds a 3D mesh for the current bapc.case, reacting to form
-   factor (dimensions) and style (front panel treatment, side panel,
-   PSU shroud presence).
+/* ----------------------------------------------------------------
+   renderBapcScene — called whenever the Build-A-PC page opens or a
+   dropdown changes. For B-1, it just drops a test cube so we can
+   verify Three.js is alive and the orbit works.
+   ---------------------------------------------------------------- */
+function renderBapcScene(){
+  const vp = $('#bapcViewport');
+  if(!vp) return;
 
-   Depends on b3d._mesh.box (from 5c-1).
-   ================================================================ */
-(function caseBuilder(){
+  bScene.init(vp);
+  bScene.clearScene();
 
-  const { box } = b3d._mesh;
+  // Test cube for B-1 verification
+  const geo = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0x3b82f6,
+    metalness: 0.4,
+    roughness: 0.35
+  });
+  const cube = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+  const mesh = new THREE.Mesh(cube, mat);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  bScene.addObject(mesh);
 
-  /* --------------------------------------------------------------
-     CASE DIMENSIONS — driven by form factor.
-     Values are in "world units" (~10cm per unit).
-     Width (X), Height (Y), Depth (Z).
-     -------------------------------------------------------------- */
-  function caseDimensions(form){
-    switch(form){
-      case 'ITX':    return { w: 1.4, h: 2.4, d: 2.2 };
-      case 'mATX':   return { w: 1.7, h: 3.2, d: 3.0 };
-      case 'ATX':    return { w: 1.9, h: 3.8, d: 3.6 };
-      case 'E-ATX':  return { w: 2.1, h: 4.4, d: 4.0 };
-      default:       return { w: 1.9, h: 3.8, d: 3.6 };
-    }
-  }
+  // Second cube — offset
+  const mat2 = new THREE.MeshStandardMaterial({
+    color: 0xf59e0b,
+    metalness: 0.4,
+    roughness: 0.35
+  });
+  const mesh2 = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), mat2);
+  mesh2.position.set(1.4, 1.1, 0.3);
+  mesh2.castShadow = true;
+  mesh2.receiveShadow = true;
+  bScene.addObject(mesh2);
 
-  /* --------------------------------------------------------------
-     STYLE PROFILE — cosmetic treatment per case `style` field.
-     -------------------------------------------------------------- */
-  function styleProfile(style){
-    switch(style){
-      case 'sff':      return { front:'mesh',  side:'mesh',  shroud:false, glassTint:'rgba(255,255,255,0.05)' };
-      case 'matx':     return { front:'mesh',  side:'solid', shroud:false, glassTint:'rgba(255,255,255,0.05)' };
-      case 'atx':      return { front:'mesh',  side:'solid', shroud:true,  glassTint:'rgba(255,255,255,0.05)' };
-      case 'full':     return { front:'mesh',  side:'glass', shroud:true,  glassTint:'rgba(120,180,255,0.06)' };
-      case 'showcase': return { front:'glass', side:'glass', shroud:false, glassTint:'rgba(180,140,255,0.07)' };
-      default:         return { front:'mesh',  side:'solid', shroud:true,  glassTint:'rgba(255,255,255,0.05)' };
-    }
-  }
-
-  /* --------------------------------------------------------------
-     MESH PRIMITIVES
-     -------------------------------------------------------------- */
-
-  // A flat panel facing +Z, +X, -X, +Y, or -Y with a given normal,
-  // used for case walls (single-sided quads, not full boxes).
-  function panelMesh(w, h, color, normal, opts){
-    opts = opts || {};
-    const t = opts.thickness != null ? opts.thickness : 0.04;
-    const x = w/2, y = h/2, z = t/2;
-
-    // A thin box instead of a flat quad. Front face at +z, back at -z.
-    const verts = [
-      [-x,-y,-z], [ x,-y,-z], [ x, y,-z], [-x, y,-z], // back   (0-3)
-      [-x,-y, z], [ x,-y, z], [ x, y, z], [-x, y, z]  // front  (4-7)
-    ];
-
-    const stroke = opts.stroke || 'rgba(0,0,0,0.35)';
-    const strokeWidth = opts.strokeWidth != null ? opts.strokeWidth : 1;
-    const dark = shadeHexLocal(color, 0.70);
-    const mid  = shadeHexLocal(color, 0.85);
-
-    const faces = [
-      { idx:[4,5,6,7], color,            normal:[0,0,1],  stroke, strokeWidth, meta: opts.meta || {} }, // front
-      { idx:[1,0,3,2], color: dark,      normal:[0,0,-1], stroke, strokeWidth, meta: opts.meta || {} }, // back
-      { idx:[0,4,7,3], color: mid,       normal:[-1,0,0], stroke, strokeWidth, meta: opts.meta || {} }, // left
-      { idx:[5,1,2,6], color: mid,       normal:[1,0,0],  stroke, strokeWidth, meta: opts.meta || {} }, // right
-      { idx:[3,7,6,2], color: shadeHexLocal(color, 1.10), normal:[0,1,0],  stroke, strokeWidth, meta: opts.meta || {} }, // top
-      { idx:[0,1,5,4], color: dark,      normal:[0,-1,0], stroke, strokeWidth, meta: opts.meta || {} }  // bottom
-    ];
-    return { verts, faces };
-  }
-
-  // local hex shade helper — caseBuilder doesn't have access to b3d's internal shadeHex
-  function shadeHexLocal(hex, factor){
-    const c = hex.replace('#','');
-    let r = parseInt(c.substring(0,2),16);
-    let g = parseInt(c.substring(2,4),16);
-    let b = parseInt(c.substring(4,6),16);
-    if(factor > 1){
-      r = Math.min(255, Math.round(r + (255-r) * (factor-1)));
-      g = Math.min(255, Math.round(g + (255-g) * (factor-1)));
-      b = Math.min(255, Math.round(b + (255-b) * (factor-1)));
-    } else {
-      r = Math.round(r * factor);
-      g = Math.round(g * factor);
-      b = Math.round(b * factor);
-    }
-    const h = n => n.toString(16).padStart(2,'0');
-    return '#' + h(r) + h(g) + h(b);
-  }
-
-  // A thin box used for structural frame members (rails, feet, shroud).
-  function frameMesh(w, h, d, color, opts){
-    return box(w, h, d, color, opts);
-  }
-
-  // Vent / mesh grille: a set of thin bars on a panel.
-  function grilleBars(count, length, thickness, spacing, color){
-    const meshes = [];
-    const start = -((count - 1) * spacing) / 2;
-    for(let i = 0; i < count; i++){
-      const y = start + i * spacing;
-      const m = panelMesh(length, thickness, color, [0,0,1]);
-      m._offset = [0, y, 0];
-      meshes.push(m);
-    }
-    return meshes;
-  }
-
-  /* --------------------------------------------------------------
-     BUILD THE CASE — returns an array of {mesh, pos, rot} objects
-     that b3d.setScene can consume.
-     -------------------------------------------------------------- */
-  function buildCase(caseData){
-    if(!caseData) return [];
-
-    const dims   = caseDimensions(caseData.form);
-    const style  = styleProfile(caseData.style);
-    const w = dims.w, h = dims.h, d = dims.d;
-    const halfW = w/2, halfH = h/2, halfD = d/2;
-
-    const objects = [];
-
-    /* ---- palette ---- */
-    const frameColor   = '#2a3142';   // dark charcoal for structure
-    const panelColor   = '#1a1f2c';   // slightly darker panel
-    const glassColor   = style.glassTint;
-    const meshColor    = '#141821';
-    const frontColor   = style.front === 'glass' ? glassColor : panelColor;
-
-    /* ============================================================
-       1. STRUCTURAL FRAME — 12 thin edge rails forming a wireframe box
-       ============================================================ */
-    const railT = 0.08;   // rail thickness
-    const railColor = frameColor;
-
-    // vertical rails (4 corners)
-    const vRails = [
-      [-halfW, 0, -halfD],
-      [ halfW, 0, -halfD],
-      [-halfW, 0,  halfD],
-      [ halfW, 0,  halfD]
-    ];
-    vRails.forEach(p=>{
-      objects.push({
-        mesh: frameMesh(railT, h, railT, railColor),
-        pos: p, rot: [0,0,0]
-      });
-    });
-
-    // horizontal rails along X (top and bottom, front and back) — 4 rails
-    const hRailsX = [
-      [0,  halfH, -halfD],
-      [0, -halfH, -halfD],
-      [0,  halfH,  halfD],
-      [0, -halfH,  halfD]
-    ];
-    hRailsX.forEach(p=>{
-      objects.push({
-        mesh: frameMesh(w, railT, railT, railColor),
-        pos: p, rot: [0,0,0]
-      });
-    });
-
-    // horizontal rails along Z (top and bottom, left and right) — 4 rails
-    const hRailsZ = [
-      [-halfW,  halfH, 0],
-      [ halfW,  halfH, 0],
-      [-halfW, -halfH, 0],
-      [ halfW, -halfH, 0]
-    ];
-    hRailsZ.forEach(p=>{
-      objects.push({
-        mesh: frameMesh(railT, railT, d, railColor),
-        pos: p, rot: [0,0,0]
-      });
-    });
-
-    /* ============================================================
-       2. SIDE PANEL — left side (+X in our coordinate system after
-          the case is drawn; from camera it reads as the "visible"
-          side once rotated). Glass or solid based on style.
-       ============================================================ */
-    const sideColor = style.side === 'glass' ? glassColor : panelColor;
-    objects.push({
-      mesh: panelMesh(d, h, sideColor, [1,0,0], { stroke:'rgba(0,0,0,0.4)' }),
-      pos: [halfW, 0, 0],
-      rot: [0, Math.PI/2, 0]
-    });
-
-    /* ============================================================
-       3. RIGHT SIDE PANEL — solid, holds the motherboard tray
-       ============================================================ */
-    objects.push({
-      mesh: panelMesh(d, h, panelColor, [-1,0,0], { stroke:'rgba(0,0,0,0.4)' }),
-      pos: [-halfW, 0, 0],
-      rot: [0, -Math.PI/2, 0]
-    });
-
-    /* ============================================================
-       4. FRONT PANEL — mesh grille, glass, or solid
-       ============================================================ */
-    if(style.front === 'mesh'){
-      // solid front backing
-      objects.push({
-        mesh: panelMesh(w, h, meshColor, [0,0,1], { stroke:'rgba(0,0,0,0.4)' }),
-        pos: [0, 0, halfD],
-        rot: [0, 0, 0]
-      });
-      // grille bars on top of it
-      const bars = grilleBars(
-        Math.max(6, Math.round(h / 0.18)),
-        w * 0.85,
-        0.04,
-        0.16,
-        '#3a4255'
-      );
-      bars.forEach(bar=>{
-        objects.push({
-          mesh: bar,
-          pos: [bar._offset[0], bar._offset[1], halfD + 0.02],
-          rot: [0,0,0]
-        });
-      });
-    } else if(style.front === 'glass'){
-      objects.push({
-        mesh: panelMesh(w, h, glassColor, [0,0,1], { stroke:'rgba(255,255,255,0.15)' }),
-        pos: [0, 0, halfD],
-        rot: [0, 0, 0]
-      });
-    } else {
-      objects.push({
-        mesh: panelMesh(w, h, frontColor, [0,0,1], { stroke:'rgba(0,0,0,0.4)' }),
-        pos: [0, 0, halfD],
-        rot: [0, 0, 0]
-      });
-    }
-
-    /* ============================================================
-       5. REAR PANEL — solid, with a rectangular cutout for rear I/O
-          (we approximate the cutout by leaving a gap: the panel is
-          drawn as four strips around the I/O rectangle)
-       ============================================================ */
-    const ioW = w * 0.35;
-    const ioH = h * 0.10;
-    const ioY = halfH - h * 0.12;   // near top
-    const ioX = 0;                  // centred horizontally
-
-    // rear panel strips (above, below, left, right of I/O cutout)
-    // above
-    const aboveH = h/2 - (ioY + ioH/2);
-    objects.push({
-      mesh: panelMesh(w, aboveH, panelColor, [0,0,-1], { stroke:'rgba(0,0,0,0.4)' }),
-      pos: [0, (ioY + ioH/2) + aboveH/2, -halfD],
-      rot: [0, 0, 0]
-    });
-    // below
-    const belowH = (ioY - ioH/2) + h/2;
-    objects.push({
-      mesh: panelMesh(w, belowH, panelColor, [0,0,-1], { stroke:'rgba(0,0,0,0.4)' }),
-      pos: [0, -(h/2) + belowH/2, -halfD],
-      rot: [0, 0, 0]
-    });
-    // left of I/O
-    const leftW = (w/2) - (ioX - ioW/2);
-    objects.push({
-      mesh: panelMesh(leftW, ioH, panelColor, [0,0,-1], { stroke:'rgba(0,0,0,0.4)' }),
-      pos: [-(w/2) + leftW/2, ioY, -halfD],
-      rot: [0, 0, 0]
-    });
-    // right of I/O
-    const rightW = (ioX + ioW/2) + w/2;
-    objects.push({
-      mesh: panelMesh(rightW, ioH, panelColor, [0,0,-1], { stroke:'rgba(0,0,0,0.4)' }),
-      pos: [(w/2) - rightW/2, ioY, -halfD],
-      rot: [0, 0, 0]
-    });
-
-    /* ============================================================
-       6. TOP PANEL — solid, slightly lighter shade
-       ============================================================ */
-    objects.push({
-      mesh: panelMesh(w, d, '#232a3a', [0,1,0], { stroke:'rgba(0,0,0,0.4)' }),
-      pos: [0, halfH, 0],
-      rot: [-Math.PI/2, 0, 0]
-    });
-
-    /* ============================================================
-       7. BOTTOM PANEL — dark
-       ============================================================ */
-    objects.push({
-      mesh: panelMesh(w, d, '#10141c', [0,-1,0], { stroke:'rgba(0,0,0,0.5)' }),
-      pos: [0, -halfH, 0],
-      rot: [Math.PI/2, 0, 0]
-    });
-
-    /* ============================================================
-       8. PSU SHROUD — a wide flat box in the bottom of the case,
-          present on ATX / E-ATX / full styles
-       ============================================================ */
-    if(style.shroud){
-      const shroudH = h * 0.22;
-      const shroudW = w * 0.95;
-      const shroudD = d * 0.85;
-      objects.push({
-        mesh: frameMesh(shroudW, shroudH, shroudD, '#181d28', {
-          stroke: 'rgba(0,0,0,0.5)'
-        }),
-        pos: [0, -halfH + shroudH/2 + 0.05, 0],
-        rot: [0, 0, 0]
-      });
-    }
-
-    /* ============================================================
-       9. FEET — four small cylinders approximated as boxes
-       ============================================================ */
-    const footSize = 0.14;
-    const footH = 0.10;
-    const feet = [
-      [-halfW + 0.15, -halfH - footH/2, -halfD + 0.15],
-      [ halfW - 0.15, -halfH - footH/2, -halfD + 0.15],
-      [-halfW + 0.15, -halfH - footH/2,  halfD - 0.15],
-      [ halfW - 0.15, -halfH - footH/2,  halfD - 0.15]
-    ];
-    feet.forEach(p=>{
-      objects.push({
-        mesh: frameMesh(footSize, footH, footSize, '#0a0d14'),
-        pos: p, rot: [0,0,0]
-      });
-    });
-
-    return objects;
-  }
-
-  /* --------------------------------------------------------------
-     PUBLIC API — called by renderBapcScene
-     -------------------------------------------------------------- */
-  function build(caseData){
-    return buildCase(caseData);
-  }
-
-  // expose to outer scope
-  window.caseBuilder = { build };
-
-})();
+  bScene.setRadius(6);
+}
