@@ -2678,6 +2678,7 @@ function renderBuildAPC(){
       setBapcStorageQty(+e.target.value);
     }
 
+    renderBapcSpecList();
     renderBapcWarnings();
     renderBapcCostTable();
   });
