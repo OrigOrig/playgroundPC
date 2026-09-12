@@ -160,6 +160,7 @@ function navigate(page){
   if(page==='builds') renderSavedBuilds();
   if(page==='upgrade') renderUpgradePage();
   if(page==='compare') populateCompareSelects();
+  if(page==='buildapc') renderBuildAPC();
 }
 $$('.nav-item').forEach(item=>item.addEventListener('click', ()=>navigate(item.dataset.page)));
 
@@ -1813,6 +1814,25 @@ document.addEventListener('touchend', (e)=>{
 document.addEventListener('keydown', (e)=>{
   if(e.key === 'Escape' && $('#sidebar').classList.contains('open')) closeSidebar();
 });
+
+/* ----------------------------------------------------------------
+   BUILD A PC — placeholder (full logic in the next message)
+   ---------------------------------------------------------------- */
+function renderBuildAPC(){
+  // Message 5 will fill this in. For now, just a placeholder so
+  // the page can open without errors.
+  const svg = $('#bapcSvg');
+  if(svg){
+    svg.innerHTML = `
+      <text x="400" y="240" text-anchor="middle" fill="var(--text-3)" font-family="Inter, sans-serif" font-size="18" font-weight="600">
+        Visual builder coming next
+      </text>
+      <text x="400" y="270" text-anchor="middle" fill="var(--text-3)" font-family="Inter, sans-serif" font-size="13">
+        Message 5 completes this page
+      </text>
+    `;
+  }
+}
 
 /* ----------------------------------------------------------------
    BOOT
