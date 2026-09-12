@@ -132,7 +132,47 @@ body::before{
 .brand small{display:block;font-size:.65rem;color:var(--text-3);font-weight:500;letter-spacing:.04em;text-transform:uppercase;margin-top:1px;}
 
 .nav{display:flex;flex-direction:column;gap:.15rem;flex:1;overflow-y:auto;}
-.nav-section{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);font-weight:700;padding:1rem .75rem .4rem;}
+.nav-section{
+  font-size:.65rem;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:var(--text-3);
+  font-weight:700;
+  padding:1rem .75rem .4rem;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  cursor:pointer;
+  user-select:none;
+  border-radius:var(--radius-sm);
+  transition:var(--transition);
+}
+.nav-section:hover{color:var(--text-2);}
+.nav-section .nav-chevron{
+  font-size:.7rem;
+  color:var(--text-3);
+  transition:transform 200ms cubic-bezier(.4,0,.2,1);
+  margin-left:.4rem;
+}
+.nav-section.collapsed .nav-chevron{
+  transform:rotate(-90deg);
+}
+.nav-group{
+  display:flex;
+  flex-direction:column;
+  gap:.15rem;
+  overflow:hidden;
+  max-height:1000px;
+  transition:max-height 240ms cubic-bezier(.4,0,.2,1),
+             opacity 200ms ease,
+             padding 200ms ease;
+  opacity:1;
+}
+.nav-group.collapsed{
+  max-height:0;
+  opacity:0;
+  padding:0;
+}
 .nav-item{
   display:flex;align-items:center;gap:.75rem;
   padding:.6rem .75rem;border-radius:var(--radius-sm);
@@ -988,19 +1028,27 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
         <small>Know · Play · Upgrade</small>
       </div>
     </div>
-    <nav class="nav" id="nav">
-      <div class="nav-section">Main</div>
-      <div class="nav-item active" data-page="home"><i class="fas fa-house"></i> Home</div>
-      <div class="nav-item" data-page="mypc"><i class="fas fa-desktop"></i> My PC</div>
-      <div class="nav-item" data-page="games"><i class="fas fa-gamepad"></i> Games <span class="nav-badge" id="gamesCountBadge">0</span></div>
-      <div class="nav-item" data-page="compare"><i class="fas fa-code-compare"></i> Compare</div>
-      <div class="nav-section">Tools</div>
-      <div class="nav-item" data-page="upgrade"><i class="fas fa-arrow-up"></i> Upgrade Path</div>
-      <div class="nav-item" data-page="benchmarks"><i class="fas fa-chart-line"></i> Benchmarks</div>
-      <div class="nav-item" data-page="advisor"><i class="fas fa-wand-magic-sparkles"></i> PC Advisor</div>
-      <div class="nav-section">Account</div>
-      <div class="nav-item" data-page="builds"><i class="fas fa-cubes"></i> My Builds</div>
-      <div class="nav-item" data-page="settings"><i class="fas fa-sliders"></i> Settings</div>
+        <nav class="nav" id="nav">
+      <div class="nav-section" data-section="main">Main <i class="fas fa-chevron-down nav-chevron"></i></div>
+      <div class="nav-group" data-group="main">
+        <div class="nav-item active" data-page="home"><i class="fas fa-house"></i> Home</div>
+        <div class="nav-item" data-page="mypc"><i class="fas fa-desktop"></i> My PC</div>
+        <div class="nav-item" data-page="games"><i class="fas fa-gamepad"></i> Games <span class="nav-badge" id="gamesCountBadge">0</span></div>
+        <div class="nav-item" data-page="compare"><i class="fas fa-code-compare"></i> Compare</div>
+      </div>
+
+      <div class="nav-section" data-section="tools">Tools <i class="fas fa-chevron-down nav-chevron"></i></div>
+      <div class="nav-group" data-group="tools">
+        <div class="nav-item" data-page="upgrade"><i class="fas fa-arrow-up"></i> Upgrade Path</div>
+        <div class="nav-item" data-page="benchmarks"><i class="fas fa-chart-line"></i> Benchmarks</div>
+        <div class="nav-item" data-page="advisor"><i class="fas fa-wand-magic-sparkles"></i> PC Advisor</div>
+      </div>
+
+      <div class="nav-section" data-section="account">Account <i class="fas fa-chevron-down nav-chevron"></i></div>
+      <div class="nav-group" data-group="account">
+        <div class="nav-item" data-page="builds"><i class="fas fa-cubes"></i> My Builds</div>
+        <div class="nav-item" data-page="settings"><i class="fas fa-sliders"></i> Settings</div>
+      </div>
     </nav>
     <div class="sidebar-footer">
       <div class="user-chip" id="userChip" title="Guest session">
