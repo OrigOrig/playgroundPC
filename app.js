@@ -2746,43 +2746,6 @@ function setBapcStorageQty(n){
   });
 })();
 
-/* ----------------------------------------------------------------
-   BOOT
-   ---------------------------------------------------------------- */
-(function boot(){
-  $('#cpuBrand').value = state.build.cpuBrand;
-  populateCpuSelect();
-  if(state.build.cpu) $('#cpuSelect').value = state.build.cpu;
-  $('#gpuBrand').value = state.build.gpuBrand;
-  populateGpuSelect();
-  if(state.build.gpu) $('#gpuSelect').value = state.build.gpu;
-  populateRamSelect();
-  if($('#ramCapacity')) $('#ramCapacity').value = state.build.ramCapacity || '';
-  if($('#ramType')) $('#ramType').value = state.build.ramType || '';
-  populateRamSpeed();
-  if($('#moboSocket')) $('#moboSocket').value = state.build.moboSocket || '';
-  populateMoboSelect();
-  if($('#ramSpeed') && state.build.ramSpeed) $('#ramSpeed').value = state.build.ramSpeed;
-  if($('#psuWatt') && state.build.psuWatt) $('#psuWatt').value = state.build.psuWatt;
-  $('#psuEff').value = state.build.psuEff;
-  $('#coolerType').value = state.build.coolerType;
-  renderStorage();
-  applyTheme();
-  populateCompareSelects();
-  renderSavedBuilds();
-  updateTower();
-
-  if(savedBuild && savedBuild.cpu && savedBuild.gpu){ analyze(); }
-  else {
-    $('#heroCpu').textContent = state.build.cpu || '—';
-    $('#heroGpu').textContent = state.build.gpu || '—';
-    $('#heroRam').textContent = state.build.ram || '—';
-    $('#gamesCountBadge').textContent = GAMES.length;
-  }
-  console.log('%cPC Playground v4.3','font-size:16px;font-weight:800;color:#3b82f6');
-  console.log('Loaded:', allCpus().length, 'CPUs,', allGpus().length, 'GPUs,', GAMES.length, 'games');
-})();
-
 /* ================================================================
    B-1  —  Three.js scene manager for Build-A-PC
    ----------------------------------------------------------------
@@ -2983,6 +2946,43 @@ const bScene = (function(){
     get scene(){ return scene; },
     get camera(){ return camera; }
   };
+})();
+
+/* ----------------------------------------------------------------
+   BOOT
+   ---------------------------------------------------------------- */
+(function boot(){
+  $('#cpuBrand').value = state.build.cpuBrand;
+  populateCpuSelect();
+  if(state.build.cpu) $('#cpuSelect').value = state.build.cpu;
+  $('#gpuBrand').value = state.build.gpuBrand;
+  populateGpuSelect();
+  if(state.build.gpu) $('#gpuSelect').value = state.build.gpu;
+  populateRamSelect();
+  if($('#ramCapacity')) $('#ramCapacity').value = state.build.ramCapacity || '';
+  if($('#ramType')) $('#ramType').value = state.build.ramType || '';
+  populateRamSpeed();
+  if($('#moboSocket')) $('#moboSocket').value = state.build.moboSocket || '';
+  populateMoboSelect();
+  if($('#ramSpeed') && state.build.ramSpeed) $('#ramSpeed').value = state.build.ramSpeed;
+  if($('#psuWatt') && state.build.psuWatt) $('#psuWatt').value = state.build.psuWatt;
+  $('#psuEff').value = state.build.psuEff;
+  $('#coolerType').value = state.build.coolerType;
+  renderStorage();
+  applyTheme();
+  populateCompareSelects();
+  renderSavedBuilds();
+  updateTower();
+
+  if(savedBuild && savedBuild.cpu && savedBuild.gpu){ analyze(); }
+  else {
+    $('#heroCpu').textContent = state.build.cpu || '—';
+    $('#heroGpu').textContent = state.build.gpu || '—';
+    $('#heroRam').textContent = state.build.ram || '—';
+    $('#gamesCountBadge').textContent = GAMES.length;
+  }
+  console.log('%cPC Playground v4.3','font-size:16px;font-weight:800;color:#3b82f6');
+  console.log('Loaded:', allCpus().length, 'CPUs,', allGpus().length, 'GPUs,', GAMES.length, 'games');
 })();
 
 /* ----------------------------------------------------------------
