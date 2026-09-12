@@ -418,7 +418,7 @@ const GAMES = [
     banner:'https://shared.steamstatic.com/store_item_assets/steam/apps/552500/header.jpg',
     store:'https://store.steampowered.com/app/552500/', color:'#7f1d1d'},
   {name:'Darktide',            genre:'Co-op',    base:82,  cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:true,
-    banner:'https://shared.steamstatic.com/store_item_assets/steam/apps/40000/header.jpg',
+    banner:'https://shared.steamstatic.com/store_item_assets/steam/apps/1361210/header.jpg',
     store:'https://store.steampowered.com/app/1361210/', color:'#7f1d1d'},
   {name:'Throne and Liberty',  genre:'MMO',      base:86,  cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:false,
     banner:'https://shared.steamstatic.com/store_item_assets/steam/apps/2429640/header.jpg',
