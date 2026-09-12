@@ -2771,43 +2771,6 @@ function setBapcStorageQty(n){
 })();
 
 /* ----------------------------------------------------------------
-   BAPC SPEC LIST — replaces the 3D viewport
-   Renders the current build as a labelled list next to the cost table.
-   ---------------------------------------------------------------- */
-function renderBapcSpecList(){
-  const el = $('#bapcSpecList');
-  if(!el) return;
-
-  const rows = [
-    { icon:'fa-cube',                label:'Case',        value: bapc.case    ? `${bapc.case.brand} ${bapc.case.name}` : '—',
-      sub: bapc.case ? `${bapc.case.form} · max GPU ${bapc.case.maxGpu}mm · max cooler ${bapc.case.maxCooler}mm` : '' },
-    { icon:'fa-microchip',           label:'CPU',         value: bapc.cpu     ? bapc.cpu.name : '—',
-      sub: bapc.cpu ? `${bapc.cpu.cores} · ${bapc.cpu.socket} · ${bapc.cpu.tdp}W` : '' },
-    { icon:'fa-square-poll-vertical',label:'Motherboard', value: bapc.mobo    ? bapc.mobo.name : '—',
-      sub: bapc.mobo ? `${bapc.mobo.socket} · ${bapc.mobo.chipset} · ${bapc.mobo.form}` : '' },
-    { icon:'fa-memory',              label:'RAM',         value: bapc.ram     ? `${bapc.ram.capacity}GB ${bapc.ram.type}` : '—',
-      sub: bapc.ram ? `up to ${bapc.ram.speeds[bapc.ram.speeds.length-1]}MHz · ${bapc.ram.tdp}W` : '' },
-    { icon:'fa-display',             label:'GPU',         value: bapc.gpu     ? bapc.gpu.name : '—',
-      sub: bapc.gpu ? `${bapc.gpu.vram}GB VRAM · ${bapc.gpu.tdp}W · ${bapc.gpu.tier}` : '' },
-    { icon:'fa-fan',                 label:'Cooler',      value: bapc.cooler  ? bapc.cooler.name : '—',
-      sub: bapc.cooler ? `up to ${bapc.cooler.maxTdp}W TDP` : '' },
-    { icon:'fa-plug',                label:'PSU',         value: bapc.psu     ? `${bapc.psu.wattage}W` : '—',
-      sub: bapc.psu ? `${bapc.psu.efficiency} · ${bapc.psu.form} · ${bapc.psu.modular}-modular` : '' },
-    { icon:'fa-hard-drive',          label:'Storage',     value: bapc.storage ? `${bapc.storage.name} ×${bapc.storageQty}` : '—',
-      sub: bapc.storage ? `${bapc.storage.speed} MB/s · ${bapc.storage.price}$ each` : '' },
-  ];
-
-  el.innerHTML = rows.map(r => `
-    <div class="spec-row">
-      <div class="spec-icon"><i class="fas ${r.icon}"></i></div>
-      <div class="spec-info">
-        <div class="label">${r.label}</div>
-        <div class="value">${r.value}</div>
-        ${r.sub ? `<div class="text-muted" style="font-size:.72rem;">${r.sub}</div>` : ''}
-      </div>
-    </div>`).join('');
-}
-/* ----------------------------------------------------------------
    BAPC SPEC LIST — the "Your build" panel
    ---------------------------------------------------------------- */
 function renderBapcSpecList(){
