@@ -261,306 +261,61 @@ body::before{
 .chip i{color:var(--primary);font-size:.7rem;}
 
 /* ============================================================
-   3D PC TOWER — realistic mid-tower with visible internals
-   Uses CSS 3D transforms, updates based on selected CPU + GPU
+   HERO PC IMAGE — replaces the old 3D tower
+   The PNG is transparent, so it floats on the gradient background
    ============================================================ */
 .hero-visual{
   position:relative;
   height:340px;
-  display:grid;place-items:center;
-  perspective:1400px;
+  display:grid;
+  place-items:center;
+  overflow:visible;
 }
-.pc-scene{
+.pc-hero-image{
   position:relative;
-  width:220px;height:300px;
-  transform-style:preserve-3d;
-  transform:rotateY(-22deg) rotateX(6deg) translateY(-10px);
-  animation:towerIdle 8s ease-in-out infinite;
-}
-@keyframes towerIdle{
-  0%,100%{transform:rotateY(-22deg) rotateX(6deg) translateY(-10px);}
-  50%{transform:rotateY(-18deg) rotateX(4deg) translateY(-18px);}
-}
-/* Floor shadow */
-.pc-shadow-3d{
-  position:absolute;
-  bottom:-8px;left:50%;
-  transform:translateX(-50%) rotateX(90deg);
-  width:260px;height:80px;
-  background:radial-gradient(ellipse, rgba(0,0,0,.75), transparent 65%);
-  filter:blur(12px);
-}
-
-/* Main chassis — the case */
-.pc-chassis{
-  position:absolute;inset:0;
-  transform-style:preserve-3d;
-}
-
-/* Right side panel (has glass window + internals) */
-.pc-side{
-  position:absolute;
-  top:0;right:0;
-  width:280px;height:300px;
-  transform-origin:right center;
-  transform:rotateY(-90deg);
-  background:
-    linear-gradient(135deg, #1c2130 0%, #14181f 100%);
-  border:1px solid #2a3142;
-  border-radius:12px 4px 4px 12px;
-  box-shadow:inset 0 0 40px rgba(0,0,0,.6);
-  overflow:hidden;
-}
-/* Tempered glass look */
-.pc-side::before{
-  content:'';
-  position:absolute;inset:8px;
-  background:
-    linear-gradient(135deg, rgba(255,255,255,.06) 0%, transparent 40%),
-    linear-gradient(45deg, transparent 60%, rgba(255,255,255,.03) 100%);
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:8px;
-  pointer-events:none;
-  z-index:5;
-}
-/* Front of case */
-.pc-front-3d{
-  position:absolute;
-  top:0;left:0;
-  width:220px;height:300px;
-  transform-origin:left center;
-  transform:rotateY(0deg) translateZ(0);
-  background:linear-gradient(180deg, #14181f 0%, #0e1218 100%);
-  border:1px solid #232a3a;
-  border-radius:12px 12px 6px 6px;
-  overflow:hidden;
-}
-/* Top of case */
-.pc-top-3d{
-  position:absolute;
-  top:0;left:0;
-  width:220px;height:60px;
-  transform-origin:top center;
-  transform:rotateX(90deg) translateZ(0);
-  background:linear-gradient(180deg, #1a2030 0%, #14181f 100%);
-  border:1px solid #232a3a;
-  border-radius:12px 12px 0 0;
-}
-.pc-top-3d::before{
-  content:'';
-  position:absolute;inset:8px 12px;
-  background:
-    repeating-linear-gradient(90deg, transparent 0 4px, rgba(255,255,255,.04) 4px 5px),
-    radial-gradient(circle at 20% 50%, rgba(59,130,246,.15), transparent 40%);
-  border-radius:6px;
-}
-
-/* Front intake fans — two 120mm RGB fans */
-.pc-front-fans{
-  position:absolute;
-  top:0;left:0;right:0;bottom:0;
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  gap:14px;
-  padding:22px 0;
-}
-.front-fan{
-  width:74px;height:74px;border-radius:50%;
-  position:relative;
-  background:
-    radial-gradient(circle, rgba(0,0,0,.5) 30%, transparent 31%),
-    conic-gradient(from 0deg,
-      transparent 0deg,
-      var(--fan-color, #3b82f6) 20deg,
-      transparent 40deg,
-      transparent 80deg,
-      var(--fan-color, #3b82f6) 100deg,
-      transparent 120deg,
-      transparent 160deg,
-      var(--fan-color, #3b82f6) 180deg,
-      transparent 200deg,
-      transparent 240deg,
-      var(--fan-color, #3b82f6) 260deg,
-      transparent 280deg,
-      transparent 320deg,
-      var(--fan-color, #3b82f6) 340deg,
-      transparent 360deg);
-  border:2px solid rgba(255,255,255,.08);
-  box-shadow:
-    0 0 20px var(--fan-color, #3b82f6),
-    inset 0 0 12px rgba(0,0,0,.6);
-  animation:fanSpin 3s linear infinite;
-}
-.front-fan::after{
-  content:'';
-  position:absolute;inset:26px;
-  border-radius:50%;
-  background:radial-gradient(circle, #232a3a, #0e1218);
-  border:1px solid rgba(255,255,255,.1);
-  box-shadow:0 0 8px rgba(0,0,0,.6);
-}
-@keyframes fanSpin{to{transform:rotate(360deg);}}
-
-/* Side panel internals */
-.pc-internals{
-  position:absolute;
-  inset:14px;
-  display:flex;flex-direction:column;
-  gap:10px;
+  width:auto;
+  max-width:100%;
+  max-height:300px;
+  object-fit:contain;
+  filter:drop-shadow(0 30px 50px rgba(0,0,0,.65))
+         drop-shadow(0 0 40px var(--primary-glow));
+  animation:pcFloat 6s ease-in-out infinite;
   z-index:2;
+  transition:filter .4s ease;
 }
-/* Motherboard base */
-.pc-mobo{
+@keyframes pcFloat{
+  0%,100%{transform:translateY(0) scale(1);}
+  50%{transform:translateY(-10px) scale(1.01);}
+}
+.pc-hero-glow{
   position:absolute;
-  top:16px;left:16px;right:16px;bottom:70px;
-  background:
-    linear-gradient(135deg, #1a1f2c 0%, #0f1319 100%);
-  border:1px solid #2a3142;
-  border-radius:6px;
-  box-shadow:inset 0 0 20px rgba(0,0,0,.4);
-}
-.pc-mobo::before{
-  content:'';
-  position:absolute;inset:6px;
-  background:
-    repeating-linear-gradient(0deg, transparent 0 8px, rgba(255,255,255,.02) 8px 9px),
-    repeating-linear-gradient(90deg, transparent 0 8px, rgba(255,255,255,.02) 8px 9px);
-  border-radius:4px;
-}
-/* CPU cooler block */
-.pc-cpu-cooler{
-  position:absolute;
-  top:38px;left:52px;
-  width:70px;height:70px;
-  border-radius:8px;
-  background:linear-gradient(145deg, #2a3142, #1a1f2c);
-  border:1px solid #3a4458;
-  box-shadow:
-    0 0 16px var(--cpu-color, #ef4444),
-    inset 0 0 12px rgba(0,0,0,.5);
-  display:grid;place-items:center;
-  z-index:3;
-}
-.pc-cpu-cooler::before{
-  content:'';
-  width:44px;height:44px;border-radius:50%;
-  background:
-    conic-gradient(from 0deg,
-      transparent 0deg,
-      var(--cpu-color, #ef4444) 25deg,
-      transparent 50deg,
-      transparent 90deg,
-      var(--cpu-color, #ef4444) 115deg,
-      transparent 140deg,
-      transparent 180deg,
-      var(--cpu-color, #ef4444) 205deg,
-      transparent 230deg,
-      transparent 270deg,
-      var(--cpu-color, #ef4444) 295deg,
-      transparent 320deg,
-      transparent 360deg);
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:340px;height:340px;
   border-radius:50%;
-  border:1px solid rgba(255,255,255,.08);
-  animation:fanSpin 4s linear infinite reverse;
+  background:radial-gradient(circle, var(--primary-glow), transparent 65%);
+  filter:blur(40px);
+  z-index:0;
+  pointer-events:none;
 }
-.pc-cpu-cooler::after{
-  content:'';
+.pc-hero-shadow{
   position:absolute;
-  width:16px;height:16px;border-radius:50%;
-  background:radial-gradient(circle, #0e1218, #000);
-  border:1px solid rgba(255,255,255,.1);
+  bottom:30px;left:50%;
+  transform:translateX(-50%);
+  width:220px;height:26px;
+  background:radial-gradient(ellipse, rgba(0,0,0,.7), transparent 70%);
+  filter:blur(10px);
+  z-index:1;
+  pointer-events:none;
 }
-/* RAM sticks */
-.pc-ram-sticks{
-  position:absolute;
-  top:38px;right:24px;
-  display:flex;gap:4px;
-  z-index:3;
-}
-.ram-stick{
-  width:6px;height:56px;
-  background:linear-gradient(180deg, #2a3142, #1a1f2c);
-  border:1px solid #3a4458;
-  border-radius:2px;
-  box-shadow:0 0 6px rgba(59,130,246,.3);
-}
-/* GPU — long horizontal card near the bottom */
-.pc-gpu{
-  position:absolute;
-  bottom:32px;left:20px;
-  width:220px;height:34px;
-  border-radius:4px;
-  background:
-    linear-gradient(90deg, #1a1f2c 0%, #232a3a 50%, #1a1f2c 100%);
-  border:1px solid #3a4458;
-  box-shadow:
-    0 4px 12px rgba(0,0,0,.6),
-    0 0 22px var(--gpu-color, #22c55e),
-    inset 0 0 8px rgba(0,0,0,.5);
-  z-index:3;
-}
-.pc-gpu::before{
-  content:'';
-  position:absolute;
-  inset:4px 8px;
-  background:
-    repeating-linear-gradient(90deg, transparent 0 6px, rgba(255,255,255,.05) 6px 7px);
-  border-radius:2px;
-}
-.pc-gpu::after{
-  content:'';
-  position:absolute;
-  left:10px;top:50%;transform:translateY(-50%);
-  width:32px;height:32px;border-radius:50%;
-  background:
-    conic-gradient(from 0deg,
-      transparent 0deg,
-      var(--gpu-color, #22c55e) 30deg,
-      transparent 60deg,
-      transparent 120deg,
-      var(--gpu-color, #22c55e) 150deg,
-      transparent 180deg,
-      transparent 240deg,
-      var(--gpu-color, #22c55e) 270deg,
-      transparent 300deg,
-      transparent 360deg);
-  border:1px solid rgba(255,255,255,.1);
-  box-shadow:0 0 8px var(--gpu-color, #22c55e);
-}
-/* PSU shroud */
-.pc-psu{
-  position:absolute;
-  bottom:8px;left:16px;right:16px;
-  height:20px;
-  background:linear-gradient(180deg, #0f1319, #05080c);
-  border:1px solid #232a3a;
-  border-radius:4px;
-  box-shadow:inset 0 -4px 10px rgba(0,0,0,.8);
-}
-.pc-psu::after{
-  content:'PSU';
-  position:absolute;right:8px;top:50%;transform:translateY(-50%);
-  font-size:.55rem;font-weight:800;letter-spacing:.1em;
-  color:var(--text-3);
-}
-/* Cable management bar */
-.pc-cablebar{
-  position:absolute;
-  top:120px;right:16px;
-  width:20px;height:120px;
-  background:linear-gradient(90deg, transparent, rgba(0,0,0,.5));
-  border-right:2px solid #2a3142;
-  border-radius:2px;
-}
-
-/* Label under the tower */
 .pc-3d-label{
   position:absolute;
-  bottom:-46px;
+  bottom:0;
   left:50%;
   transform:translateX(-50%);
   text-align:center;
   white-space:nowrap;
+  z-index:3;
 }
 .pc-3d-label .pl-title{
   font-size:.6rem;
@@ -586,6 +341,64 @@ body::before{
 /* Legacy simple tower (kept for no-js fallback, hidden) */
 .pc-tower{display:none;}
 .pc-glow{display:none;}
+
+/* ============================================================
+   PERFORMANCE OVERVIEW CHART — SVG area chart (matches screenshot 4)
+   ============================================================ */
+.perf-chart-wrap{
+  position:relative;
+  width:100%;
+  height:180px;
+  margin-top:.5rem;
+}
+.perf-chart-wrap svg{
+  width:100%;
+  height:100%;
+  display:block;
+  overflow:visible;
+}
+.perf-chart-grid line{
+  stroke:var(--border);
+  stroke-dasharray:2 3;
+  stroke-width:1;
+}
+.perf-chart-labels text{
+  fill:var(--text-3);
+  font-size:9px;
+  font-family:'Inter',system-ui,sans-serif;
+  font-weight:600;
+}
+.perf-chart-axis-labels text{
+  fill:var(--text-3);
+  font-size:10px;
+  font-family:'Inter',system-ui,sans-serif;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+.perf-chart-area{
+  fill:url(#perfGradient);
+  opacity:.55;
+}
+.perf-chart-line{
+  fill:none;
+  stroke:var(--primary);
+  stroke-width:2.5;
+  stroke-linejoin:round;
+  stroke-linecap:round;
+}
+.perf-chart-dot{
+  fill:var(--surface);
+  stroke:var(--primary);
+  stroke-width:2.5;
+}
+.perf-chart-dot-label{
+  fill:var(--text);
+  font-size:10px;
+  font-weight:800;
+  font-family:'Inter',system-ui,sans-serif;
+  text-anchor:middle;
+}
 
 /* ============================================================
    BUILD PANEL (sidebar-style quick view)
@@ -776,7 +589,7 @@ table.data tr:hover td{background:var(--surface-2);}
 .field.full{grid-column:1/-1;}
 
 /* ============================================================
-   STORAGE — restyled to match the Memory card (label above select)
+   STORAGE — matches the Memory card (label above select)
    ============================================================ */
 .storage-list{display:flex;flex-direction:column;gap:.85rem;}
 .storage-item{
@@ -883,6 +696,55 @@ table.data tr:hover td{background:var(--surface-2);}
 .modal-body{padding:1.5rem;}
 
 /* ============================================================
+   PER-GAME BAR CHART (inside modal)
+   ============================================================ */
+.game-bar-chart{
+  display:flex;
+  align-items:flex-end;
+  gap:.75rem;
+  height:140px;
+  padding:.5rem 0 .25rem;
+  margin-top:.25rem;
+}
+.game-bar-col{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:.4rem;
+  height:100%;
+  justify-content:flex-end;
+}
+.game-bar{
+  width:100%;
+  max-width:44px;
+  border-radius:6px 6px 0 0;
+  background:linear-gradient(180deg, var(--primary), var(--accent));
+  box-shadow:0 4px 12px -3px var(--primary-glow);
+  position:relative;
+  transition:height .6s cubic-bezier(.4,0,.2,1);
+  min-height:6px;
+}
+.game-bar.excellent{background:linear-gradient(180deg, var(--success), #16a34a);}
+.game-bar.great{background:linear-gradient(180deg, var(--info), #0891b2);}
+.game-bar.good{background:linear-gradient(180deg, var(--primary), #2563eb);}
+.game-bar.playable{background:linear-gradient(180deg, var(--warn), #d97706);}
+.game-bar.poor{background:linear-gradient(180deg, var(--danger), #b91c1c);}
+.game-bar-value{
+  font-size:.7rem;
+  font-weight:800;
+  color:var(--text);
+  font-variant-numeric:tabular-nums;
+}
+.game-bar-label{
+  font-size:.65rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  color:var(--text-3);
+}
+
+/* ============================================================
    SETTINGS ROWS
    ============================================================ */
 .setting-row{display:flex;align-items:center;justify-content:space-between;padding:.75rem 0;border-bottom:1px solid var(--border);gap:1rem;}
@@ -961,7 +823,7 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
   .topbar{padding:0 1rem;}
   .search-box{max-width:none;}
   .storage-item{grid-template-columns:1fr;gap:.5rem;}
-  .pc-scene{transform:scale(.8) rotateY(-22deg) rotateX(6deg);}
+  .pc-hero-image{max-height:220px;}
 }
 </style>
 </head>
@@ -1037,47 +899,23 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
               </div>
             </div>
             <div class="hero-visual">
-              <!-- ========== 3D PC TOWER ========== -->
-              <div class="pc-scene" id="pcScene">
-                <div class="pc-shadow-3d"></div>
-
-                <!-- Front of the case with 2 RGB fans -->
-                <div class="pc-front-3d">
-                  <div class="pc-front-fans">
-                    <div class="front-fan" id="fan1"></div>
-                    <div class="front-fan" id="fan2"></div>
-                  </div>
-                </div>
-
-                <!-- Top panel -->
-                <div class="pc-top-3d"></div>
-
-                <!-- Right side panel with glass + internals -->
-                <div class="pc-side">
-                  <div class="pc-mobo"></div>
-                  <div class="pc-cpu-cooler" id="cpuCooler"></div>
-                  <div class="pc-ram-sticks">
-                    <div class="ram-stick"></div>
-                    <div class="ram-stick"></div>
-                    <div class="ram-stick"></div>
-                    <div class="ram-stick"></div>
-                  </div>
-                  <div class="pc-gpu" id="gpuCard"></div>
-                  <div class="pc-cablebar"></div>
-                  <div class="pc-psu"></div>
-                </div>
-
-                <!-- Label under the tower -->
-                <div class="pc-3d-label">
-                  <div class="pl-title">Your Build</div>
-                  <div class="pl-hardware" id="pcHardwareLabel">
-                    <span id="pcLabelCpu">—</span>
-                    <span class="pl-arrow"><i class="fas fa-plus"></i></span>
-                    <span id="pcLabelGpu">—</span>
-                  </div>
+              <!-- ========== REAL PC IMAGE (replaces the old 3D tower) ========== -->
+              <div class="pc-hero-glow"></div>
+              <div class="pc-hero-shadow"></div>
+              <img class="pc-hero-image"
+                   id="pcHeroImage"
+                   src="https://www.pngmart.com/files/23/Gaming-Pc-PNG-Isolated-Image.png"
+                   alt="Your PC build"
+                   onerror="this.style.opacity='0.25'">
+              <div class="pc-3d-label">
+                <div class="pl-title">Your Build</div>
+                <div class="pl-hardware" id="pcHardwareLabel">
+                  <span id="pcLabelCpu">—</span>
+                  <span class="pl-arrow"><i class="fas fa-plus"></i></span>
+                  <span id="pcLabelGpu">—</span>
                 </div>
               </div>
-              <!-- ========== /3D PC TOWER ========== -->
+              <!-- ========== /REAL PC IMAGE ========== -->
             </div>
           </div>
         </div>
@@ -1143,14 +981,16 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
           </div>
         </div>
 
-        <!-- BOTTLENECK + SCORE METERS -->
+        <!-- ========== PERFORMANCE OVERVIEW CHART + BREAKDOWN ========== -->
         <div class="grid grid-2 mb-3">
           <div class="card">
             <div class="card-header">
-              <div class="card-title"><i class="fas fa-diagram-project"></i> Bottleneck Analysis</div>
-              <span class="card-sub" id="bnSummary">—</span>
+              <div class="card-title"><i class="fas fa-chart-line"></i> Performance Overview</div>
+              <span class="card-sub" id="perfOverviewSub">—</span>
             </div>
-            <div id="bnList"><div class="empty"><i class="fas fa-diagram-project"></i><p>Add your components to see bottleneck analysis.</p></div></div>
+            <div id="perfOverviewChart" class="perf-chart-wrap">
+              <div class="empty" style="padding:1.5rem;"><i class="fas fa-chart-line"></i><p>Run analysis to see the graph.</p></div>
+            </div>
           </div>
           <div class="card">
             <div class="card-header">
@@ -1160,6 +1000,15 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
               <div class="empty"><i class="fas fa-chart-simple"></i><p>Analysis pending.</p></div>
             </div>
           </div>
+        </div>
+
+        <!-- BOTTLENECK -->
+        <div class="card mb-3">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-diagram-project"></i> Bottleneck Analysis</div>
+            <span class="card-sub" id="bnSummary">—</span>
+          </div>
+          <div id="bnList"><div class="empty"><i class="fas fa-diagram-project"></i><p>Add your components to see bottleneck analysis.</p></div></div>
         </div>
 
         <!-- TOP GAMES PREVIEW -->
@@ -1554,8 +1403,8 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
 
         <div class="card">
           <div class="card-header"><div class="card-title"><i class="fas fa-circle-info"></i> About</div></div>
-          <p class="text-muted mb-2">PC Playground is a client-side performance modeler. All estimates are algorithmic, based on a curated component database and relative-weight FPS model. For production use, plug a live benchmark API into <code>DATA_MODE</code>.</p>
-          <p class="text-muted" style="font-size:.75rem;">Version 3.5 · Built with vanilla HTML/CSS/JS · No tracking · No server.</p>
+          <p class="text-muted mb-2">PC Playground is a client-side performance modeler. All estimates are algorithmic, based on a curated component database and relative-weight FPS model.</p>
+          <p class="text-muted" style="font-size:.75rem;">Version 4.0 · Built with vanilla HTML/CSS/JS · No tracking · No server.</p>
         </div>
       </section>
 
@@ -1570,7 +1419,6 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
 <div class="modal-backdrop" id="gameModal">
   <div class="modal">
     <div class="modal-hero" id="modalHero">
-      <!-- Injected: banner image or SVG fallback -->
       <div class="modal-hero-overlay"></div>
       <div class="modal-hero-content">
         <div>
@@ -1601,18 +1449,16 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
 
 <script>
 /* ================================================================
-   PC PLAYGROUND — CORE ENGINE v3.5
+   PC PLAYGROUND — CORE ENGINE v4.0
    ----------------------------------------------------------------
-   CHANGES FROM v3.0:
-     - Storage rebuilt to match the Memory card layout
-     - Added 64GB and 128GB storage capacities
-     - Realistic 3D PC tower on home (updates with CPU/GPU selection)
-     - Per-game banner in modal (real URLs + SVG fallback)
-     - Small banner thumbnails on Games grid cards
-     - Banner field added to all games
+   CHANGES FROM v3.5:
+     - Real PC image on home (replaces the CSS 3D tower)
+     - Performance Overview area chart on home
+     - Per-game bar chart inside the game modal
+   Everything else is byte-identical to v3.5.
    ================================================================ */
 
-const DATA_MODE = 'local'; // 'local' | 'remote'
+const DATA_MODE = 'local';
 
 const CPUS = {
   AMD: [
@@ -1730,14 +1576,8 @@ const STORAGE_TYPES = [
   {name:'NVMe Gen5',      mult:1.60, tdp:10, speed:12000},
 ];
 
-/* NEW: Added 64GB and 128GB capacities (plus kept everything else) */
 const CAPACITIES = ['64GB','128GB','256GB','500GB','1TB','2TB','4TB','8TB'];
 
-/* ----------------------------------------------------------------
-   GAME DB
-   Each game now has a `banner` field. If set to a URL, the modal
-   and card thumb will use it. If empty, a procedural SVG is generated.
-   ---------------------------------------------------------------- */
 const GAMES = [
   {name:'Cyberpunk 2077',      genre:'RPG',      base:42,  cw:0.22, gw:0.68, rw:0.10, preset:'High', rt:true,
     banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/header.jpg', color:'#facc15'},
@@ -1837,9 +1677,6 @@ const GAMES = [
     banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/548430/header.jpg', color:'#ea580c'},
 ];
 
-/* ----------------------------------------------------------------
-   COOKIE ENGINE
-   ---------------------------------------------------------------- */
 const CK = {
   set(name, value, days=365){
     const d = new Date();
@@ -1860,9 +1697,6 @@ const CK = {
   }
 };
 
-/* ----------------------------------------------------------------
-   STATE (unchanged cookie keys — your saved data is safe)
-   ---------------------------------------------------------------- */
 let state = {
   build: {
     cpuBrand:'AMD', cpu:'Ryzen 5 2600',
@@ -1893,9 +1727,6 @@ if(savedBuild) state.build = {...state.build, ...savedBuild};
 if(savedSettings) state.settings = {...state.settings, ...savedSettings};
 if(savedBuildsList) state.savedBuilds = savedBuildsList;
 
-/* ----------------------------------------------------------------
-   HELPERS
-   ---------------------------------------------------------------- */
 const $ = (sel, root=document)=>root.querySelector(sel);
 const $$ = (sel, root=document)=>Array.from(root.querySelectorAll(sel));
 const fmt = n => n.toLocaleString();
@@ -1919,9 +1750,6 @@ function toast(msg, icon='fa-info-circle'){
   setTimeout(()=>{ t.style.animation='slideIn .3s reverse'; setTimeout(()=>t.remove(),300); }, 3000);
 }
 
-/* ----------------------------------------------------------------
-   THEME ENGINE
-   ---------------------------------------------------------------- */
 function applyTheme(){
   const s = state.settings;
   document.body.classList.remove('theme-light');
@@ -1966,9 +1794,6 @@ function hexToRgba(hex, a){
   return `rgba(${r},${g},${b},${a})`;
 }
 
-/* ----------------------------------------------------------------
-   ROUTER
-   ---------------------------------------------------------------- */
 function navigate(page){
   $$('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.page===page));
   $$('.page').forEach(p=>p.classList.toggle('active', p.id === 'page-'+page));
@@ -1981,9 +1806,6 @@ function navigate(page){
 }
 $$('.nav-item').forEach(item=>item.addEventListener('click', ()=>navigate(item.dataset.page)));
 
-/* ----------------------------------------------------------------
-   BUILD UI
-   ---------------------------------------------------------------- */
 function populateCpuSelect(){
   const brand = $('#cpuBrand').value;
   const list = CPUS[brand] || CPUS.AMD;
@@ -2007,9 +1829,6 @@ function populateRamSelect(){
   else sel.value = RAMS[2].name;
 }
 
-/* ----------------------------------------------------------------
-   STORAGE — restyled (label-above-select, same as Memory card)
-   ---------------------------------------------------------------- */
 function renderStorage(){
   const container = $('#storageContainer');
   const list = state.build.storages;
@@ -2055,9 +1874,6 @@ $('#addStorage').addEventListener('click', ()=>{
   renderStorage();
 });
 
-/* ----------------------------------------------------------------
-   INPUT LISTENERS (updated to also refresh the 3D tower)
-   ---------------------------------------------------------------- */
 $('#cpuBrand').addEventListener('change', ()=>{ state.build.cpuBrand = $('#cpuBrand').value; populateCpuSelect(); updateTower(); });
 $('#gpuBrand').addEventListener('change', ()=>{ state.build.gpuBrand = $('#gpuBrand').value; populateGpuSelect(); updateTower(); });
 $('#cpuSelect').addEventListener('change', ()=>{ state.build.cpu = $('#cpuSelect').value; updateTower(); });
@@ -2069,30 +1885,32 @@ $('#psuEff').addEventListener('change', ()=>{ state.build.psuEff = $('#psuEff').
 $('#coolerType').addEventListener('change', ()=>{ state.build.coolerType = $('#coolerType').value; });
 
 /* ----------------------------------------------------------------
-   3D PC TOWER — updates based on CPU brand & GPU brand
+   updateTower() — v4.0: only updates the label under the PC image
+   and the image's ambient glow to match the GPU brand.
+   The image itself is fixed (single PNG).
    ---------------------------------------------------------------- */
 function updateTower(){
   const cpuName = $('#cpuSelect') ? $('#cpuSelect').value : state.build.cpu;
   const gpuName = $('#gpuSelect') ? $('#gpuSelect').value : state.build.gpu;
-  const cpuBrand = (cpuName||'').toLowerCase().includes('ryzen') ? 'AMD'
-                 : (cpuName||'').toLowerCase().includes('intel') || (cpuName||'').toLowerCase().includes('core') ? 'Intel'
-                 : 'AMD';
+
   const gpuBrand = (gpuName||'').toLowerCase().includes('rtx') || (gpuName||'').toLowerCase().includes('gtx') ? 'NVIDIA'
                  : (gpuName||'').toLowerCase().includes('rx ') ? 'AMD'
                  : (gpuName||'').toLowerCase().includes('arc') ? 'Intel'
                  : 'NVIDIA';
+  const gpuGlow = gpuBrand === 'NVIDIA' ? 'rgba(34,197,94,.55)'
+                : gpuBrand === 'AMD'    ? 'rgba(239,68,68,.55)'
+                :                          'rgba(6,182,212,.55)';
 
-  const cpuColor = cpuBrand === 'AMD' ? '#ef4444' : '#3b82f6';
-  const gpuColor = gpuBrand === 'NVIDIA' ? '#22c55e' : gpuBrand === 'AMD' ? '#ef4444' : '#06b6d4';
-  const fanColor = gpuColor;
+  // Tint the drop-shadow glow behind/around the PC based on GPU brand
+  const img = $('#pcHeroImage');
+  if(img){
+    img.style.filter = `drop-shadow(0 30px 50px rgba(0,0,0,.65)) drop-shadow(0 0 40px ${gpuGlow})`;
+  }
+  const glow = document.querySelector('.pc-hero-glow');
+  if(glow){
+    glow.style.background = `radial-gradient(circle, ${gpuGlow}, transparent 65%)`;
+  }
 
-  const scene = $('#pcScene');
-  if(!scene) return;
-  scene.style.setProperty('--cpu-color', cpuColor);
-  scene.style.setProperty('--gpu-color', gpuColor);
-  scene.style.setProperty('--fan-color', fanColor);
-
-  // Labels
   const labelCpu = $('#pcLabelCpu');
   const labelGpu = $('#pcLabelGpu');
   if(labelCpu) labelCpu.textContent = cpuName || '—';
@@ -2100,7 +1918,7 @@ function updateTower(){
 }
 
 /* ----------------------------------------------------------------
-   ANALYSIS ENGINE (unchanged logic, banner support added)
+   ANALYSIS ENGINE — unchanged
    ---------------------------------------------------------------- */
 function analyze(){
   state.build.cpu = $('#cpuSelect').value;
@@ -2277,6 +2095,9 @@ function renderHome(){
     <div class="meter"><div class="meter-label"><i class="fas fa-hard-drive"></i> Storage</div><div class="meter-track"><div class="meter-fill ${a.storageScore<50?'warn':a.storageScore>=80?'good':''}" style="width:${a.storageScore}%"></div></div><div class="meter-value">${a.storageScore}</div></div>
   `;
 
+  // NEW: performance overview chart
+  renderPerfChart(a);
+
   const top8 = [...a.gameResults].sort((x,y)=>y.fps-x.fps).slice(0,8);
   $('#homeGames').innerHTML = top8.map(g=>gameCardHtml(g)).join('');
   $$('#homeGames .game-card').forEach((el,i)=>el.addEventListener('click',()=>openGameModal(top8[i])));
@@ -2285,8 +2106,75 @@ function renderHome(){
 }
 
 /* ----------------------------------------------------------------
-   GAME CARD — with optional banner thumb at the top
+   PERFORMANCE OVERVIEW — SVG area chart
    ---------------------------------------------------------------- */
+function renderPerfChart(a){
+  const wrap = $('#perfOverviewChart');
+  const sub = $('#perfOverviewSub');
+  if(!wrap) return;
+  sub.textContent = `${a.cpuScore} CPU · ${a.gpuScore} GPU · ${a.ramScore} RAM · ${a.storageScore} Storage`;
+
+  const points = [
+    {label:'CPU',     value:a.cpuScore},
+    {label:'GPU',     value:a.gpuScore},
+    {label:'RAM',     value:a.ramScore},
+    {label:'Storage', value:a.storageScore},
+  ];
+
+  const W = 500, H = 180;
+  const padL = 30, padR = 16, padT = 20, padB = 30;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+  const maxV = 100;
+  const stepX = chartW / (points.length - 1);
+
+  const coords = points.map((p,i)=>({
+    x: padL + i*stepX,
+    y: padT + (1 - p.value/maxV) * chartH,
+    value: p.value,
+    label: p.label
+  }));
+
+  // Build smooth-ish line path (straight segments, clean)
+  const linePath = coords.map((c,i)=> `${i===0?'M':'L'} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`).join(' ');
+  const areaPath = `${linePath} L ${coords[coords.length-1].x.toFixed(1)} ${(padT+chartH).toFixed(1)} L ${coords[0].x.toFixed(1)} ${(padT+chartH).toFixed(1)} Z`;
+
+  // Grid lines
+  const gridLines = [0, 25, 50, 75, 100].map(v=>{
+    const y = padT + (1 - v/maxV) * chartH;
+    return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}"/>`;
+  }).join('');
+
+  const gridLabels = [0, 25, 50, 75, 100].map(v=>{
+    const y = padT + (1 - v/maxV) * chartH;
+    return `<text x="${padL-6}" y="${(y+3).toFixed(1)}" text-anchor="end">${v}</text>`;
+  }).join('');
+
+  const axisLabels = coords.map(c=>`<text x="${c.x.toFixed(1)}" y="${(H-8).toFixed(1)}" text-anchor="middle">${c.label}</text>`).join('');
+
+  const dots = coords.map(c=>`
+    <circle class="perf-chart-dot" cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="5"/>
+    <text class="perf-chart-dot-label" x="${c.x.toFixed(1)}" y="${(c.y-10).toFixed(1)}">${c.value}</text>
+  `).join('');
+
+  wrap.innerHTML = `
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="perfGradient" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--primary)" stop-opacity="0.55"/>
+          <stop offset="100%" stop-color="var(--primary)" stop-opacity="0.02"/>
+        </linearGradient>
+      </defs>
+      <g class="perf-chart-grid">${gridLines}</g>
+      <g class="perf-chart-labels">${gridLabels}</g>
+      <path class="perf-chart-area" d="${areaPath}"/>
+      <path class="perf-chart-line" d="${linePath}"/>
+      ${dots}
+      <g class="perf-chart-axis-labels">${axisLabels}</g>
+    </svg>
+  `;
+}
+
 function gameCardHtml(g){
   const bannerInner = g.banner && g.banner.length
     ? `<img src="${g.banner}" alt="" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('no-img');">`
@@ -2318,9 +2206,6 @@ function gameCardHtml(g){
     </div>`;
 }
 
-/* ----------------------------------------------------------------
-   PROCEDURAL BANNER SVG — used as fallback when no URL exists
-   ---------------------------------------------------------------- */
 function proceduralBannerSvg(g, w, h){
   const initials = (g.name || 'PC')
     .replace(/[^A-Za-z0-9 ]/g,'')
@@ -2362,9 +2247,6 @@ function explainBn(component){
   toast(msgs[component], 'fa-circle-question');
 }
 
-/* ----------------------------------------------------------------
-   RENDER: GAMES PAGE
-   ---------------------------------------------------------------- */
 function renderGamesPage(){
   const a = state.analysis;
   if(!a){
@@ -2388,13 +2270,8 @@ function renderGamesPage(){
 $('#gameFilterQuality').addEventListener('change', renderGamesPage);
 $('#gameSort').addEventListener('change', renderGamesPage);
 
-/* ----------------------------------------------------------------
-   GAME MODAL — with hero banner (uses real URL if available)
-   ---------------------------------------------------------------- */
 function openGameModal(g){
-  // Hero banner: real image if we have a URL, else SVG fallback
   const hero = $('#modalHero');
-  const badgeClass = 'quality-tag ' + g.qclass;
   const bannerMarkup = g.banner && g.banner.length
     ? `<img src="${g.banner}" alt="" onerror="this.style.display='none';this.parentElement.classList.add('no-img');">`
     : proceduralBannerSvg(g, 640, 180);
@@ -2433,6 +2310,39 @@ function openGameModal(g){
     return `<tr><td>1080p ${p.label}</td><td><strong>${fps} FPS</strong></td><td class="text-muted">${g.confidence} confidence</td></tr>`;
   }).join('');
   const a = state.analysis;
+
+  // NEW: build bar chart for Low/Medium/High/Ultra at 1080p
+  const chartPresets = [
+    {label:'Low',    mult:1.35},
+    {label:'Medium', mult:1.10},
+    {label:'High',   mult:1.00},
+    {label:'Ultra',  mult:0.78},
+  ];
+  const chartData = chartPresets.map(p=>{
+    const fps = Math.round(g.fps * p.mult);
+    let cls = 'poor';
+    if(fps>=144) cls='excellent';
+    else if(fps>=100) cls='great';
+    else if(fps>=60) cls='good';
+    else if(fps>=30) cls='playable';
+    return {label:p.label, value:fps, cls};
+  });
+  const maxVal = Math.max(...chartData.map(d=>d.value), 1);
+  const barChartHtml = `
+    <h4 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin:1rem 0 .25rem;">FPS by Preset (1080p)</h4>
+    <div class="game-bar-chart">
+      ${chartData.map(d=>{
+        const h = Math.max(6, Math.round((d.value/maxVal)*100));
+        return `
+          <div class="game-bar-col">
+            <div class="game-bar-value">${d.value}</div>
+            <div class="game-bar ${d.cls}" style="height:${h}%"></div>
+            <div class="game-bar-label">${d.label}</div>
+          </div>`;
+      }).join('')}
+    </div>
+  `;
+
   $('#modalGameBody').innerHTML = `
     <div class="grid grid-2 mb-2">
       <div class="card-soft" style="background:var(--surface-2);padding:1rem;border-radius:var(--radius-sm);">
@@ -2447,7 +2357,8 @@ function openGameModal(g){
         <div style="font-size:.85rem;">VRAM: <strong>${(g.gw*a.gpu.vram*0.9).toFixed(1)} GB</strong></div>
       </div>
     </div>
-    <h4 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin:.75rem 0 .5rem;">By Resolution</h4>
+    ${barChartHtml}
+    <h4 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin:1rem 0 .5rem;">By Resolution</h4>
     <table class="data"><thead><tr><th>Resolution</th><th>FPS</th><th>Quality</th></tr></thead><tbody>${rows}</tbody></table>
     <h4 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin:1rem 0 .5rem;">By Preset (1080p)</h4>
     <table class="data"><thead><tr><th>Preset</th><th>FPS</th><th>Confidence</th></tr></thead><tbody>${presetRows}</tbody></table>
@@ -2464,9 +2375,6 @@ function openGameModal(g){
 function closeModal(id){ document.getElementById(id).classList.remove('show'); }
 $$('.modal-backdrop').forEach(m=>m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('show'); }));
 
-/* ----------------------------------------------------------------
-   RENDER: BUILD HEALTH
-   ---------------------------------------------------------------- */
 function renderBuildHealth(){
   const a = state.analysis;
   if(!a){ return; }
@@ -2498,9 +2406,6 @@ function renderBuildHealth(){
   `;
 }
 
-/* ----------------------------------------------------------------
-   RENDER: UPGRADE PAGE
-   ---------------------------------------------------------------- */
 function renderUpgradePage(){
   const a = state.analysis;
   if(!a){ $('#fullUpgrade').innerHTML = `<div class="empty"><i class="fas fa-route"></i><p>Analyze your PC first.</p></div>`; return; }
@@ -2553,9 +2458,6 @@ function upgradeTeaserHtml(a, full=false){
   `;
 }
 
-/* ----------------------------------------------------------------
-   RENDER: BENCHMARKS PAGE
-   ---------------------------------------------------------------- */
 function renderBenchmarksPage(){
   const a = state.analysis;
   if(!a){ return; }
@@ -2602,9 +2504,6 @@ function renderBenchmarksPage(){
 function allCpus(){ return [...CPUS.AMD, ...CPUS.Intel]; }
 function allGpus(){ return [...GPUS.NVIDIA, ...GPUS.AMD, ...GPUS.Intel]; }
 
-/* ----------------------------------------------------------------
-   COMPARE
-   ---------------------------------------------------------------- */
 function populateCompareSelects(){
   const cpuOpts = allCpus().map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
   const gpuOpts = allGpus().map(g=>`<option value="${g.name}">${g.name}</option>`).join('');
@@ -2671,9 +2570,6 @@ function runCompare(){
 }
 $('#runCompare').addEventListener('click', runCompare);
 
-/* ----------------------------------------------------------------
-   ADVISOR
-   ---------------------------------------------------------------- */
 $$('#advisorGoals button').forEach(btn=>btn.addEventListener('click', ()=>{
   const goal = btn.dataset.goal;
   const a = state.analysis;
@@ -2726,9 +2622,6 @@ $$('#advisorGoals button').forEach(btn=>btn.addEventListener('click', ()=>{
   $('#advisorResult').innerHTML = html;
 }));
 
-/* ----------------------------------------------------------------
-   SAVED BUILDS
-   ---------------------------------------------------------------- */
 $('#saveBuildBtn').addEventListener('click', ()=>{
   const name = prompt('Name your build:', state.build.cpu.split(' ')[0] + ' + ' + state.build.gpu.split(' ').slice(0,2).join(' '));
   if(!name) return;
@@ -2785,9 +2678,6 @@ function delBuild(id){
   });
 }
 
-/* ----------------------------------------------------------------
-   SETTINGS
-   ---------------------------------------------------------------- */
 $$('#themeSwatches .swatch').forEach(el=>el.addEventListener('click', ()=>{
   state.settings.theme = el.dataset.theme;
   CK.set('pcp_settings', state.settings);
@@ -2814,7 +2704,7 @@ $('#quickTheme').addEventListener('click', ()=>{
 $('#quickSettings').addEventListener('click', ()=>navigate('settings'));
 
 $('#exportBtn').addEventListener('click', ()=>{
-  const payload = {version:3.5, build:state.build, settings:state.settings, builds:state.savedBuilds, exported:new Date().toISOString()};
+  const payload = {version:4, build:state.build, settings:state.settings, builds:state.savedBuilds, exported:new Date().toISOString()};
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -2863,9 +2753,6 @@ function confirmDialog(msg, cb){
 $('#confirmCancel').addEventListener('click', ()=>{ $('#confirmModal').classList.remove('show'); confirmCb=null; });
 $('#confirmOk').addEventListener('click', ()=>{ $('#confirmModal').classList.remove('show'); if(confirmCb) confirmCb(); confirmCb=null; });
 
-/* ----------------------------------------------------------------
-   GLOBAL SEARCH
-   ---------------------------------------------------------------- */
 $('#globalSearch').addEventListener('input', e=>{
   const q = e.target.value.trim().toLowerCase();
   if(!q){ return; }
@@ -2873,9 +2760,6 @@ $('#globalSearch').addEventListener('input', e=>{
   if(game){ toast('Try "Games" page to see: '+game.name, 'fa-gamepad'); }
 });
 
-/* ----------------------------------------------------------------
-   MOBILE MENU
-   ---------------------------------------------------------------- */
 function checkMobile(){
   const isMobile = window.innerWidth <= 760;
   $('#menuBtn').style.display = isMobile ? 'grid' : 'none';
@@ -2884,9 +2768,6 @@ window.addEventListener('resize', checkMobile);
 checkMobile();
 $('#menuBtn').addEventListener('click', ()=>$('#sidebar').classList.toggle('open'));
 
-/* ----------------------------------------------------------------
-   BOOT
-   ---------------------------------------------------------------- */
 (function boot(){
   $('#cpuBrand').value = state.build.cpuBrand;
   populateCpuSelect();
@@ -2913,7 +2794,7 @@ $('#menuBtn').addEventListener('click', ()=>$('#sidebar').classList.toggle('open
     $('#heroRam').textContent = state.build.ram;
     $('#gamesCountBadge').textContent = GAMES.length;
   }
-  console.log('%cPC Playground v3.5','font-size:16px;font-weight:800;color:#3b82f6');
+  console.log('%cPC Playground v4.0','font-size:16px;font-weight:800;color:#3b82f6');
   console.log('Loaded:', allCpus().length, 'CPUs,', allGpus().length, 'GPUs,', GAMES.length, 'games');
 })();
 </script>
