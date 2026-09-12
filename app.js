@@ -1292,9 +1292,123 @@ $$('#advisorGoals button').forEach(btn=>btn.addEventListener('click', ()=>{
     <p class="text-muted mb-2">You hit 144+ FPS in <strong>${hits} of ${a.gameResults.length}</strong> titles.</p>
     ${misses.length?'<p class="text-muted mb-1">Games that fall short:</p>':'<p class="text-muted">You hit 144 FPS in every game tested. Excellent!</p>'}
     ${misses.map(g=>`<div class="bn-item mb-1"><div class="bn-icon gpu"><i class="fas fa-gamepad"></i></div><div class="bn-body"><div class="bn-head"><strong>${g.name}</strong><span>${g.fps} FPS</span></div></div></div>`).join('')}`;
+  } else if(goal==='target'){
+    // Build a game <option> list sorted alphabetically
+    const sorted = [...a.gameResults].sort((x,y)=>x.name.localeCompare(y.name));
+    const gameOptions = sorted.map(g => `<option value="${g.name.replace(/"/g,'&quot;')}">${g.name}</option>`).join('');
+    html = `
+      <div class="card-title mb-2"><i class="fas fa-bullseye"></i> Target FPS Advisor</div>
+      <p class="text-muted mb-2">Tell us what you want to play and at what framerate.</p>
+      <div style="display:grid;grid-template-columns:2fr 1fr auto;gap:.75rem;align-items:end;margin-bottom:1rem;">
+        <div class="field" style="margin:0;">
+          <label>Game</label>
+          <select id="targetGame" style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.6rem .75rem;color:var(--text);font-family:inherit;font-size:.85rem;font-weight:500;">
+            ${gameOptions}
+          </select>
+        </div>
+        <div class="field" style="margin:0;">
+          <label>Target FPS</label>
+          <input type="number" id="targetFpsAdvisor" value="144" min="30" max="360" step="1" style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.6rem .75rem;color:var(--text);font-family:inherit;font-size:.85rem;font-weight:500;width:100%;">
+        </div>
+        <button class="btn btn-primary" id="targetCheckBtn"><i class="fas fa-bolt"></i> Check</button>
+      </div>
+      <div id="targetResult"></div>
+    `;
   }
   $('#advisorResult').innerHTML = html;
+
+  // If this is the Target-FPS advisor, wire its Check button
+  const checkBtn = $('#targetCheckBtn');
+  if(checkBtn){
+    checkBtn.addEventListener('click', runTargetFpsCheck);
+    // Auto-run once so the user sees something immediately
+    runTargetFpsCheck();
+  }
 }));
+
+/* ----------------------------------------------------------------
+   TARGET FPS ADVISOR — evaluation
+   ---------------------------------------------------------------- */
+function runTargetFpsCheck(){
+  const a = state.analysis;
+  if(!a) return;
+  const gameName = $('#targetGame') ? $('#targetGame').value : null;
+  const targetFps = parseInt(($('#targetFpsAdvisor') && $('#targetFpsAdvisor').value) || '144', 10);
+  const result = $('#targetResult');
+  if(!gameName || !result) return;
+
+  const game = a.gameResults.find(g => g.name === gameName);
+  if(!game){
+    result.innerHTML = `<p class="text-muted">Game not found.</p>`;
+    return;
+  }
+
+  const fps = game.fps;
+  const pct = Math.round((fps / targetFps) * 100);
+  const diff = fps - targetFps;
+
+  // Determine hit/miss and the recommendation
+  let status, badgeClass, icon, message, actionHtml = '';
+
+  if(fps >= targetFps){
+    status = 'Hit';
+    badgeClass = 'pill-green';
+    icon = 'fa-circle-check';
+    message = `Your PC can hit <strong>${targetFps} FPS</strong> in <strong>${game.name}</strong> at ${game.preset}. You're currently at ~${fps} FPS (${pct}% of target).`;
+    if(fps >= targetFps * 1.5){
+      message += ` You have <strong>${Math.round((fps/targetFps - 1)*100)}% headroom</strong> — you could push higher settings or resolution.`;
+    }
+  } else {
+    status = 'Miss';
+    badgeClass = 'pill-gray';
+    icon = 'fa-circle-xmark';
+    message = `Your PC is at <strong>${fps} FPS</strong> in <strong>${game.name}</strong> — that's <strong>${Math.abs(diff)} FPS short</strong> of your ${targetFps} target (${pct}% of the way).`;
+
+    // Recommend upgrades
+    const recs = [];
+    const needsGpu = game.gw >= 0.50;
+    const needsCpu = game.cw >= 0.40;
+
+    if(needsGpu){
+      const gpuTier = a.gpu.tier;
+      const gpuMap = {
+        'entry': 'RX 7600 or RTX 4060',
+        'mainstream': 'RTX 4070 or RX 7800 XT',
+        'performance': 'RTX 4070 Super or RX 7900 GRE',
+        'enthusiast': 'RTX 4080 Super or RX 7900 XTX',
+        'flagship': 'RTX 5090 (already top-tier)'
+      };
+      recs.push(`<li><strong>GPU:</strong> Upgrade to <strong>${gpuMap[gpuTier] || 'a newer GPU'}</strong> — this game is GPU-heavy.</li>`);
+    }
+    if(needsCpu){
+      recs.push(`<li><strong>CPU:</strong> Consider a <strong>Ryzen 7 7800X3D</strong> (or comparable) — this game leans on the CPU.</li>`);
+    }
+    recs.push(`<li><strong>Settings:</strong> Drop to <strong>Medium</strong> or <strong>Low</strong> preset — often gets you 30–60% back.</li>`);
+    recs.push(`<li><strong>Upscaling:</strong> Enable <strong>DLSS / FSR Performance</strong> for another boost.</li>`);
+
+    actionHtml = `
+      <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;margin-top:.5rem;">
+        <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:.5rem;">What to do</div>
+        <ul style="list-style:none;line-height:1.9;font-size:.85rem;">
+          ${recs.join('')}
+        </ul>
+      </div>
+    `;
+  }
+
+  result.innerHTML = `
+    <div class="bn-item" style="border-color:color-mix(in srgb,${fps>=targetFps?'var(--success)':'var(--warn)'} 40%,transparent);">
+      <div class="bn-icon" style="background:color-mix(in srgb,${fps>=targetFps?'var(--success)':'var(--warn)'} 15%,transparent);color:${fps>=targetFps?'var(--success)':'var(--warn)'};">
+        <i class="fas ${icon}"></i>
+      </div>
+      <div class="bn-body">
+        <div class="bn-head"><strong>${status === 'Hit' ? 'Can hit target' : 'Short of target'}</strong><span>${fps} / ${targetFps} FPS</span></div>
+        <div class="bn-desc">${message}</div>
+      </div>
+    </div>
+    ${actionHtml}
+  `;
+}
 
 /* ----------------------------------------------------------------
    SAVED BUILDS
