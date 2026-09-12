@@ -2719,6 +2719,15 @@ window.addEventListener('resize', ()=>{
   }, 120);
 });
 
+/* inject mini icons into Parts labels */
+(function injectBapcMiniIcons(){
+  document.querySelectorAll('.bapc-mini-icon').forEach(el=>{
+    const type = el.dataset.icon;
+    if(!type || !window.bapcIcon) return;
+    el.innerHTML = bapcIcon(type);
+  });
+})();
+
 /* ----------------------------------------------------------------
    BOOT
    ---------------------------------------------------------------- */
