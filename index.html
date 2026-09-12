@@ -158,6 +158,7 @@ body::before{
   border-radius:var(--radius-pill);
   padding:.5rem 1rem;
   transition:var(--transition);
+  position:relative;
 }
 .search-box:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow);}
 .search-box i{color:var(--text-3);font-size:.9rem;}
@@ -165,7 +166,6 @@ body::before{
 .search-box input::placeholder{color:var(--text-3);}
 
 /* ---------- Search results dropdown ---------- */
-.search-box{position:relative;}
 .search-results{
   position:absolute;
   top:calc(100% + 8px);
@@ -1225,15 +1225,30 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
           <div class="card-header"><div class="card-title"><i class="fas fa-memory"></i> Memory</div></div>
           <div class="form-grid">
             <div class="field">
-              <label>Capacity & Type</label>
-              <select id="ramSelect"></select>
+              <label>Capacity</label>
+              <select id="ramCapacity">
+                <option value="" disabled hidden>-</option>
+                <option value="8">8 GB</option>
+                <option value="16">16 GB</option>
+                <option value="32">32 GB</option>
+                <option value="64">64 GB</option>
+                <option value="128">128 GB</option>
+                <option value="256">256 GB</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Type</label>
+              <select id="ramType">
+                <option value="" disabled hidden>-</option>
+                <option value="DDR3">DDR3</option>
+                <option value="DDR4">DDR4</option>
+                <option value="DDR5">DDR5</option>
+              </select>
             </div>
             <div class="field">
               <label>Speed (MHz)</label>
               <select id="ramSpeed">
-                <option>2400</option><option>2666</option><option>3000</option>
-                <option>3200</option><option>3600</option><option>5200</option>
-                <option>6000</option><option>6400</option>
+                <option value="" disabled hidden>-</option>
               </select>
             </div>
           </div>
@@ -1254,8 +1269,21 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
               <div class="field">
                 <label>Wattage</label>
                 <select id="psuWatt">
-                  <option>450</option><option>550</option><option>650</option>
-                  <option selected>750</option><option>850</option><option>1000</option><option>1200</option>
+                  <option value="" disabled hidden>-</option>
+                  <option>350</option>
+                  <option>450</option>
+                  <option>500</option>
+                  <option>550</option>
+                  <option>600</option>
+                  <option>650</option>
+                  <option>700</option>
+                  <option>750</option>
+                  <option>800</option>
+                  <option>850</option>
+                  <option>1000</option>
+                  <option>1200</option>
+                  <option>1500</option>
+                  <option>1600</option>
                 </select>
               </div>
               <div class="field">
@@ -1552,7 +1580,7 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
         <div class="card">
           <div class="card-header"><div class="card-title"><i class="fas fa-circle-info"></i> About</div></div>
           <p class="text-muted mb-2">PC Playground is a client-side performance modeler. All estimates are algorithmic, based on a curated component database and relative-weight FPS model.</p>
-          <p class="text-muted" style="font-size:.75rem;">Version 4.2 · Built with vanilla HTML/CSS/JS · No tracking · No server.</p>
+          <p class="text-muted" style="font-size:.75rem;">Version 4.3 · Built with vanilla HTML/CSS/JS · No tracking · No server.</p>
         </div>
       </section>
 
@@ -1597,14 +1625,13 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
 
 <script>
 /* ================================================================
-   PC PLAYGROUND — CORE ENGINE v4.2
+   PC PLAYGROUND — CORE ENGINE v4.3
    ----------------------------------------------------------------
-   CHANGES FROM v4.1:
-     - Guest chip (removed KhanBaba branding)
-     - "Fix My Bottleneck" one-click action in Advisor
-     - "Share your score" card generator (Canvas → PNG download)
-     - Target FPS filter on Games page
-   Everything else is byte-identical to v4.1.
+   CHANGES FROM v4.2:
+     - "-" placeholder on first load for CPU/GPU/PSU/RAM selects
+     - RAM split into Capacity + Type + Speed (DDR3/DDR4/DDR5)
+     - More PSU wattage options (350–1600W)
+     - Live search dropdown with categories (Games/CPUs/GPUs/RAM)
    ================================================================ */
 
 const DATA_MODE = 'local';
@@ -1703,17 +1730,19 @@ const GPUS = {
   ]
 };
 
+/* RAM: now indexed by capacity + type, with speed lists per entry */
 const RAMS = [
-  {name:'8GB DDR4 2400',   mult:0.80, tdp:10, capacity:8,  type:'DDR4'},
-  {name:'8GB DDR4 3200',   mult:0.88, tdp:10, capacity:8,  type:'DDR4'},
-  {name:'16GB DDR4 3200',  mult:1.00, tdp:15, capacity:16, type:'DDR4'},
-  {name:'16GB DDR4 3600',  mult:1.05, tdp:15, capacity:16, type:'DDR4'},
-  {name:'32GB DDR4 3200',  mult:1.10, tdp:18, capacity:32, type:'DDR4'},
-  {name:'32GB DDR5 5600',  mult:1.22, tdp:22, capacity:32, type:'DDR5'},
-  {name:'32GB DDR5 6000',  mult:1.28, tdp:22, capacity:32, type:'DDR5'},
-  {name:'64GB DDR5 6000',  mult:1.35, tdp:28, capacity:64, type:'DDR5'},
-  {name:'64GB DDR5 6400',  mult:1.40, tdp:28, capacity:64, type:'DDR5'},
-  {name:'128GB DDR5 5600', mult:1.45, tdp:38, capacity:128,type:'DDR5'},
+  {capacity:8,   type:'DDR3', speeds:[1333,1600,1866],            mult:0.72, tdp:8},
+  {capacity:8,   type:'DDR4', speeds:[2400,2666,3000,3200,3600],   mult:0.85, tdp:10},
+  {capacity:16,  type:'DDR3', speeds:[1333,1600,1866],            mult:0.80, tdp:12},
+  {capacity:16,  type:'DDR4', speeds:[2400,2666,3000,3200,3600],   mult:1.00, tdp:15},
+  {capacity:16,  type:'DDR5', speeds:[4800,5200,5600,6000,6400],   mult:1.18, tdp:18},
+  {capacity:32,  type:'DDR4', speeds:[2666,3000,3200,3600],        mult:1.10, tdp:18},
+  {capacity:32,  type:'DDR5', speeds:[4800,5200,5600,6000,6400,7200], mult:1.28, tdp:22},
+  {capacity:64,  type:'DDR4', speeds:[2666,3000,3200,3600],        mult:1.18, tdp:24},
+  {capacity:64,  type:'DDR5', speeds:[5200,5600,6000,6400,7200],   mult:1.35, tdp:28},
+  {capacity:128, type:'DDR5', speeds:[5200,5600,6000,6400],        mult:1.45, tdp:38},
+  {capacity:256, type:'DDR5', speeds:[5200,5600,6000],             mult:1.50, tdp:48},
 ];
 
 const STORAGE_TYPES = [
@@ -1895,12 +1924,11 @@ const CK = {
 
 let state = {
   build: {
-    cpuBrand:'AMD', cpu:'Ryzen 5 2600',
-    gpuBrand:'NVIDIA', gpu:'RTX 3060 12GB',
-    ram:'16GB DDR4 3200',
-    ramSpeed:'3200',
+    cpuBrand:'AMD', cpu:'',
+    gpuBrand:'NVIDIA', gpu:'',
+    ram:'', ramCapacity:'', ramType:'', ramSpeed:'',
     storages:[{type:'NVMe Gen4', capacity:'1TB'}],
-    psuWatt:'750', psuEff:'80+ Gold',
+    psuWatt:'', psuEff:'80+ Gold',
     coolerType:'AIO 240mm'
   },
   settings: {
@@ -1936,7 +1964,14 @@ function getGpuData(name){
   for(const brand in GPUS){ const f = GPUS[brand].find(g=>g.name===name); if(f) return f; }
   return GPUS.NVIDIA[4];
 }
-function getRamData(name){ return RAMS.find(r=>r.name===name) || RAMS[2]; }
+function getRamData(){
+  const cap = parseInt(state.build.ramCapacity || '0', 10);
+  const type = state.build.ramType || '';
+  const entry = RAMS.find(r => r.capacity === cap && r.type === type);
+  if(entry) return entry;
+  // Fallback: 16GB DDR4 equivalent
+  return RAMS.find(r => r.capacity === 16 && r.type === 'DDR4') || RAMS[0];
+}
 
 function toast(msg, icon='fa-info-circle'){
   const t = document.createElement('div');
@@ -2006,23 +2041,50 @@ function populateCpuSelect(){
   const brand = $('#cpuBrand').value;
   const list = CPUS[brand] || CPUS.AMD;
   const sel = $('#cpuSelect');
-  sel.innerHTML = list.map(c=>`<option value="${c.name}">${c.name} — ${c.cores} · ${c.clock}</option>`).join('');
-  if(list.some(c=>c.name===state.build.cpu)) sel.value = state.build.cpu;
-  else { sel.value = list[0].name; state.build.cpu = list[0].name; state.build.cpuBrand = brand; }
+  sel.innerHTML = `<option value="" disabled hidden>-</option>` +
+    list.map(c=>`<option value="${c.name}">${c.name} — ${c.cores} · ${c.clock}</option>`).join('');
+  if(state.build.cpu && list.some(c=>c.name===state.build.cpu)) sel.value = state.build.cpu;
+  else sel.value = '';
 }
 function populateGpuSelect(){
   const brand = $('#gpuBrand').value;
   const list = GPUS[brand] || GPUS.NVIDIA;
   const sel = $('#gpuSelect');
-  sel.innerHTML = list.map(g=>`<option value="${g.name}">${g.name} — ${g.vram}GB · ${g.tdp}W</option>`).join('');
-  if(list.some(g=>g.name===state.build.gpu)) sel.value = state.build.gpu;
-  else { sel.value = list[0].name; state.build.gpu = list[0].name; state.build.gpuBrand = brand; }
+  sel.innerHTML = `<option value="" disabled hidden>-</option>` +
+    list.map(g=>`<option value="${g.name}">${g.name} — ${g.vram}GB · ${g.tdp}W</option>`).join('');
+  if(state.build.gpu && list.some(g=>g.name===state.build.gpu)) sel.value = state.build.gpu;
+  else sel.value = '';
 }
 function populateRamSelect(){
-  const sel = $('#ramSelect');
-  sel.innerHTML = RAMS.map(r=>`<option value="${r.name}">${r.name} — ${r.capacity}GB ${r.type}</option>`).join('');
-  if(RAMS.some(r=>r.name===state.build.ram)) sel.value = state.build.ram;
-  else sel.value = RAMS[2].name;
+  // Fallback for old cookie format "16GB DDR4 3200"
+  if(state.build.ram && !state.build.ramCapacity){
+    const m = state.build.ram.match(/^(\d+)GB\s+(DDR\d)/);
+    if(m){
+      state.build.ramCapacity = m[1];
+      state.build.ramType = m[2];
+    }
+  }
+  const cap = $('#ramCapacity');
+  const typ = $('#ramType');
+  if(cap) cap.value = state.build.ramCapacity || '';
+  if(typ) typ.value = state.build.ramType || '';
+  populateRamSpeed();
+}
+function populateRamSpeed(){
+  const cap = parseInt($('#ramCapacity').value, 10);
+  const type = $('#ramType').value;
+  const speedSel = $('#ramSpeed');
+  const entry = RAMS.find(r => r.capacity === cap && r.type === type);
+  if(!entry){
+    speedSel.innerHTML = `<option value="" disabled hidden>-</option>`;
+    speedSel.value = '';
+    return;
+  }
+  speedSel.innerHTML = `<option value="" disabled hidden>-</option>` +
+    entry.speeds.map(s => `<option value="${s}">${s}</option>`).join('');
+  // Prefer 3200 if available, else the fastest
+  if(entry.speeds.includes(3200)) speedSel.value = '3200';
+  else speedSel.value = entry.speeds[entry.speeds.length - 1];
 }
 
 function renderStorage(){
@@ -2074,8 +2136,26 @@ $('#cpuBrand').addEventListener('change', ()=>{ state.build.cpuBrand = $('#cpuBr
 $('#gpuBrand').addEventListener('change', ()=>{ state.build.gpuBrand = $('#gpuBrand').value; populateGpuSelect(); updateTower(); });
 $('#cpuSelect').addEventListener('change', ()=>{ state.build.cpu = $('#cpuSelect').value; updateTower(); });
 $('#gpuSelect').addEventListener('change', ()=>{ state.build.gpu = $('#gpuSelect').value; updateTower(); });
-$('#ramSelect').addEventListener('change', ()=>{ state.build.ram = $('#ramSelect').value; });
-$('#ramSpeed').addEventListener('change', ()=>{ state.build.ramSpeed = $('#ramSpeed').value; });
+$('#ramCapacity').addEventListener('change', ()=>{
+  state.build.ramCapacity = $('#ramCapacity').value;
+  populateRamSpeed();
+  updateRamString();
+});
+$('#ramType').addEventListener('change', ()=>{
+  state.build.ramType = $('#ramType').value;
+  populateRamSpeed();
+  updateRamString();
+});
+$('#ramSpeed').addEventListener('change', ()=>{
+  state.build.ramSpeed = $('#ramSpeed').value;
+  updateRamString();
+});
+function updateRamString(){
+  const cap = state.build.ramCapacity;
+  const type = state.build.ramType;
+  const spd = $('#ramSpeed').value;
+  state.build.ram = (cap && type && spd) ? `${cap}GB ${type} ${spd}` : '';
+}
 $('#psuWatt').addEventListener('change', ()=>{ state.build.psuWatt = $('#psuWatt').value; });
 $('#psuEff').addEventListener('change', ()=>{ state.build.psuEff = $('#psuEff').value; });
 $('#coolerType').addEventListener('change', ()=>{ state.build.coolerType = $('#coolerType').value; });
@@ -2110,15 +2190,17 @@ function updateTower(){
 function analyze(){
   state.build.cpu = $('#cpuSelect').value;
   state.build.gpu = $('#gpuSelect').value;
-  state.build.ram = $('#ramSelect').value;
+  state.build.ramCapacity = $('#ramCapacity').value;
+  state.build.ramType = $('#ramType').value;
   state.build.ramSpeed = $('#ramSpeed').value;
+  updateRamString();
   state.build.psuWatt = $('#psuWatt').value;
   state.build.psuEff = $('#psuEff').value;
   state.build.coolerType = $('#coolerType').value;
 
   const cpu = getCpuData(state.build.cpu);
   const gpu = getGpuData(state.build.gpu);
-  const ram = getRamData(state.build.ram);
+  const ram = getRamData();
 
   const cpuScore = clamp(Math.round(cpu.mult * 42), 5, 100);
   const gpuScore = clamp(Math.round(gpu.mult * 30), 5, 100);
@@ -2136,7 +2218,7 @@ function analyze(){
   const power = cpu.tdp + gpu.tdp + ram.tdp
               + state.build.storages.reduce((sum,s)=>sum + (STORAGE_TYPES.find(t=>t.name===s.type)?.tdp || 5), 0)
               + 75;
-  const psuWatt = +state.build.psuWatt;
+  const psuWatt = +state.build.psuWatt || 0;
   const psuHeadroom = psuWatt - power;
 
   const cw = cpu.mult, gw = gpu.mult, rw = ram.mult;
@@ -2193,11 +2275,11 @@ $('#analyzeBtn').addEventListener('click', analyze);
 $('#resetBuildBtn').addEventListener('click', ()=>{
   confirmDialog('Reset your build?', ()=>{
     state.build = {
-      cpuBrand:'AMD', cpu:'Ryzen 5 2600',
-      gpuBrand:'NVIDIA', gpu:'RTX 3060 12GB',
-      ram:'16GB DDR4 3200', ramSpeed:'3200',
+      cpuBrand:'AMD', cpu:'',
+      gpuBrand:'NVIDIA', gpu:'',
+      ram:'', ramCapacity:'', ramType:'', ramSpeed:'',
       storages:[{type:'NVMe Gen4', capacity:'1TB'}],
-      psuWatt:'750', psuEff:'80+ Gold', coolerType:'AIO 240mm'
+      psuWatt:'', psuEff:'80+ Gold', coolerType:'AIO 240mm'
     };
     syncBuildUI();
     toast('Build reset','fa-rotate-left');
@@ -2207,14 +2289,16 @@ $('#resetBuildBtn').addEventListener('click', ()=>{
 function syncBuildUI(){
   $('#cpuBrand').value = state.build.cpuBrand;
   populateCpuSelect();
-  $('#cpuSelect').value = state.build.cpu;
+  if(state.build.cpu) $('#cpuSelect').value = state.build.cpu;
   $('#gpuBrand').value = state.build.gpuBrand;
   populateGpuSelect();
-  $('#gpuSelect').value = state.build.gpu;
+  if(state.build.gpu) $('#gpuSelect').value = state.build.gpu;
   populateRamSelect();
-  $('#ramSelect').value = state.build.ram;
-  $('#ramSpeed').value = state.build.ramSpeed;
-  $('#psuWatt').value = state.build.psuWatt;
+  if($('#ramCapacity')) $('#ramCapacity').value = state.build.ramCapacity || '';
+  if($('#ramType')) $('#ramType').value = state.build.ramType || '';
+  populateRamSpeed();
+  if($('#ramSpeed') && state.build.ramSpeed) $('#ramSpeed').value = state.build.ramSpeed;
+  if($('#psuWatt') && state.build.psuWatt) $('#psuWatt').value = state.build.psuWatt;
   $('#psuEff').value = state.build.psuEff;
   $('#coolerType').value = state.build.coolerType;
   renderStorage();
@@ -2224,19 +2308,19 @@ function syncBuildUI(){
 function renderHome(){
   const a = state.analysis;
   if(!a){
-    $('#heroCpu').textContent = state.build.cpu;
-    $('#heroGpu').textContent = state.build.gpu;
-    $('#heroRam').textContent = state.build.ram;
+    $('#heroCpu').textContent = state.build.cpu || '—';
+    $('#heroGpu').textContent = state.build.gpu || '—';
+    $('#heroRam').textContent = state.build.ram || '—';
     return;
   }
   $('#heroCpu').textContent = a.cpu.name;
   $('#heroGpu').textContent = a.gpu.name;
-  $('#heroRam').textContent = a.ram.name;
+  $('#heroRam').textContent = `${a.ram.capacity}GB ${a.ram.type}`;
 
   $('#buildSpecs').innerHTML = `
     <div class="spec-row"><div class="spec-icon"><i class="fas fa-microchip"></i></div><div class="spec-info"><div class="label">CPU</div><div class="value">${a.cpu.name} · ${a.cpu.cores}</div></div></div>
     <div class="spec-row"><div class="spec-icon"><i class="fas fa-display"></i></div><div class="spec-info"><div class="label">GPU</div><div class="value">${a.gpu.name} · ${a.gpu.vram}GB</div></div></div>
-    <div class="spec-row"><div class="spec-icon"><i class="fas fa-memory"></i></div><div class="spec-info"><div class="label">RAM</div><div class="value">${a.ram.name}</div></div></div>
+    <div class="spec-row"><div class="spec-icon"><i class="fas fa-memory"></i></div><div class="spec-info"><div class="label">RAM</div><div class="value">${a.ram.capacity}GB ${a.ram.type}${state.build.ramSpeed ? ' ' + state.build.ramSpeed : ''}</div></div></div>
     <div class="spec-row"><div class="spec-icon"><i class="fas fa-hard-drive"></i></div><div class="spec-info"><div class="label">Storage</div><div class="value">${state.build.storages.map(s=>s.capacity+' '+s.type.split(' ')[0]).join(' · ')}</div></div></div>
   `;
 
@@ -2253,7 +2337,7 @@ function renderHome(){
   $('#statGpuScore').textContent = a.gpuScore;
   $('#statGpuName').textContent = a.gpu.name;
   $('#statRamScore').textContent = a.ramScore;
-  $('#statRamName').textContent = a.ram.name;
+  $('#statRamName').textContent = `${a.ram.capacity}GB ${a.ram.type}`;
   $('#statPower').textContent = a.power + ' W';
 
   if(a.bottlenecks.length === 0){
@@ -2442,7 +2526,7 @@ function generateShareCard(){
   ctx.fillText(a.gpu.name, 60, 246);
   ctx.fillStyle = '#a8b2c6';
   ctx.font = '22px Inter, sans-serif';
-  ctx.fillText(a.ram.name, 60, 288);
+  ctx.fillText(`${a.ram.capacity}GB ${a.ram.type}`, 60, 288);
 
   // Rating text
   const rating = a.totalScore>=85?'Excellent':a.totalScore>=70?'Very Good':a.totalScore>=50?'Good':'Needs upgrade';
@@ -2740,10 +2824,10 @@ function renderBuildHealth(){
   if(cpuGen.includes('Zen 5') || cpuGen.includes('Arrow')){
     checks.push({ok:ramType==='DDR5', label:'RAM matches CPU platform', desc:`${a.cpu.name} prefers DDR5, you have ${ramType}`});
   } else {
-    checks.push({ok:ramType==='DDR4' || cpuGen.includes('Zen 4') || cpuGen.includes('Alder') || cpuGen.includes('Raptor'), label:'RAM matches CPU platform', desc:`${a.ram.name}`});
+    checks.push({ok:ramType==='DDR4' || cpuGen.includes('Zen 4') || cpuGen.includes('Alder') || cpuGen.includes('Raptor'), label:'RAM matches CPU platform', desc:`${a.ram.capacity}GB ${a.ram.type}`});
   }
   const psuOK = a.psuHeadroom > 100;
-  checks.push({ok:psuOK, label:'PSU headroom', desc:`${a.psuWatt}W PSU · ${a.power}W est. draw · ${a.psuHeadroom}W headroom`});
+  checks.push({ok:psuOK, label:'PSU headroom', desc:`${a.psuWatt || '—'}W PSU · ${a.power}W est. draw · ${a.psuHeadroom > 0 ? a.psuHeadroom : '?'}W headroom`});
   checks.push({ok:true, label:'Storage present', desc:`${state.build.storages.length} drive(s)`});
   const coolerOK = !(a.cpu.tdp > 120 && state.build.coolerType === 'Stock cooler');
   checks.push({ok:coolerOK, label:'Cooling adequate', desc:`${state.build.coolerType} for ${a.cpu.tdp}W TDP CPU`});
@@ -2861,19 +2945,24 @@ function allGpus(){ return [...GPUS.NVIDIA, ...GPUS.AMD, ...GPUS.Intel]; }
 function populateCompareSelects(){
   const cpuOpts = allCpus().map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
   const gpuOpts = allGpus().map(g=>`<option value="${g.name}">${g.name}</option>`).join('');
-  const ramOpts = RAMS.map(r=>`<option value="${r.name}">${r.name}</option>`).join('');
+  const ramOpts = RAMS.map(r=>`<option value="${r.capacity}GB ${r.type}">${r.capacity}GB ${r.type}</option>`).join('');
   ['cmpACpu','cmpBCpu'].forEach(id=>{ const el=$('#'+id); if(el && !el.innerHTML) el.innerHTML = cpuOpts; });
   ['cmpAGpu','cmpBGpu'].forEach(id=>{ const el=$('#'+id); if(el && !el.innerHTML) el.innerHTML = gpuOpts; });
   ['cmpARam','cmpBRam'].forEach(id=>{ const el=$('#'+id); if(el && !el.innerHTML) el.innerHTML = ramOpts; });
-  if($('#cmpACpu').value==='' ) $('#cmpACpu').value = state.build.cpu;
-  if($('#cmpAGpu').value==='' ) $('#cmpAGpu').value = state.build.gpu;
-  if($('#cmpARam').value==='' ) $('#cmpARam').value = state.build.ram;
+  if($('#cmpACpu').value==='' && state.build.cpu) $('#cmpACpu').value = state.build.cpu;
+  if($('#cmpAGpu').value==='' && state.build.gpu) $('#cmpAGpu').value = state.build.gpu;
+  if($('#cmpARam').value==='' && state.build.ramType) $('#cmpARam').value = `${state.build.ramCapacity}GB ${state.build.ramType}`;
   if($('#cmpBCpu').value==='' ) $('#cmpBCpu').value = 'Ryzen 7 7800X3D';
   if($('#cmpBGpu').value==='' ) $('#cmpBGpu').value = 'RTX 5080';
-  if($('#cmpBRam').value==='' ) $('#cmpBRam').value = '32GB DDR5 6000';
+  if($('#cmpBRam').value==='' ) $('#cmpBRam').value = '32GB DDR5';
 }
-function evalBuild(cpuName, gpuName, ramName){
-  const cpu = getCpuData(cpuName), gpu = getGpuData(gpuName), ram = getRamData(ramName);
+function evalBuild(cpuName, gpuName, ramLabel){
+  const cpu = getCpuData(cpuName), gpu = getGpuData(gpuName);
+  // parse "16GB DDR4"
+  const m = (ramLabel||'').match(/^(\d+)GB\s+(DDR\d)/);
+  const cap = m ? parseInt(m[1],10) : 16;
+  const type = m ? m[2] : 'DDR4';
+  const ram = RAMS.find(r=>r.capacity===cap && r.type===type) || RAMS[3];
   const cpuScore = clamp(Math.round(cpu.mult*42),5,100);
   const gpuScore = clamp(Math.round(gpu.mult*30),5,100);
   const ramScore = clamp(Math.round(ram.mult*78),5,100);
@@ -2895,7 +2984,7 @@ function runCompare(){
         <div class="card-title mb-2"><i class="fas fa-desktop"></i> Build A</div>
         <div class="text-muted" style="font-size:.8rem;">${A.cpu.name}</div>
         <div class="text-muted" style="font-size:.8rem;">${A.gpu.name}</div>
-        <div class="text-muted mb-2" style="font-size:.8rem;">${A.ram.name}</div>
+        <div class="text-muted mb-2" style="font-size:.8rem;">${A.ram.capacity}GB ${A.ram.type}</div>
         <div style="font-size:2.2rem;font-weight:800;letter-spacing:-.03em;">${A.total}<span style="font-size:1rem;color:var(--text-3);">/100</span></div>
         ${winner==='A'?'<span class="pill pill-green">Winner</span>':''}
       </div>
@@ -2903,7 +2992,7 @@ function runCompare(){
         <div class="card-title mb-2"><i class="fas fa-desktop"></i> Build B</div>
         <div class="text-muted" style="font-size:.8rem;">${B.cpu.name}</div>
         <div class="text-muted" style="font-size:.8rem;">${B.gpu.name}</div>
-        <div class="text-muted mb-2" style="font-size:.8rem;">${B.ram.name}</div>
+        <div class="text-muted mb-2" style="font-size:.8rem;">${B.ram.capacity}GB ${B.ram.type}</div>
         <div style="font-size:2.2rem;font-weight:800;letter-spacing:-.03em;">${B.total}<span style="font-size:1rem;color:var(--text-3);">/100</span></div>
         ${winner==='B'?'<span class="pill pill-green">Winner</span>':''}
       </div>
@@ -3011,7 +3100,7 @@ $$('#advisorGoals button').forEach(btn=>btn.addEventListener('click', ()=>{
 }));
 
 $('#saveBuildBtn').addEventListener('click', ()=>{
-  const name = prompt('Name your build:', state.build.cpu.split(' ')[0] + ' + ' + state.build.gpu.split(' ').slice(0,2).join(' '));
+  const name = prompt('Name your build:', (state.build.cpu||'My').split(' ')[0] + ' + ' + (state.build.gpu||'Build').split(' ').slice(0,2).join(' '));
   if(!name) return;
   const entry = {id:Date.now(), name, build:JSON.parse(JSON.stringify(state.build)), date:new Date().toISOString()};
   state.savedBuilds.push(entry);
@@ -3030,9 +3119,9 @@ function renderSavedBuilds(){
         <div class="card-title">${b.name}</div>
         <span class="pill pill-gray">${new Date(b.date).toLocaleDateString()}</span>
       </div>
-      <div class="text-muted" style="font-size:.82rem;">${b.build.cpu}</div>
-      <div class="text-muted" style="font-size:.82rem;">${b.build.gpu}</div>
-      <div class="text-muted mb-2" style="font-size:.82rem;">${b.build.ram}</div>
+      <div class="text-muted" style="font-size:.82rem;">${b.build.cpu || '—'}</div>
+      <div class="text-muted" style="font-size:.82rem;">${b.build.gpu || '—'}</div>
+      <div class="text-muted mb-2" style="font-size:.82rem;">${b.build.ram || '—'}</div>
       <div class="flex">
         <button class="btn btn-sm" onclick="loadBuild(${b.id})"><i class="fas fa-folder-open"></i> Load</button>
         <button class="btn btn-sm" onclick="dupBuild(${b.id})"><i class="fas fa-copy"></i> Duplicate</button>
@@ -3092,7 +3181,7 @@ $('#quickTheme').addEventListener('click', ()=>{
 $('#quickSettings').addEventListener('click', ()=>navigate('settings'));
 
 $('#exportBtn').addEventListener('click', ()=>{
-  const payload = {version:4.2, build:state.build, settings:state.settings, builds:state.savedBuilds, exported:new Date().toISOString()};
+  const payload = {version:4.3, build:state.build, settings:state.settings, builds:state.savedBuilds, exported:new Date().toISOString()};
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -3149,7 +3238,6 @@ let searchDebounce = null;
 
 function buildSearchIndex(){
   const items = [];
-  // Games
   GAMES.forEach(g=>{
     items.push({
       type:'game',
@@ -3159,7 +3247,6 @@ function buildSearchIndex(){
       data:g
     });
   });
-  // CPUs
   allCpus().forEach(c=>{
     items.push({
       type:'cpu',
@@ -3169,7 +3256,6 @@ function buildSearchIndex(){
       data:c
     });
   });
-  // GPUs
   allGpus().forEach(g=>{
     items.push({
       type:'gpu',
@@ -3179,12 +3265,12 @@ function buildSearchIndex(){
       data:g
     });
   });
-  // RAM
   RAMS.forEach(r=>{
+    const label = `${r.capacity}GB ${r.type}`;
     items.push({
       type:'ram',
-      name:r.name,
-      sub:`${r.capacity}GB ${r.type}`,
+      name: label,
+      sub: r.speeds.join(' / ') + ' MHz',
       icon:'fa-memory',
       data:r
     });
@@ -3206,7 +3292,6 @@ function runSearch(query){
   if(searchActiveFilter !== 'all'){
     matches = matches.filter(it => it.type === searchActiveFilter);
   }
-  // Rank: starts-with first, then contains
   matches.sort((a,b)=>{
     const aStarts = a.name.toLowerCase().startsWith(q) ? 0 : 1;
     const bStarts = b.name.toLowerCase().startsWith(q) ? 0 : 1;
@@ -3224,7 +3309,6 @@ function runSearch(query){
     return;
   }
 
-  // Group by type
   const groups = {game:[], cpu:[], gpu:[], ram:[]};
   matches.forEach(m=>groups[m.type].push(m));
 
@@ -3249,7 +3333,6 @@ function runSearch(query){
   body.innerHTML = html;
   panel.classList.add('show');
 
-  // Wire clicks
   $$('#searchResultsBody .search-item').forEach(el=>{
     el.addEventListener('click', ()=>{
       const type = el.dataset.type;
@@ -3266,13 +3349,11 @@ function handleSearchSelect(type, name){
   if(type === 'game'){
     const g = GAMES.find(x=>x.name===name);
     if(!g) return;
-    // If no analysis yet, tell them to configure first
     if(!state.analysis){
       toast('Configure your PC first to see ' + g.name, 'fa-triangle-exclamation');
       navigate('mypc');
       return;
     }
-    // Find the analyzed game object
     const analyzed = state.analysis.gameResults.find(x=>x.name===name);
     if(analyzed){
       openGameModal(analyzed);
@@ -3280,7 +3361,6 @@ function handleSearchSelect(type, name){
       openGameModal(g);
     }
   } else if(type === 'cpu'){
-    // Find which brand the CPU belongs to and select it
     for(const brand in CPUS){
       if(CPUS[brand].some(c=>c.name===name)){
         state.build.cpuBrand = brand;
@@ -3305,11 +3385,15 @@ function handleSearchSelect(type, name){
       }
     }
   } else if(type === 'ram'){
-    state.build.ram = name;
-    CK.set('pcp_build', state.build);
-    syncBuildUI();
-    navigate('mypc');
-    toast('Selected RAM: ' + name, 'fa-memory');
+    const m = name.match(/^(\d+)GB\s+(DDR\d)/);
+    if(m){
+      state.build.ramCapacity = m[1];
+      state.build.ramType = m[2];
+      CK.set('pcp_build', state.build);
+      syncBuildUI();
+      navigate('mypc');
+      toast('Selected RAM: ' + name, 'fa-memory');
+    }
   }
 }
 
@@ -3317,13 +3401,11 @@ function hideSearch(){
   $('#searchResults').classList.remove('show');
 }
 
-// Input listener with debounce
 $('#globalSearch').addEventListener('input', (e)=>{
   clearTimeout(searchDebounce);
   searchDebounce = setTimeout(()=>runSearch(e.target.value), 180);
 });
 
-// Category filter chips
 $$('#searchFilters .search-chip').forEach(chip=>{
   chip.addEventListener('click', ()=>{
     $$('#searchFilters .search-chip').forEach(c=>c.classList.remove('active'));
@@ -3333,18 +3415,15 @@ $$('#searchFilters .search-chip').forEach(chip=>{
   });
 });
 
-// Close on Escape
 $('#globalSearch').addEventListener('keydown', (e)=>{
   if(e.key === 'Escape'){ hideSearch(); e.target.blur(); }
 });
 
-// Close on click outside
 document.addEventListener('click', (e)=>{
   const box = e.target.closest('.search-box');
   if(!box) hideSearch();
 });
 
-// Keyboard shortcut: press "/" anywhere (not in an input) to focus search
 document.addEventListener('keydown', (e)=>{
   if(e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT' && document.activeElement.tagName !== 'TEXTAREA'){
     e.preventDefault();
@@ -3356,7 +3435,6 @@ function checkMobile(){
   const isMobile = window.innerWidth <= 760;
   $('#menuBtn').style.display = isMobile ? 'grid' : 'none';
   if(!isMobile){
-    // Safety: if window grows back to desktop while sidebar is open, close it cleanly
     $('#sidebar').classList.remove('open');
     $('#sidebarBackdrop').classList.remove('show');
   }
@@ -3382,12 +3460,10 @@ $('#menuBtn').addEventListener('click', ()=>{
 $('#sidebarClose').addEventListener('click', closeSidebar);
 $('#sidebarBackdrop').addEventListener('click', closeSidebar);
 
-// Auto-close sidebar when a nav item is tapped on mobile
 $$('.nav-item').forEach(item=>item.addEventListener('click', ()=>{
   if(window.innerWidth <= 760) closeSidebar();
 }));
 
-// Swipe gestures — swipe right from edge to open, swipe left to close
 let touchStartX = 0;
 let touchStartY = 0;
 let touchingSidebar = false;
@@ -3422,14 +3498,16 @@ document.addEventListener('keydown', (e)=>{
 (function boot(){
   $('#cpuBrand').value = state.build.cpuBrand;
   populateCpuSelect();
-  $('#cpuSelect').value = state.build.cpu;
+  if(state.build.cpu) $('#cpuSelect').value = state.build.cpu;
   $('#gpuBrand').value = state.build.gpuBrand;
   populateGpuSelect();
-  $('#gpuSelect').value = state.build.gpu;
+  if(state.build.gpu) $('#gpuSelect').value = state.build.gpu;
   populateRamSelect();
-  $('#ramSelect').value = state.build.ram;
-  $('#ramSpeed').value = state.build.ramSpeed;
-  $('#psuWatt').value = state.build.psuWatt;
+  if($('#ramCapacity')) $('#ramCapacity').value = state.build.ramCapacity || '';
+  if($('#ramType')) $('#ramType').value = state.build.ramType || '';
+  populateRamSpeed();
+  if($('#ramSpeed') && state.build.ramSpeed) $('#ramSpeed').value = state.build.ramSpeed;
+  if($('#psuWatt') && state.build.psuWatt) $('#psuWatt').value = state.build.psuWatt;
   $('#psuEff').value = state.build.psuEff;
   $('#coolerType').value = state.build.coolerType;
   renderStorage();
@@ -3438,14 +3516,14 @@ document.addEventListener('keydown', (e)=>{
   renderSavedBuilds();
   updateTower();
 
-  if(savedBuild){ analyze(); }
+  if(savedBuild && savedBuild.cpu && savedBuild.gpu){ analyze(); }
   else {
-    $('#heroCpu').textContent = state.build.cpu;
-    $('#heroGpu').textContent = state.build.gpu;
-    $('#heroRam').textContent = state.build.ram;
+    $('#heroCpu').textContent = state.build.cpu || '—';
+    $('#heroGpu').textContent = state.build.gpu || '—';
+    $('#heroRam').textContent = state.build.ram || '—';
     $('#gamesCountBadge').textContent = GAMES.length;
   }
-  console.log('%cPC Playground v4.2','font-size:16px;font-weight:800;color:#3b82f6');
+  console.log('%cPC Playground v4.3','font-size:16px;font-weight:800;color:#3b82f6');
   console.log('Loaded:', allCpus().length, 'CPUs,', allGpus().length, 'GPUs,', GAMES.length, 'games');
 })();
 </script>
