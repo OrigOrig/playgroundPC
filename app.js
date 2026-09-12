@@ -171,7 +171,6 @@ $$('.nav-item').forEach(item=>item.addEventListener('click', ()=>navigate(item.d
   const sections = $$('.nav-section[data-section]');
   if(sections.length === 0) return;
 
-  // Load saved state — default all open
   const saved = CK.get(STORAGE_KEY) || {};
 
   sections.forEach(section=>{
@@ -179,7 +178,6 @@ $$('.nav-item').forEach(item=>item.addEventListener('click', ()=>navigate(item.d
     const group = document.querySelector(`.nav-group[data-group="${key}"]`);
     if(!group) return;
 
-    // Apply saved state (default = open)
     if(saved[key] === false){
       section.classList.add('collapsed');
       group.classList.add('collapsed');
@@ -189,7 +187,6 @@ $$('.nav-item').forEach(item=>item.addEventListener('click', ()=>navigate(item.d
       const isCollapsed = section.classList.toggle('collapsed');
       group.classList.toggle('collapsed', isCollapsed);
 
-      // Save state
       const state = CK.get(STORAGE_KEY) || {};
       state[key] = !isCollapsed;
       CK.set(STORAGE_KEY, state);
