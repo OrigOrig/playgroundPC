@@ -2675,7 +2675,6 @@ function renderBuildAPC(){
           if($mobo) $mobo.value = String(idx);
         }
       }
-    }
     } else if(id === 'bapcGpu'){
       bapc.gpu = findGpu(e.target.value);
     } else if(id === 'bapcRam'){
@@ -2683,7 +2682,6 @@ function renderBuildAPC(){
     } else if(id === 'bapcMobo'){
       bapc.moboIdx = +e.target.value || 0;
       bapc.mobo = MOTHERBOARDS[bapc.moboIdx] || null;
-    }
     } else if(id === 'bapcCooler'){
       bapc.cooler = COOLERS[+e.target.value] || COOLERS[0];
     } else if(id === 'bapcPsu'){
