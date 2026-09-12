@@ -2985,11 +2985,172 @@ const bScene = (function(){
   console.log('Loaded:', allCpus().length, 'CPUs,', allGpus().length, 'GPUs,', GAMES.length, 'games');
 })();
 
-/* ----------------------------------------------------------------
-   renderBapcScene — called whenever the Build-A-PC page opens or a
-   dropdown changes. For B-1, it just drops a test cube so we can
-   verify Three.js is alive and the orbit works.
-   ---------------------------------------------------------------- */
+/* ================================================================
+   B-2  —  CASE CHASSIS (Three.js)
+   ----------------------------------------------------------------
+   Builds a real 3D case chassis reacting to bapc.case form factor
+   and style. Called by renderBapcScene on every change.
+   ================================================================ */
+
+/* ---------- Case dimensions per form factor ---------- */
+function caseDims(form){
+  switch(form){
+    case 'ITX':   return { w: 1.4, h: 2.4, d: 2.2 };
+    case 'mATX':  return { w: 1.7, h: 3.2, d: 3.0 };
+    case 'ATX':   return { w: 1.9, h: 3.8, d: 3.6 };
+    case 'E-ATX': return { w: 2.1, h: 4.4, d: 4.0 };
+    default:      return { w: 1.9, h: 3.8, d: 3.6 };
+  }
+}
+
+/* ---------- Style profile per case.style ---------- */
+function styleProfile(style){
+  switch(style){
+    case 'sff':      return { front:'mesh',  side:'mesh',  shroud:false, glassTint:0x88aaff, glassOpacity:0.08 };
+    case 'matx':     return { front:'mesh',  side:'solid', shroud:false, glassTint:0x88aaff, glassOpacity:0.08 };
+    case 'atx':      return { front:'mesh',  side:'solid', shroud:true,  glassTint:0x88aaff, glassOpacity:0.08 };
+    case 'full':     return { front:'mesh',  side:'glass', shroud:true,  glassTint:0x88bbff, glassOpacity:0.12 };
+    case 'showcase': return { front:'glass', side:'glass', shroud:false, glassTint:0xbb99ff, glassOpacity:0.14 };
+    default:         return { front:'mesh',  side:'solid', shroud:true,  glassTint:0x88aaff, glassOpacity:0.08 };
+  }
+}
+
+/* ---------- Material palette ---------- */
+function caseMaterials(){
+  return {
+    frame:   new THREE.MeshStandardMaterial({ color: 0x2a3142, metalness: 0.65, roughness: 0.45 }),
+    panel:   new THREE.MeshStandardMaterial({ color: 0x1a1f2c, metalness: 0.55, roughness: 0.55 }),
+    panelTop:new THREE.MeshStandardMaterial({ color: 0x232a3a, metalness: 0.55, roughness: 0.55 }),
+    panelBot:new THREE.MeshStandardMaterial({ color: 0x10141c, metalness: 0.4,  roughness: 0.75 }),
+    mesh:    new THREE.MeshStandardMaterial({ color: 0x141821, metalness: 0.5,  roughness: 0.65 }),
+    grille:  new THREE.MeshStandardMaterial({ color: 0x3a4255, metalness: 0.7,  roughness: 0.35 }),
+    shroud:  new THREE.MeshStandardMaterial({ color: 0x181d28, metalness: 0.6,  roughness: 0.5  }),
+    foot:    new THREE.MeshStandardMaterial({ color: 0x0a0d14, metalness: 0.3,  roughness: 0.9  }),
+    glass:   (tint, op) => new THREE.MeshPhysicalMaterial({
+      color: tint,
+      metalness: 0,
+      roughness: 0.05,
+      transmission: 0.9,
+      transparent: true,
+      opacity: op,
+      thickness: 0.05
+    })
+  };
+}
+
+/* ---------- Build the case as a group of meshes ---------- */
+function buildCaseGroup(caseData){
+  const group = new THREE.Group();
+  if(!caseData) return group;
+
+  const dims  = caseDims(caseData.form);
+  const style = styleProfile(caseData.style);
+  const M     = caseMaterials();
+
+  const w = dims.w, h = dims.h, d = dims.d;
+  const halfW = w/2, halfH = h/2, halfD = d/2;
+
+  /* helper: make a box mesh with position */
+  function addBox(w, h, d, mat, x, y, z, name){
+    const geo = new THREE.BoxGeometry(w, h, d);
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(x, y, z);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    if(name) mesh.name = name;
+    group.add(mesh);
+    return mesh;
+  }
+
+  /* ---- 1. STRUCTURAL FRAME — 12 rails ---- */
+  const railT = 0.06;
+  // vertical rails (4)
+  addBox(railT, h, railT, M.frame, -halfW + railT/2, 0, -halfD + railT/2);
+  addBox(railT, h, railT, M.frame,  halfW - railT/2, 0, -halfD + railT/2);
+  addBox(railT, h, railT, M.frame, -halfW + railT/2, 0,  halfD - railT/2);
+  addBox(railT, h, railT, M.frame,  halfW - railT/2, 0,  halfD - railT/2);
+  // top + bottom rails along X (4)
+  addBox(w, railT, railT, M.frame, 0,  halfH - railT/2, -halfD + railT/2);
+  addBox(w, railT, railT, M.frame, 0, -halfH + railT/2, -halfD + railT/2);
+  addBox(w, railT, railT, M.frame, 0,  halfH - railT/2,  halfD - railT/2);
+  addBox(w, railT, railT, M.frame, 0, -halfH + railT/2,  halfD - railT/2);
+  // top + bottom rails along Z (4)
+  addBox(railT, railT, d, M.frame, -halfW + railT/2,  halfH - railT/2, 0);
+  addBox(railT, railT, d, M.frame,  halfW - railT/2,  halfH - railT/2, 0);
+  addBox(railT, railT, d, M.frame, -halfW + railT/2, -halfH + railT/2, 0);
+  addBox(railT, railT, d, M.frame,  halfW - railT/2, -halfH + railT/2, 0);
+
+  /* ---- 2. SIDE PANELS ---- */
+  // left side (+X) — may be glass
+  if(style.side === 'glass'){
+    addBox(0.02, h - 0.1, d - 0.1, M.glass(style.glassTint, style.glassOpacity), halfW - 0.01, 0, 0, 'side-glass');
+  } else {
+    addBox(0.05, h - 0.1, d - 0.1, M.panel, halfW - 0.03, 0, 0, 'side-left');
+  }
+  // right side (-X) — always solid (mobo tray)
+  addBox(0.05, h - 0.1, d - 0.1, M.panel, -halfW + 0.03, 0, 0, 'side-right');
+
+  /* ---- 3. FRONT PANEL ---- */
+  if(style.front === 'mesh'){
+    // backing
+    addBox(w - 0.15, h - 0.15, 0.04, M.mesh, 0, 0, halfD - 0.02, 'front-back');
+    // grille bars
+    const barCount = Math.max(6, Math.round(h / 0.22));
+    const barSpacing = (h - 0.3) / barCount;
+    for(let i = 0; i < barCount; i++){
+      const y = -halfH + 0.2 + i * barSpacing + barSpacing/2;
+      addBox(w - 0.4, 0.03, 0.03, M.grille, 0, y, halfD + 0.01, 'grille-' + i);
+    }
+  } else if(style.front === 'glass'){
+    addBox(w - 0.1, h - 0.1, 0.02, M.glass(style.glassTint, style.glassOpacity), 0, 0, halfD - 0.01, 'front-glass');
+  } else {
+    addBox(w - 0.1, h - 0.1, 0.04, M.panel, 0, 0, halfD - 0.02, 'front-solid');
+  }
+
+  /* ---- 4. REAR PANEL — solid with I/O cutout (4 strips) ---- */
+  const ioW = w * 0.35;
+  const ioH = h * 0.10;
+  const ioY = halfH - h * 0.12;
+  // above
+  const aboveH = (h/2) - (ioY + ioH/2);
+  addBox(w - 0.1, aboveH, 0.04, M.panel, 0, (ioY + ioH/2) + aboveH/2, -halfD + 0.02);
+  // below
+  const belowH = (ioY - ioH/2) + (h/2);
+  addBox(w - 0.1, belowH, 0.04, M.panel, 0, -(h/2) + belowH/2, -halfD + 0.02);
+  // left of I/O
+  const leftW = (w/2) - ioW/2;
+  addBox(leftW, ioH, 0.04, M.panel, -(w/2) + leftW/2, ioY, -halfD + 0.02);
+  // right of I/O
+  const rightW = (w/2) - ioW/2;
+  addBox(rightW, ioH, 0.04, M.panel, (w/2) - rightW/2, ioY, -halfD + 0.02);
+
+  /* ---- 5. TOP PANEL ---- */
+  addBox(w - 0.1, 0.05, d - 0.1, M.panelTop, 0, halfH - 0.025, 0, 'top');
+
+  /* ---- 6. BOTTOM PANEL ---- */
+  addBox(w - 0.1, 0.05, d - 0.1, M.panelBot, 0, -halfH + 0.025, 0, 'bottom');
+
+  /* ---- 7. PSU SHROUD ---- */
+  if(style.shroud){
+    const shroudH = h * 0.22;
+    const shroudW = w - 0.2;
+    const shroudD = d - 0.3;
+    addBox(shroudW, shroudH, shroudD, M.shroud, 0, -halfH + shroudH/2 + 0.08, 0.05, 'shroud');
+  }
+
+  /* ---- 8. FEET ---- */
+  const footSize = 0.14;
+  const footH = 0.10;
+  const footY = -halfH - footH/2;
+  addBox(footSize, footH, footSize, M.foot, -halfW + 0.15, footY, -halfD + 0.15);
+  addBox(footSize, footH, footSize, M.foot,  halfW - 0.15, footY, -halfD + 0.15);
+  addBox(footSize, footH, footSize, M.foot, -halfW + 0.15, footY,  halfD - 0.15);
+  addBox(footSize, footH, footSize, M.foot,  halfW - 0.15, footY,  halfD - 0.15);
+
+  return group;
+}
+
+/* ---------- renderBapcScene — replaced for B-2 ---------- */
 function renderBapcScene(){
   const vp = $('#bapcViewport');
   if(!vp) return;
@@ -2997,30 +3158,15 @@ function renderBapcScene(){
   bScene.init(vp);
   bScene.clearScene();
 
-  // Test cube for B-1 verification
-  const geo = new THREE.BoxGeometry(1.5, 1.5, 1.5);
-  const mat = new THREE.MeshStandardMaterial({
-    color: 0x3b82f6,
-    metalness: 0.4,
-    roughness: 0.35
-  });
-  const cube = new THREE.BoxGeometry(1.5, 1.5, 1.5);
-  const mesh = new THREE.Mesh(cube, mat);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
-  bScene.addObject(mesh);
+  // If bapc.case hasn't been set yet (page just opened), use the first case
+  const currentCase = (typeof bapc !== 'undefined' && bapc.case) ? bapc.case : (typeof CASES !== 'undefined' ? CASES[0] : null);
+  if(!currentCase) return;
 
-  // Second cube — offset
-  const mat2 = new THREE.MeshStandardMaterial({
-    color: 0xf59e0b,
-    metalness: 0.4,
-    roughness: 0.35
-  });
-  const mesh2 = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), mat2);
-  mesh2.position.set(1.4, 1.1, 0.3);
-  mesh2.castShadow = true;
-  mesh2.receiveShadow = true;
-  bScene.addObject(mesh2);
+  const caseGroup = buildCaseGroup(currentCase);
+  bScene.addObject(caseGroup);
 
-  bScene.setRadius(6);
+  // Auto-frame camera based on case size
+  const dims = caseDims(currentCase.form);
+  const maxDim = Math.max(dims.w, dims.h, dims.d);
+  bScene.setRadius(maxDim * 2.4);
 }
