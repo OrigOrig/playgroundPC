@@ -33,17 +33,6 @@ const CPUS = {
   ]
 };
 
-/* ============================================================
-   GPUS
-   Indexed by brand. Each entry:
-     name    – display name
-     tier    – entry | mainstream | performance | enthusiast | flagship
-     mult    – relative performance multiplier (RX 580 = ~0.95, RTX 3060 = 1.62)
-     tdp     – watts
-     vram    – GB
-     ts      – 3DMark Time Spy graphics score
-     rt      – hardware ray tracing support
-   ============================================================ */
 const GPUS = {
   NVIDIA: [
     {name:'GTX 1050 Ti',        tier:'entry',     mult:0.55, tdp:75,  vram:4,  ts:3100,  rt:false},
@@ -103,11 +92,6 @@ const GPUS = {
   ]
 };
 
-/* ============================================================
-   RAM
-   Indexed by capacity + type, with speed list per entry.
-   The RAM dropdown in the app picks capacity, then type, then speed.
-   ============================================================ */
 const RAMS = [
   {capacity:8,   type:'DDR3', speeds:[1333,1600,1866],                mult:0.72, tdp:8},
   {capacity:8,   type:'DDR4', speeds:[2400,2666,3000,3200,3600],       mult:0.85, tdp:10},
@@ -122,9 +106,6 @@ const RAMS = [
   {capacity:256, type:'DDR5', speeds:[5200,5600,6000],                 mult:1.50, tdp:48},
 ];
 
-/* ============================================================
-   STORAGE
-   ============================================================ */
 const STORAGE_TYPES = [
   {name:'HDD 5400RPM',    mult:0.55, tdp:5,  speed:100},
   {name:'HDD 7200RPM',    mult:0.65, tdp:6,  speed:150},
@@ -136,21 +117,6 @@ const STORAGE_TYPES = [
 
 const CAPACITIES = ['64GB','128GB','256GB','500GB','1TB','2TB','4TB','8TB'];
 
-/* ============================================================
-   GAMES
-   Each entry:
-     name    – display name
-     genre   – genre tag shown on the card
-     base    – estimated FPS on the reference build (Ryzen 5 2600 + RTX 3060 + 16GB DDR4)
-     cw      – CPU weight (0.0–1.0, sums with gw + rw to 1.0)
-     gw      – GPU weight
-     rw      – RAM weight
-     preset  – recommended preset name
-     rt      – supports ray tracing
-     banner  – Steam (or other) header image URL
-     store   – official store page URL
-     color   – accent color used for the procedural fallback banner
-   ============================================================ */
 const GAMES = [
   {name:'Cyberpunk 2077',      genre:'RPG',      base:42,  cw:0.22, gw:0.68, rw:0.10, preset:'High', rt:true,
     banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/header.jpg',
@@ -425,3 +391,193 @@ const GAMES = [
     banner:'https://shared.steamstatic.com/store_item_assets/steam/apps/2429640/header.jpg',
     store:'https://store.steampowered.com/app/2429640/', color:'#7c3aed'},
 ];
+
+const CASES = [
+  /* -------- SFF / ITX (6) -------- */
+  { name:'Cooler Master NR200',           brand:'Cooler Master', form:'ITX',    maxGpu:330, maxCooler:155, maxPsu:130, bays2_5:3, bays3_5:1, frontFans:0, style:'sff',      price:80  },
+  { name:'Fractal Design Node 304',       brand:'Fractal',       form:'ITX',    maxGpu:310, maxCooler:165, maxPsu:160, bays2_5:0, bays3_5:6, frontFans:0, style:'sff',      price:100 },
+  { name:'Lian Li Q58',                   brand:'Lian Li',       form:'ITX',    maxGpu:320, maxCooler:135, maxPsu:130, bays2_5:2, bays3_5:0, frontFans:0, style:'sff',      price:130 },
+  { name:'NZXT H1 v2',                    brand:'NZXT',          form:'ITX',    maxGpu:324, maxCooler:0,   maxPsu:0,   bays2_5:2, bays3_5:0, frontFans:0, style:'sff',      price:200 },
+  { name:'Phanteks Evolv Shift XT',       brand:'Phanteks',      form:'ITX',    maxGpu:324, maxCooler:75,  maxPsu:130, bays2_5:2, bays3_5:0, frontFans:0, style:'sff',      price:180 },
+  { name:'Silverstone SG13',              brand:'Silverstone',   form:'ITX',    maxGpu:266, maxCooler:61,  maxPsu:150, bays2_5:2, bays3_5:1, frontFans:0, style:'sff',      price:60  },
+
+  /* -------- mATX (5) -------- */
+  { name:'Fractal Design Pop Mini Air',   brand:'Fractal',       form:'mATX',   maxGpu:355, maxCooler:170, maxPsu:180, bays2_5:2, bays3_5:2, frontFans:2, style:'matx',     price:90  },
+  { name:'Cooler Master Q300L',           brand:'Cooler Master', form:'mATX',   maxGpu:360, maxCooler:159, maxPsu:160, bays2_5:2, bays3_5:1, frontFans:2, style:'matx',     price:60  },
+  { name:'Lian Li O11 Air Mini',          brand:'Lian Li',       form:'mATX',   maxGpu:380, maxCooler:170, maxPsu:200, bays2_5:4, bays3_5:2, frontFans:2, style:'matx',     price:130 },
+  { name:'NZXT H400',                     brand:'NZXT',          form:'mATX',   maxGpu:381, maxCooler:164, maxPsu:200, bays2_5:3, bays3_5:1, frontFans:2, style:'matx',     price:80  },
+  { name:'Thermaltake Versa H17',         brand:'Thermaltake',   form:'mATX',   maxGpu:350, maxCooler:155, maxPsu:160, bays2_5:2, bays3_5:2, frontFans:1, style:'matx',     price:50  },
+
+  /* -------- Mid-tower ATX (12) -------- */
+  { name:'NZXT H510',                     brand:'NZXT',          form:'ATX',    maxGpu:381, maxCooler:165, maxPsu:180, bays2_5:3, bays3_5:2, frontFans:2, style:'atx',      price:70  },
+  { name:'NZXT H5 Flow',                  brand:'NZXT',          form:'ATX',    maxGpu:365, maxCooler:165, maxPsu:200, bays2_5:2, bays3_5:1, frontFans:2, style:'atx',      price:95  },
+  { name:'NZXT H7 Flow',                  brand:'NZXT',          form:'ATX',    maxGpu:400, maxCooler:185, maxPsu:200, bays2_5:4, bays3_5:2, frontFans:3, style:'atx',      price:130 },
+  { name:'Fractal Design Meshify 2',      brand:'Fractal',       form:'ATX',    maxGpu:461, maxCooler:185, maxPsu:250, bays2_5:4, bays3_5:6, frontFans:3, style:'atx',      price:160 },
+  { name:'Fractal Design North',          brand:'Fractal',       form:'ATX',    maxGpu:355, maxCooler:170, maxPsu:255, bays2_5:2, bays3_5:3, frontFans:2, style:'atx',      price:140 },
+  { name:'Lian Li Lancool 216',           brand:'Lian Li',       form:'ATX',    maxGpu:392, maxCooler:180, maxPsu:210, bays2_5:4, bays3_5:2, frontFans:2, style:'atx',      price:100 },
+  { name:'Lian Li O11 Dynamic',           brand:'Lian Li',       form:'ATX',    maxGpu:420, maxCooler:167, maxPsu:200, bays2_5:6, bays3_5:0, frontFans:0, style:'atx',      price:150 },
+  { name:'Corsair 4000D Airflow',         brand:'Corsair',       form:'ATX',    maxGpu:360, maxCooler:170, maxPsu:180, bays2_5:2, bays3_5:2, frontFans:2, style:'atx',      price:95  },
+  { name:'Corsair 5000D Airflow',         brand:'Corsair',       form:'ATX',    maxGpu:420, maxCooler:170, maxPsu:225, bays2_5:4, bays3_5:2, frontFans:3, style:'atx',      price:160 },
+  { name:'Cooler Master TD500 Mesh',      brand:'Cooler Master', form:'ATX',    maxGpu:410, maxCooler:165, maxPsu:180, bays2_5:4, bays3_5:2, frontFans:3, style:'atx',      price:100 },
+  { name:'Phanteks Eclipse P400A',        brand:'Phanteks',      form:'ATX',    maxGpu:420, maxCooler:160, maxPsu:220, bays2_5:2, bays3_5:2, frontFans:3, style:'atx',      price:90  },
+  { name:'be quiet! Pure Base 500DX',     brand:'be quiet!',     form:'ATX',    maxGpu:369, maxCooler:190, maxPsu:225, bays2_5:2, bays3_5:2, frontFans:3, style:'atx',      price:110 },
+
+  /* -------- Full-tower / E-ATX (4) -------- */
+  { name:'Corsair 7000D Airflow',         brand:'Corsair',       form:'E-ATX',  maxGpu:420, maxCooler:190, maxPsu:225, bays2_5:6, bays3_5:6, frontFans:3, style:'full',     price:250 },
+  { name:'Fractal Design Torrent',        brand:'Fractal',       form:'E-ATX',  maxGpu:461, maxCooler:188, maxPsu:230, bays2_5:4, bays3_5:4, frontFans:2, style:'full',     price:230 },
+  { name:'Lian Li O11 Dynamic XL',        brand:'Lian Li',       form:'E-ATX',  maxGpu:446, maxCooler:167, maxPsu:210, bays2_5:8, bays3_5:4, frontFans:0, style:'full',     price:200 },
+  { name:'Thermaltake View 91',           brand:'Thermaltake',   form:'E-ATX',  maxGpu:600, maxCooler:200, maxPsu:280, bays2_5:10,bays3_5:8, frontFans:4, style:'full',     price:400 },
+
+  /* -------- Showcase / Open (3) -------- */
+  { name:'Lian Li O11 Dynamic EVO',       brand:'Lian Li',       form:'ATX',    maxGpu:425, maxCooler:167, maxPsu:210, bays2_5:6, bays3_5:0, frontFans:0, style:'showcase', price:160 },
+  { name:'Thermaltake Core P3',           brand:'Thermaltake',   form:'ATX',    maxGpu:470, maxCooler:180, maxPsu:200, bays2_5:3, bays3_5:1, frontFans:0, style:'showcase', price:130 },
+  { name:'Cougar Conquer 2',              brand:'Cougar',        form:'ATX',    maxGpu:430, maxCooler:180, maxPsu:200, bays2_5:4, bays3_5:2, frontFans:0, style:'showcase', price:250 },
+];
+
+const COOLERS = [
+  /* Stock / low-profile */
+  { name:'Intel Stock Cooler',        style:'stock',        maxTdp:65,  height:50,  price:0   },
+  { name:'AMD Wraith Stealth',        style:'stock',        maxTdp:65,  height:65,  price:0   },
+  { name:'AMD Wraith Prism',          style:'stock',        maxTdp:95,  height:82,  price:35  },
+  { name:'Low-profile air (NH-L9i)',  style:'air-low',      maxTdp:65,  height:37,  price:50  },
+  { name:'Low-profile air (L12S)',    style:'air-low',      maxTdp:95,  height:70,  price:60  },
+
+  /* Single-tower */
+  { name:'Single-tower 92mm',         style:'air-single',   maxTdp:100, height:130, price:30  },
+  { name:'Single-tower 120mm',        style:'air-single',   maxTdp:150, height:155, price:45  },
+  { name:'Single-tower 140mm',        style:'air-single',   maxTdp:180, height:165, price:70  },
+  { name:'Single-tower 140mm premium',style:'air-single',   maxTdp:200, height:170, price:100 },
+
+  /* Dual-tower */
+  { name:'Dual-tower 120mm',          style:'air-dual',     maxTdp:200, height:155, price:80  },
+  { name:'Dual-tower 140mm',          style:'air-dual',     maxTdp:230, height:165, price:110 },
+  { name:'Dual-tower premium (NH-D15)',style:'air-dual',    maxTdp:250, height:165, price:110 },
+
+  /* AIO liquid */
+  { name:'AIO 120mm',                 style:'aio',          maxTdp:150, height:55,  price:70  },
+  { name:'AIO 240mm',                 style:'aio',          maxTdp:200, height:55,  price:100 },
+  { name:'AIO 280mm',                 style:'aio',          maxTdp:230, height:55,  price:130 },
+  { name:'AIO 360mm',                 style:'aio',          maxTdp:280, height:55,  price:160 },
+  { name:'AIO 420mm',                 style:'aio',          maxTdp:320, height:55,  price:200 },
+
+  /* Custom loop */
+  { name:'Custom loop (single block)',style:'custom',       maxTdp:250, height:60,  price:300 },
+  { name:'Custom loop (multi-block)', style:'custom',       maxTdp:400, height:60,  price:600 },
+];
+
+const PSUS = [
+  { wattage:350,  efficiency:'80+ Bronze', form:'ATX',  modular:'Non',  price:40  },
+  { wattage:400,  efficiency:'80+ Bronze', form:'ATX',  modular:'Non',  price:45  },
+  { wattage:450,  efficiency:'80+ Bronze', form:'ATX',  modular:'Non',  price:50  },
+  { wattage:500,  efficiency:'80+ Bronze', form:'ATX',  modular:'Semi', price:60  },
+  { wattage:500,  efficiency:'80+ Gold',   form:'SFX',  modular:'Full', price:110 },
+  { wattage:550,  efficiency:'80+ Bronze', form:'ATX',  modular:'Semi', price:65  },
+  { wattage:550,  efficiency:'80+ Gold',   form:'ATX',  modular:'Full', price:90  },
+  { wattage:600,  efficiency:'80+ Bronze', form:'ATX',  modular:'Semi', price:70  },
+  { wattage:600,  efficiency:'80+ Gold',   form:'SFX',  modular:'Full', price:130 },
+  { wattage:650,  efficiency:'80+ Bronze', form:'ATX',  modular:'Semi', price:80  },
+  { wattage:650,  efficiency:'80+ Gold',   form:'ATX',  modular:'Full', price:110 },
+  { wattage:700,  efficiency:'80+ Gold',   form:'ATX',  modular:'Full', price:120 },
+  { wattage:750,  efficiency:'80+ Gold',   form:'ATX',  modular:'Full', price:110 },
+  { wattage:750,  efficiency:'80+ Platinum',form:'ATX', modular:'Full', price:150 },
+  { wattage:800,  efficiency:'80+ Gold',   form:'ATX',  modular:'Full', price:130 },
+  { wattage:850,  efficiency:'80+ Gold',   form:'ATX',  modular:'Full', price:140 },
+  { wattage:850,  efficiency:'80+ Platinum',form:'ATX', modular:'Full', price:180 },
+  { wattage:1000, efficiency:'80+ Gold',   form:'ATX',  modular:'Full', price:180 },
+  { wattage:1000, efficiency:'80+ Platinum',form:'ATX', modular:'Full', price:230 },
+  { wattage:1200, efficiency:'80+ Platinum',form:'ATX', modular:'Full', price:290 },
+  { wattage:1500, efficiency:'80+ Titanium',form:'ATX', modular:'Full', price:450 },
+  { wattage:1600, efficiency:'80+ Titanium',form:'ATX', modular:'Full', price:550 },
+];
+
+const STORAGE_EXTENDED = [
+  /* HDDs */
+  { name:'HDD 5400RPM',        family:'HDD',        speed:100,   mult:0.55, tdp:5,  price:35 },
+  { name:'HDD 7200RPM',        family:'HDD',        speed:150,   mult:0.65, tdp:6,  price:45 },
+  { name:'HDD 10K RPM',        family:'HDD-Ent',    speed:200,   mult:0.75, tdp:8,  price:120},
+  { name:'HDD 15K RPM',        family:'HDD-Ent',    speed:250,   mult:0.85, tdp:12, price:200},
+
+  /* SATA SSD */
+  { name:'SATA SSD (DRAM-less)',family:'SATA-SSD',  speed:500,   mult:0.95, tdp:3,  price:40 },
+  { name:'SATA SSD (DRAM)',    family:'SATA-SSD',   speed:550,   mult:1.00, tdp:3,  price:55 },
+  { name:'SATA SSD (Enterprise)',family:'SATA-Ent', speed:550,   mult:1.00, tdp:5,  price:180},
+  { name:'SATA M.2',           family:'SATA-M2',    speed:550,   mult:1.00, tdp:3,  price:50 },
+
+  /* NVMe */
+  { name:'NVMe Gen3 (TLC)',    family:'NVMe-3',     speed:3500,  mult:1.20, tdp:5,  price:60 },
+  { name:'NVMe Gen4 (TLC)',    family:'NVMe-4',     speed:7000,  mult:1.40, tdp:7,  price:90 },
+  { name:'NVMe Gen4 (QLC)',    family:'NVMe-4',     speed:5000,  mult:1.30, tdp:6,  price:70 },
+  { name:'NVMe Gen5 (TLC)',    family:'NVMe-5',     speed:12000, mult:1.60, tdp:10, price:160},
+  { name:'NVMe Gen5 (Ent.)',   family:'NVMe-5-Ent', speed:14000, mult:1.70, tdp:14, price:350},
+
+  /* External / Other */
+  { name:'USB 3.0 External HDD',family:'Ext-HDD',   speed:120,   mult:0.60, tdp:8,  price:60 },
+  { name:'USB 3.2 External SSD',family:'Ext-SSD',   speed:1000,  mult:1.05, tdp:4,  price:110},
+  { name:'Thunderbolt Ext. SSD',family:'TB-SSD',    speed:2800,  mult:1.15, tdp:6,  price:220},
+  { name:'Intel Optane',       family:'Optane',     speed:2500,  mult:1.35, tdp:10, price:300},
+  { name:'SD Card / eMMC',     family:'SD',         speed:100,   mult:0.50, tdp:2,  price:20 },
+];
+
+const RAM_EXTENDED = [
+  /* DDR3 (legacy) */
+  { capacity:4,   type:'DDR3', speeds:[1333,1600],                   mult:0.65, tdp:6,  price:20 },
+  { capacity:8,   type:'DDR3', speeds:[1333,1600,1866],              mult:0.72, tdp:8,  price:30 },
+  { capacity:16,  type:'DDR3', speeds:[1333,1600,1866],              mult:0.80, tdp:12, price:55 },
+
+  /* DDR4 — older systems */
+  { capacity:4,   type:'DDR4', speeds:[2400,2666,3000],              mult:0.70, tdp:6,  price:25 },
+  { capacity:8,   type:'DDR4', speeds:[2400,2666,3000,3200],         mult:0.85, tdp:10, price:35 },
+  { capacity:8,   type:'DDR4', speeds:[3200,3600],                   mult:0.90, tdp:10, price:40 },
+  { capacity:16,  type:'DDR4', speeds:[2400,2666,3000,3200],         mult:1.00, tdp:15, price:55 },
+  { capacity:16,  type:'DDR4', speeds:[3200,3600,4000],              mult:1.05, tdp:15, price:70 },
+  { capacity:32,  type:'DDR4', speeds:[3000,3200,3600],              mult:1.10, tdp:18, price:100 },
+  { capacity:64,  type:'DDR4', speeds:[3000,3200,3600],              mult:1.18, tdp:24, price:180 },
+  { capacity:128, type:'DDR4', speeds:[2666,3000,3200],              mult:1.22, tdp:36, price:400 },
+
+  /* DDR5 */
+  { capacity:16,  type:'DDR5', speeds:[4800,5200,5600,6000],         mult:1.18, tdp:18, price:80 },
+  { capacity:16,  type:'DDR5', speeds:[6000,6400,7200],              mult:1.24, tdp:18, price:110 },
+  { capacity:32,  type:'DDR5', speeds:[4800,5200,5600],              mult:1.22, tdp:22, price:130 },
+  { capacity:32,  type:'DDR5', speeds:[5600,6000,6400],              mult:1.28, tdp:22, price:160 },
+  { capacity:32,  type:'DDR5', speeds:[6000,6400,7200,8000],         mult:1.32, tdp:24, price:220 },
+  { capacity:64,  type:'DDR5', speeds:[5200,5600,6000],              mult:1.35, tdp:28, price:250 },
+  { capacity:64,  type:'DDR5', speeds:[6000,6400,7200],              mult:1.40, tdp:28, price:320 },
+  { capacity:96,  type:'DDR5', speeds:[5600,6000,6400],              mult:1.42, tdp:34, price:450 },
+  { capacity:128, type:'DDR5', speeds:[5200,5600,6000],              mult:1.45, tdp:38, price:600 },
+  { capacity:128, type:'DDR5', speeds:[6000,6400],                   mult:1.48, tdp:38, price:750 },
+  { capacity:192, type:'DDR5', speeds:[5200,5600],                   mult:1.48, tdp:44, price:900 },
+  { capacity:256, type:'DDR5', speeds:[5200,5600],                   mult:1.50, tdp:48, price:1400 },
+];
+
+const CPU_PRICES = {
+  'Ryzen 3 1200':       60,   'Ryzen 5 2600':       120,  'Ryzen 5 3600':       180,
+  'Ryzen 5 5600X':      180,  'Ryzen 7 5700X':      200,  'Ryzen 7 5800X3D':    350,
+  'Ryzen 5 7600X':      220,  'Ryzen 7 7700X':      300,  'Ryzen 7 7800X3D':    400,
+  'Ryzen 9 7900X':      400,  'Ryzen 9 7950X3D':    650,  'Ryzen 5 9600X':      260,
+  'Ryzen 7 9700X':      350,  'Ryzen 9 9900X':      500,  'Ryzen 9 9950X3D':    800,
+  'Core i3-10100F':     80,   'Core i5-10400F':     130,  'Core i5-11400F':     150,
+  'Core i5-12400F':     170,  'Core i5-12600K':     220,  'Core i7-12700K':     320,
+  'Core i5-13600K':     300,  'Core i7-13700K':     400,  'Core i9-13900K':     550,
+  'Core i9-14900K':     580,  'Core Ultra 5 245K':  320,  'Core Ultra 7 265K':  420,
+  'Core Ultra 9 285K':  620,
+};
+
+const GPU_PRICES = {
+  'GTX 1050 Ti':        130,  'GTX 1060 6GB':       180,  'GTX 1660 Super':     220,
+  'RTX 2060':           250,  'RTX 3060 12GB':      300,  'RTX 3060 Ti':        380,
+  'RTX 3070':           450,  'RTX 3080 10GB':      600,  'RTX 3080 Ti':        800,
+  'RTX 3090':           950,  'RTX 4060':           300,  'RTX 4060 Ti':        400,
+  'RTX 4070':           550,  'RTX 4070 Super':     600,  'RTX 4070 Ti':        800,
+  'RTX 4070 Ti Super':  800,  'RTX 4080':           1100, 'RTX 4080 Super':     1050,
+  'RTX 4090':           1800, 'RTX 5070':           550,  'RTX 5070 Ti':        750,
+  'RTX 5080':           1100, 'RTX 5090':           2200,
+  'RX 570 4GB':         90,   'RX 580 8GB':         130,  'RX 5500 XT 8GB':     180,
+  'RX 5600 XT':         220,  'RX 5700 XT':         280,  'RX 6600':            220,
+  'RX 6600 XT':         250,  'RX 6700 XT':         350,  'RX 6750 XT':         400,
+  'RX 6800':            500,  'RX 6800 XT':         600,  'RX 6900 XT':         800,
+  'RX 6950 XT':         900,  'RX 7600':            280,  'RX 7700 XT':         450,
+  'RX 7800 XT':         500,  'RX 7900 GRE':        550,  'RX 7900 XT':         750,
+  'RX 7900 XTX':        950,  'RX 9070':            600,  'RX 9070 XT':         700,
+  'Arc A380':           120,  'Arc A580':           180,  'Arc A750':           220,
+  'Arc A770 16GB':      280,  'Arc B580':           250,  'Arc B770':           400,
+};
