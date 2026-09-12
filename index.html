@@ -772,6 +772,167 @@ table.data tr:hover td{background:var(--surface-2);}
 .storage-remove:disabled{opacity:.35;cursor:not-allowed;}
 
 /* ============================================================
+   BUILD A PC
+   ============================================================ */
+.bapc-grid{
+  display:grid;
+  grid-template-columns:1.6fr 1fr;
+  gap:1.25rem;
+}
+@media(max-width:1100px){
+  .bapc-grid{grid-template-columns:1fr;}
+}
+.bapc-visual-card{overflow:hidden;}
+.bapc-viewport{
+  position:relative;
+  width:100%;
+  aspect-ratio:800/500;
+  background:
+    radial-gradient(circle at 30% 20%, color-mix(in srgb,var(--primary) 8%,transparent), transparent 60%),
+    radial-gradient(circle at 80% 80%, color-mix(in srgb,var(--accent) 6%,transparent), transparent 60%),
+    var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+  cursor:grab;
+  perspective:1200px;
+  transition:background var(--transition),border-color var(--transition);
+}
+.bapc-viewport:active{cursor:grabbing;}
+.bapc-viewport svg{
+  width:100%;
+  height:100%;
+  display:block;
+  transition:transform 120ms ease-out;
+  transform-style:preserve-3d;
+}
+.bapc-hint{
+  position:absolute;
+  bottom:.75rem;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:.7rem;
+  color:var(--text-3);
+  background:color-mix(in srgb,var(--surface) 85%,transparent);
+  padding:.25rem .65rem;
+  border-radius:var(--radius-pill);
+  border:1px solid var(--border);
+  pointer-events:none;
+  opacity:.85;
+  backdrop-filter:blur(6px);
+}
+.bapc-legend{
+  display:flex;
+  gap:1rem;
+  justify-content:center;
+  padding-top:.9rem;
+  font-size:.72rem;
+  color:var(--text-3);
+}
+.bapc-legend i{font-size:.6rem;margin-right:.25rem;vertical-align:middle;}
+
+.bapc-config-card{display:flex;flex-direction:column;}
+.bapc-field{
+  display:flex;
+  flex-direction:column;
+  gap:.3rem;
+  margin-bottom:.75rem;
+}
+.bapc-field label{
+  font-size:.7rem;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  color:var(--text-3);
+  font-weight:700;
+}
+.bapc-field select{
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:.55rem .75rem;
+  color:var(--text);
+  font-family:inherit;
+  font-size:.85rem;
+  font-weight:500;
+  transition:var(--transition);
+  width:100%;
+}
+.bapc-field select:focus{
+  outline:none;
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px var(--primary-glow);
+}
+
+.bapc-cost-summary{
+  display:flex;
+  flex-direction:column;
+  gap:.35rem;
+}
+.bapc-cost-row{
+  display:flex;
+  justify-content:space-between;
+  font-size:.85rem;
+  color:var(--text-2);
+}
+.bapc-cost-row strong{
+  color:var(--text);
+  font-weight:700;
+  font-variant-numeric:tabular-nums;
+}
+
+#bapcWarnings .compat-warn{margin-bottom:.5rem;}
+#bapcWarnings .compat-warn:last-child{margin-bottom:0;}
+
+.bapc-cost-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:.85rem;
+}
+.bapc-cost-table th{
+  text-align:left;
+  color:var(--text-3);
+  font-size:.7rem;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  font-weight:700;
+  padding:.5rem 0;
+  border-bottom:1px solid var(--border);
+}
+.bapc-cost-table td{
+  padding:.6rem 0;
+  border-bottom:1px solid var(--border);
+}
+.bapc-cost-table tr:last-child td{border-bottom:none;}
+.bapc-cost-table input[type="number"]{
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:.4rem .6rem;
+  color:var(--text);
+  font-family:inherit;
+  font-size:.85rem;
+  font-weight:500;
+  width:110px;
+  text-align:right;
+  transition:var(--transition);
+}
+.bapc-cost-table input[type="number"]:focus{
+  outline:none;
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px var(--primary-glow);
+}
+.bapc-cost-table .total-row td{
+  padding-top:1rem;
+  font-weight:700;
+  border-top:2px solid var(--border);
+}
+.bapc-cost-table .total-row td:last-child{
+  color:var(--primary);
+  font-size:1rem;
+  text-align:right;
+}
+   
+/* ============================================================
    MODAL
    ============================================================ */
 .modal-backdrop{
@@ -1039,6 +1200,7 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
 
       <div class="nav-section" data-section="tools">Tools <i class="fas fa-chevron-down nav-chevron"></i></div>
       <div class="nav-group" data-group="tools">
+        <div class="nav-item" data-page="buildapc"><i class="fas fa-screwdriver-wrench"></i> Build A PC</div>
         <div class="nav-item" data-page="upgrade"><i class="fas fa-arrow-up"></i> Upgrade Path</div>
         <div class="nav-item" data-page="benchmarks"><i class="fas fa-chart-line"></i> Benchmarks</div>
         <div class="nav-item" data-page="advisor"><i class="fas fa-wand-magic-sparkles"></i> PC Advisor</div>
@@ -1541,6 +1703,127 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
 
         <div class="card" id="advisorResult">
           <div class="empty"><i class="fas fa-wand-magic-sparkles"></i><p>Pick a goal above to get recommendations.</p></div>
+        </div>
+      </section>
+
+      <!-- ============================ BUILD A PC ============================ -->
+      <section class="page" id="page-buildapc">
+        <div class="page-header">
+          <div>
+            <h1>Build A PC</h1>
+            <p>Pick your parts. See them fit. Spot compatibility issues before you buy.</p>
+          </div>
+          <div class="flex">
+            <button class="btn btn-ghost" id="bapcResetBtn"><i class="fas fa-rotate-left"></i> Reset</button>
+            <button class="btn btn-primary" id="bapcAnalyzeBtn"><i class="fas fa-bolt"></i> Analyze build</button>
+          </div>
+        </div>
+
+        <div class="bapc-grid">
+          <!-- LEFT: visual case -->
+          <div class="card bapc-visual-card">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-cube"></i> Your build</div>
+              <span class="card-sub" id="bapcCaseLabel">—</span>
+            </div>
+            <div class="bapc-viewport" id="bapcViewport">
+              <svg id="bapcSvg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet"></svg>
+              <div class="bapc-hint">
+                <i class="fas fa-arrows-left-right"></i> Drag to rotate
+              </div>
+            </div>
+            <div class="bapc-legend">
+              <span><i class="fas fa-circle" style="color:var(--success);"></i> Fits</span>
+              <span><i class="fas fa-circle" style="color:var(--warn);"></i> Tight</span>
+              <span><i class="fas fa-circle" style="color:var(--danger);"></i> Won't fit</span>
+            </div>
+          </div>
+
+          <!-- RIGHT: configurator -->
+          <div class="card bapc-config-card">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-list-check"></i> Parts</div>
+              <span class="card-sub" id="bapcCompatCount">—</span>
+            </div>
+
+            <div class="bapc-field">
+              <label>Case</label>
+              <select id="bapcCase"></select>
+            </div>
+
+            <div class="bapc-field">
+              <label>CPU</label>
+              <select id="bapcCpu"></select>
+            </div>
+
+            <div class="bapc-field">
+              <label>GPU</label>
+              <select id="bapcGpu"></select>
+            </div>
+
+            <div class="bapc-field">
+              <label>RAM</label>
+              <select id="bapcRam"></select>
+            </div>
+
+            <div class="bapc-field">
+              <label>Cooler</label>
+              <select id="bapcCooler">
+                <option value="Stock cooler">Stock cooler</option>
+                <option value="Tower air">Tower air</option>
+                <option value="Dual-tower air">Dual-tower air</option>
+                <option value="AIO 240mm">AIO 240mm</option>
+                <option value="AIO 360mm">AIO 360mm</option>
+              </select>
+            </div>
+
+            <div class="bapc-field">
+              <label>PSU</label>
+              <select id="bapcPsu"></select>
+            </div>
+
+            <div class="bapc-field">
+              <label>Storage (main drive)</label>
+              <select id="bapcStorage"></select>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="bapc-cost-summary">
+              <div class="bapc-cost-row">
+                <span>Parts subtotal</span>
+                <strong id="bapcSubtotal">$0</strong>
+              </div>
+              <div class="bapc-cost-row">
+                <span>Performance score</span>
+                <strong id="bapcScore">—</strong>
+              </div>
+              <div class="bapc-cost-row">
+                <span>FPS per dollar</span>
+                <strong id="bapcFpsPerDollar">—</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Warnings -->
+        <div class="card" id="bapcWarningsCard" style="margin-top:1.5rem;">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-triangle-exclamation"></i> Compatibility check</div>
+            <span class="card-sub" id="bapcWarningsSummary">—</span>
+          </div>
+          <div id="bapcWarnings">
+            <div class="empty"><i class="fas fa-circle-check" style="color:var(--success);"></i><p>Pick a case and parts to see compatibility checks.</p></div>
+          </div>
+        </div>
+
+        <!-- Detailed cost breakdown -->
+        <div class="card" style="margin-top:1.5rem;">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-receipt"></i> Cost breakdown</div>
+            <span class="card-sub">Editable — updates live</span>
+          </div>
+          <div id="bapcCostTable"></div>
         </div>
       </section>
 
