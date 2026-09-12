@@ -1288,7 +1288,8 @@ $$('#advisorGoals button').forEach(btn=>btn.addEventListener('click', ()=>{
   } else if(goal==='target'){
     // Build a game <option> list sorted alphabetically
     const sorted = [...a.gameResults].sort((x,y)=>x.name.localeCompare(y.name));
-    const gameOptions = sorted.map(g => `<option value="${g.name.replace(/"/g,'&quot;')}">${g.name}</option>`).join('');
+    const gameOptions = `<option value="" disabled selected hidden>— Select a game —</option>` +
+      sorted.map(g => `<option value="${g.name.replace(/"/g,'&quot;')}">${g.name}</option>`).join('');
     html = `
       <div class="card-title mb-2"><i class="fas fa-bullseye"></i> Target FPS Advisor</div>
       <p class="text-muted mb-2">Tell us what you want to play and at what framerate.</p>
@@ -1314,8 +1315,7 @@ $$('#advisorGoals button').forEach(btn=>btn.addEventListener('click', ()=>{
   const checkBtn = $('#targetCheckBtn');
   if(checkBtn){
     checkBtn.addEventListener('click', runTargetFpsCheck);
-    // Auto-run once so the user sees something immediately
-    runTargetFpsCheck();
+    // Do NOT auto-run — wait for user to pick a game and click Check
   }
 }));
 
@@ -1326,9 +1326,15 @@ function runTargetFpsCheck(){
   const a = state.analysis;
   if(!a) return;
   const gameName = $('#targetGame') ? $('#targetGame').value : null;
-  const targetFps = parseInt(($('#targetFpsAdvisor') && $('#targetFpsAdvisor').value) || '144', 10);
+  const targetFps = parseInt(($('#targetFpsAdvisor') && $('#targetFpsAdvisor').value) || '60', 10);
   const result = $('#targetResult');
-  if(!gameName || !result) return;
+  if(!result) return;
+
+  // Handle "no game selected" gracefully
+  if(!gameName){
+    result.innerHTML = `<p class="text-muted" style="padding:.5rem 0;"><i class="fas fa-arrow-up" style="opacity:.5;"></i> Pick a game above to check your FPS target.</p>`;
+    return;
+  }
 
   const game = a.gameResults.find(g => g.name === gameName);
   if(!game){
