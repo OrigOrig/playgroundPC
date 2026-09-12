@@ -2756,25 +2756,21 @@ bapc.view = {
 };
 
 /* ---------- main scene renderer ---------- */
+let b3dBooted = false;
 function renderBapcScene(){
   const svg = $('#bapcSvg');
-  if(!svg) return;
-  svg.setAttribute('viewBox', '0 0 800 500');
-  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-  svg.style.transform = 'none';
-  svg.innerHTML = `
-    <g>
-      <text x="400" y="240" text-anchor="middle"
-        font-family="Inter,system-ui,sans-serif" font-size="20" font-weight="700"
-        fill="var(--text-2)">3D builder arriving in the next pass</text>
-      <text x="400" y="272" text-anchor="middle"
-        font-family="Inter,system-ui,sans-serif" font-size="13" font-weight="500"
-        fill="var(--text-3)">Parts, cost table, and compatibility checks are live.</text>
-      <text x="400" y="296" text-anchor="middle"
-        font-family="Inter,system-ui,sans-serif" font-size="13" font-weight="500"
-        fill="var(--text-3)">Interact with the dropdowns on the right →</text>
-    </g>
-  `;
+  const vp  = $('#bapcViewport');
+  if(!svg || !vp) return;
+
+  if(!b3dBooted){
+    b3d.init(vp, svg);
+    b3d.setScene(b3d.demoScene());
+    b3dBooted = true;
+  } else {
+    // re-init scene each time renderBapcScene is called so future
+    // stages can rebuild the object list based on bapc state
+    b3d.setScene(b3d.demoScene());
+  }
 }
 
 /* ---------- drag-to-rotate ---------- */
@@ -2880,4 +2876,402 @@ window.addEventListener('resize', ()=>{
   }
   console.log('%cPC Playground v4.3','font-size:16px;font-weight:800;color:#3b82f6');
   console.log('Loaded:', allCpus().length, 'CPUs,', allGpus().length, 'GPUs,', GAMES.length, 'games');
+})();
+
+/* ================================================================
+   5c-1  —  3D RENDERER CORE
+   ----------------------------------------------------------------
+   Pure-JS 3D pipeline: vectors, matrices, projection, face sort,
+   painter's algorithm rendering to SVG. No libraries.
+
+   Public API used by later stages:
+     b3d.init(viewportEl, svgEl)
+     b3d.setScene(objectsArray)
+     b3d.reset()
+   ================================================================ */
+const b3d = (function(){
+
+  /* --------------------------------------------------------------
+     MATH — vec3, mat4
+     -------------------------------------------------------------- */
+  const V = {
+    sub: (a,b) => [a[0]-b[0], a[1]-b[1], a[2]-b[2]],
+    add: (a,b) => [a[0]+b[0], a[1]+b[1], a[2]+b[2]],
+    scale: (a,s) => [a[0]*s, a[1]*s, a[2]*s],
+    dot: (a,b) => a[0]*b[0] + a[1]*b[1] + a[2]*b[2],
+    cross: (a,b) => [
+      a[1]*b[2] - a[2]*b[1],
+      a[2]*b[0] - a[0]*b[2],
+      a[0]*b[1] - a[1]*b[0]
+    ],
+    len: a => Math.sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]),
+    norm: a => {
+      const l = V.len(a) || 1;
+      return [a[0]/l, a[1]/l, a[2]/l];
+    }
+  };
+
+  const M = {
+    ident: () => [
+      1,0,0,0,
+      0,1,0,0,
+      0,0,1,0,
+      0,0,0,1
+    ],
+    // rotation around X axis
+    rotX: (rad) => {
+      const c = Math.cos(rad), s = Math.sin(rad);
+      return [
+        1,0,0,0,
+        0,c,-s,0,
+        0,s,c,0,
+        0,0,0,1
+      ];
+    },
+    // rotation around Y axis
+    rotY: (rad) => {
+      const c = Math.cos(rad), s = Math.sin(rad);
+      return [
+        c,0,s,0,
+        0,1,0,0,
+        -s,0,c,0,
+        0,0,0,1
+      ];
+    },
+    // perspective projection: near plane mapping
+    perspective: (fovDeg, aspect, near, far) => {
+      const f = 1 / Math.tan((fovDeg * Math.PI / 180) / 2);
+      const nf = 1 / (near - far);
+      return [
+        f/aspect, 0, 0, 0,
+        0, f, 0, 0,
+        0, 0, (far + near) * nf, -1,
+        0, 0, 2 * far * near * nf, 0
+      ];
+    },
+    // translate matrix (used to place objects)
+    trans: (x,y,z) => [
+      1,0,0,0,
+      0,1,0,0,
+      0,0,1,0,
+      x,y,z,1
+    ],
+    // matrix multiplication (A * B), column-major
+    mul: (a,b) => {
+      const r = new Array(16);
+      for(let i = 0; i < 4; i++){
+        for(let j = 0; j < 4; j++){
+          r[i*4+j] =
+            a[i*4+0]*b[0*4+j] +
+            a[i*4+1]*b[1*4+j] +
+            a[i*4+2]*b[2*4+j] +
+            a[i*4+3]*b[3*4+j];
+        }
+      }
+      return r;
+    },
+    // apply matrix to vec4 (x,y,z,w)
+    apply: (m,v) => [
+      m[0]*v[0] + m[4]*v[1] + m[8]*v[2]  + m[12]*v[3],
+      m[1]*v[0] + m[5]*v[1] + m[9]*v[2]  + m[13]*v[3],
+      m[2]*v[0] + m[6]*v[1] + m[10]*v[2] + m[14]*v[3],
+      m[3]*v[0] + m[7]*v[1] + m[11]*v[2] + m[15]*v[3]
+    ]
+  };
+
+  /* --------------------------------------------------------------
+     MESH BUILDERS — these return {verts, faces}
+     verts: array of [x,y,z]
+     faces: array of { idx:[a,b,c,d], color, ...meta }
+     -------------------------------------------------------------- */
+  function boxMesh(w, h, d, color, opts){
+    opts = opts || {};
+    const x = w/2, y = h/2, z = d/2;
+    const verts = [
+      [-x,-y,-z], [ x,-y,-z], [ x, y,-z], [-x, y,-z], // back   (0-3)
+      [-x,-y, z], [ x,-y, z], [ x, y, z], [-x, y, z]  // front  (4-7)
+    ];
+    const shade = opts.shade !== false;
+    const base = color || '#3b82f6';
+    // six faces; colors shaded slightly per direction for depth cue
+    const faces = [
+      { idx:[4,5,6,7], color: base,                     // front
+        normal:[0,0,1], meta: opts.meta || {} },
+      { idx:[1,0,3,2], color: shadeHex(base, 0.75),     // back
+        normal:[0,0,-1], meta: opts.meta || {} },
+      { idx:[0,4,7,3], color: shadeHex(base, 0.88),     // left
+        normal:[-1,0,0], meta: opts.meta || {} },
+      { idx:[5,1,2,6], color: shadeHex(base, 0.92),     // right
+        normal:[1,0,0], meta: opts.meta || {} },
+      { idx:[3,7,6,2], color: shadeHex(base, 1.10),     // top
+        normal:[0,1,0], meta: opts.meta || {} },
+      { idx:[0,1,5,4], color: shadeHex(base, 0.70),     // bottom
+        normal:[0,-1,0], meta: opts.meta || {} }
+    ];
+    return { verts, faces };
+  }
+
+  function shadeHex(hex, factor){
+    // factor 1 = original, <1 darker, >1 lighter
+    const c = hex.replace('#','');
+    let r = parseInt(c.substring(0,2),16);
+    let g = parseInt(c.substring(2,4),16);
+    let b = parseInt(c.substring(4,6),16);
+    if(factor > 1){
+      r = Math.min(255, Math.round(r + (255-r) * (factor-1)));
+      g = Math.min(255, Math.round(g + (255-g) * (factor-1)));
+      b = Math.min(255, Math.round(b + (255-b) * (factor-1)));
+    } else {
+      r = Math.round(r * factor);
+      g = Math.round(g * factor);
+      b = Math.round(b * factor);
+    }
+    const h = n => n.toString(16).padStart(2,'0');
+    return '#' + h(r) + h(g) + h(b);
+  }
+
+  /* --------------------------------------------------------------
+     STATE
+     -------------------------------------------------------------- */
+  const state = {
+    viewport: null,
+    svg: null,
+    objects: [],       // each: { mesh, pos:[x,y,z], rot:[rx,ry,rz], scale, id }
+    camera: {
+      rotY: -30 * Math.PI/180,
+      rotX: 20 * Math.PI/180,
+      dist: 8,         // camera distance from origin (for zoom)
+      fov: 45
+    },
+    drag: {
+      active: false,
+      startX: 0,
+      startY: 0,
+      startRotY: 0,
+      startRotX: 0
+    },
+    W: 800,
+    H: 500,
+    autoRotate: true,
+    autoRotSpeed: 0.12   // degrees per frame
+  };
+
+  /* --------------------------------------------------------------
+     PUBLIC API
+     -------------------------------------------------------------- */
+  function init(viewportEl, svgEl){
+    state.viewport = viewportEl;
+    state.svg = svgEl;
+    if(!state.svg) return;
+    const vb = state.svg.getAttribute('viewBox') || '0 0 800 500';
+    const parts = vb.split(' ').map(Number);
+    state.W = parts[2] || 800;
+    state.H = parts[3] || 500;
+    state.svg.setAttribute('viewBox', `0 0 ${state.W} ${state.H}`);
+    state.svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    state.svg.style.transform = 'none';
+    wireInput();
+    startLoop();
+  }
+
+  function setScene(objects){
+    state.objects = objects || [];
+  }
+
+  function reset(){
+    state.camera.rotY = -30 * Math.PI/180;
+    state.camera.rotX = 20 * Math.PI/180;
+    state.camera.dist = 8;
+  }
+
+  /* --------------------------------------------------------------
+     INPUT — drag to orbit, scroll to zoom, dbl-click reset
+     -------------------------------------------------------------- */
+  function wireInput(){
+    const vp = state.viewport;
+    if(!vp) return;
+    if(vp.dataset.b3dWired) return;
+    vp.dataset.b3dWired = '1';
+
+    let pointerId = null;
+
+    vp.addEventListener('pointerdown', (e)=>{
+      if(e.target.closest('button, select, input, a')) return;
+      pointerId = e.pointerId;
+      vp.setPointerCapture(pointerId);
+      state.drag.active = true;
+      state.drag.startX = e.clientX;
+      state.drag.startY = e.clientY;
+      state.drag.startRotY = state.camera.rotY;
+      state.drag.startRotX = state.camera.rotX;
+      state.autoRotate = false;
+    });
+
+    vp.addEventListener('pointermove', (e)=>{
+      if(!state.drag.active || e.pointerId !== pointerId) return;
+      const dx = e.clientX - state.drag.startX;
+      const dy = e.clientY - state.drag.startY;
+      state.camera.rotY = state.drag.startRotY + dx * 0.008;
+      state.camera.rotX = clamp(state.drag.startRotX + dy * 0.006, -Math.PI/3, Math.PI/2.5);
+    });
+
+    vp.addEventListener('pointerup', (e)=>{
+      if(e.pointerId !== pointerId) return;
+      state.drag.active = false;
+      pointerId = null;
+    });
+
+    vp.addEventListener('pointercancel', ()=>{
+      state.drag.active = false;
+      pointerId = null;
+    });
+
+    vp.addEventListener('wheel', (e)=>{
+      e.preventDefault();
+      state.camera.dist = clamp(state.camera.dist + e.deltaY * 0.006, 3, 20);
+    }, { passive:false });
+
+    vp.addEventListener('dblclick', ()=>{
+      reset();
+      state.autoRotate = true;
+    });
+
+    // resume auto-rotate when idle for 2s
+    let idleTimer = null;
+    vp.addEventListener('pointerup', ()=>{
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(()=>{ state.autoRotate = true; }, 2000);
+    });
+  }
+
+  /* --------------------------------------------------------------
+     RENDER LOOP
+     -------------------------------------------------------------- */
+  let rafId = null;
+  let lastT = 0;
+
+  function startLoop(){
+    if(rafId) return;
+    const tick = (t)=>{
+      rafId = requestAnimationFrame(tick);
+      const dt = Math.min(50, t - lastT) / 1000;
+      lastT = t;
+      if(state.autoRotate){
+        state.camera.rotY += state.autoRotSpeed * dt;
+      }
+      render();
+    };
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function render(){
+    if(!state.svg) return;
+
+    // camera basis: rotate world by -rotY, -rotX around origin
+    // then translate back by -dist along Z
+    const Ry = M.rotY(-state.camera.rotY);
+    const Rx = M.rotX(-state.camera.rotX);
+    const T  = M.trans(0, 0, -state.camera.dist);
+
+    // model-view: translate view = T * Rx * Ry
+    const view = M.mul(T, M.mul(Rx, Ry));
+
+    // projection
+    const proj = M.perspective(
+      state.camera.fov,
+      state.W / state.H,
+      0.1,
+      100
+    );
+
+    const mvp = M.mul(proj, view);
+
+    // gather all faces
+    const polys = [];
+    const cx = state.W / 2;
+    const cy = state.H / 2;
+
+    for(const obj of state.objects){
+      const mesh = obj.mesh;
+      if(!mesh) continue;
+      const objMat = M.mul(
+        M.trans(obj.pos[0], obj.pos[1], obj.pos[2]),
+        M.mul(M.rotY(obj.rot[1]), M.rotX(obj.rot[0]))
+      );
+      const mat = M.mul(mvp, objMat);
+
+      // project every vertex of this object
+      const projected = mesh.verts.map(v=>{
+        const p = M.apply(mat, [v[0], v[1], v[2], 1]);
+        if(p[3] <= 0.0001) return null;   // behind camera
+        const inv = 1 / p[3];
+        return {
+          x: cx + (p[0] * inv) * cx,
+          y: cy - (p[1] * inv) * cy,
+          z: p[2] * inv
+        };
+      });
+
+      for(const face of mesh.faces){
+        const pts = face.idx.map(i=>projected[i]);
+        if(pts.some(p=>!p)) continue;    // skip face touching clip plane
+        // depth = average z
+        let z = 0;
+        for(const p of pts) z += p.z;
+        z /= pts.length;
+        polys.push({
+          pts,
+          z,
+          color: face.color,
+          stroke: face.stroke || 'rgba(0,0,0,0.35)',
+          strokeWidth: face.strokeWidth || 1,
+          meta: face.meta || {}
+        });
+      }
+    }
+
+    // painter's algorithm: draw far to near (larger z first, since z is depth)
+    polys.sort((a,b)=> b.z - a.z);
+
+    // emit SVG
+    const parts = [ `<g>` ];
+    for(const p of polys){
+      const d = p.pts.map((pt,i)=> `${i===0?'M':'L'} ${pt.x.toFixed(2)} ${pt.y.toFixed(2)}`).join(' ') + ' Z';
+      parts.push(
+        `<path d="${d}" fill="${p.color}" stroke="${p.stroke}" stroke-width="${p.strokeWidth}" stroke-linejoin="round"/>`
+      );
+    }
+    parts.push('</g>');
+    state.svg.innerHTML = parts.join('');
+  }
+
+  /* --------------------------------------------------------------
+     CLAMP HELPER (may already exist as `clamp` at top of app.js;
+     redeclaring inside IIFE is safe)
+     -------------------------------------------------------------- */
+  function clamp(n, min, max){ return Math.min(max, Math.max(min, n)); }
+
+  /* --------------------------------------------------------------
+     TEST SCENE — a cube + a smaller cube to prove depth sort
+     -------------------------------------------------------------- */
+  function demoTriangle(){ /* unused */ }
+
+  function demoScene(){
+    const cube = boxMesh(2, 2, 2, '#3b82f6');
+    const cube2 = boxMesh(1, 1, 1, '#f59e0b');
+    return [
+      { mesh: cube,  pos:[0,0,0],   rot:[0,0,0] },
+      { mesh: cube2, pos:[1.6,1.0,0.4], rot:[0.4,0.6,0] }
+    ];
+  }
+
+  return {
+    init,
+    setScene,
+    reset,
+    demoScene,
+    _state: state,
+    _math: { V, M },
+    _mesh: { box: boxMesh }
+  };
 })();
