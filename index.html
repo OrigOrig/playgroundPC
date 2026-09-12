@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>PCPlayground — Know Your PC</title>
+<meta name="description" content="PCPlayground — analyze your PC, compare builds, explore game performance, and plan upgrades." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="app">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-mark">🎮</div><div><div class="brand-name">PCPlayground</div><div class="brand-sub">Know. Play. Upgrade.</div></div></div>
+    <nav id="mainNav" class="nav"></nav>
+    <div class="sidebar-bottom">
+      <div class="premium-card"><div class="premium-title">♛ Premium</div><div>Custom builds, detailed benchmarks and ad-free tools.</div><button class="btn btn-primary" data-action="toast">Upgrade</button></div>
+      <div class="user-mini"><div class="avatar">K</div><div><strong>KhanBaba</strong><span>Free Plan</span></div><span class="chev">⌄</span></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="mobile-menu" id="mobileMenu">☰</button>
+      <div class="search"><span>⌕</span><input id="globalSearch" placeholder="Search games, components, or anything..." /></div>
+      <div class="top-actions"><button class="icon-btn" data-action="toast">♧</button><button class="avatar avatar-sm">K</button></div>
+    </header>
+    <section id="content" class="content"></section>
+  </main>
+</div>
+<div id="toast" class="toast"></div>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
