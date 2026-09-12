@@ -161,6 +161,89 @@ body::before{
 .search-box i{color:var(--text-3);font-size:.9rem;}
 .search-box input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:.875rem;font-family:inherit;}
 .search-box input::placeholder{color:var(--text-3);}
+
+/* ---------- Search results dropdown ---------- */
+.search-box{position:relative;}
+.search-results{
+  position:absolute;
+  top:calc(100% + 8px);
+  left:0;
+  right:0;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow-lg);
+  max-height:420px;
+  overflow-y:auto;
+  z-index:500;
+  display:none;
+  animation:slideUp .18s ease;
+}
+.search-results.show{display:block;}
+.search-filters{
+  display:flex;
+  gap:.35rem;
+  padding:.6rem .75rem;
+  border-bottom:1px solid var(--border);
+  position:sticky;
+  top:0;
+  background:var(--surface);
+  z-index:2;
+  flex-wrap:wrap;
+}
+.search-chip{
+  padding:.3rem .65rem;
+  border-radius:var(--radius-pill);
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  font-size:.72rem;
+  font-weight:600;
+  color:var(--text-2);
+  cursor:pointer;
+  transition:var(--transition);
+  user-select:none;
+}
+.search-chip:hover{background:var(--surface-3);color:var(--text);}
+.search-chip.active{background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;border-color:transparent;}
+.search-group{padding:.5rem 0;}
+.search-group-title{
+  font-size:.65rem;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-weight:700;
+  color:var(--text-3);
+  padding:.35rem .9rem .25rem;
+}
+.search-item{
+  display:flex;
+  align-items:center;
+  gap:.7rem;
+  padding:.55rem .9rem;
+  cursor:pointer;
+  transition:var(--transition);
+  font-size:.85rem;
+}
+.search-item:hover, .search-item.highlight{background:var(--surface-2);}
+.search-item-icon{
+  width:28px;
+  height:28px;
+  border-radius:7px;
+  display:grid;
+  place-items:center;
+  background:color-mix(in srgb,var(--primary) 12%,transparent);
+  color:var(--primary);
+  font-size:.75rem;
+  flex-shrink:0;
+}
+.search-item-icon.game{background:color-mix(in srgb,var(--accent) 15%,transparent);color:var(--accent);}
+.search-item-icon.cpu{background:color-mix(in srgb,var(--info) 15%,transparent);color:var(--info);}
+.search-item-icon.gpu{background:color-mix(in srgb,var(--success) 15%,transparent);color:var(--success);}
+.search-item-icon.ram{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn);}
+.search-item-info{flex:1;min-width:0;}
+.search-item-name{font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.search-item-sub{font-size:.72rem;color:var(--text-3);}
+.search-item-arrow{color:var(--text-3);font-size:.75rem;}
+.search-empty{padding:1.5rem 1rem;text-align:center;color:var(--text-3);font-size:.85rem;}
 .topbar-right{display:flex;align-items:center;gap:.6rem;margin-left:auto;}
 .icon-btn{
   width:36px;height:36px;border-radius:10px;
@@ -908,7 +991,17 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
       <button class="icon-btn" id="menuBtn" style="display:none;"><i class="fas fa-bars"></i></button>
       <div class="search-box">
         <i class="fas fa-search"></i>
-        <input type="text" id="globalSearch" placeholder="Search games, CPUs, GPUs, or anything…">
+        <input type="text" id="globalSearch" placeholder="Search games, CPUs, GPUs, or anything…" autocomplete="off">
+        <div class="search-results" id="searchResults">
+          <div class="search-filters" id="searchFilters">
+            <span class="search-chip active" data-filter="all">All</span>
+            <span class="search-chip" data-filter="game">Games</span>
+            <span class="search-chip" data-filter="cpu">CPUs</span>
+            <span class="search-chip" data-filter="gpu">GPUs</span>
+            <span class="search-chip" data-filter="ram">RAM</span>
+          </div>
+          <div id="searchResultsBody"></div>
+        </div>
       </div>
       <div class="topbar-right">
         <button class="icon-btn" id="quickSettings" title="Settings"><i class="fas fa-cog"></i></button>
@@ -3046,11 +3139,215 @@ function confirmDialog(msg, cb){
 $('#confirmCancel').addEventListener('click', ()=>{ $('#confirmModal').classList.remove('show'); confirmCb=null; });
 $('#confirmOk').addEventListener('click', ()=>{ $('#confirmModal').classList.remove('show'); if(confirmCb) confirmCb(); confirmCb=null; });
 
-$('#globalSearch').addEventListener('input', e=>{
-  const q = e.target.value.trim().toLowerCase();
-  if(!q){ return; }
-  const game = GAMES.find(g=>g.name.toLowerCase().includes(q));
-  if(game){ toast('Try "Games" page to see: '+game.name, 'fa-gamepad'); }
+/* ================================================================
+   GLOBAL SEARCH — live dropdown with categories
+   ================================================================ */
+let searchActiveFilter = 'all';
+let searchDebounce = null;
+
+function buildSearchIndex(){
+  const items = [];
+  // Games
+  GAMES.forEach(g=>{
+    items.push({
+      type:'game',
+      name:g.name,
+      sub:g.genre + ' · ' + g.preset,
+      icon:'fa-gamepad',
+      data:g
+    });
+  });
+  // CPUs
+  allCpus().forEach(c=>{
+    items.push({
+      type:'cpu',
+      name:c.name,
+      sub:`${c.cores} · ${c.clock} · ${c.socket}`,
+      icon:'fa-microchip',
+      data:c
+    });
+  });
+  // GPUs
+  allGpus().forEach(g=>{
+    items.push({
+      type:'gpu',
+      name:g.name,
+      sub:`${g.vram}GB · ${g.tdp}W · ${g.tier}`,
+      icon:'fa-display',
+      data:g
+    });
+  });
+  // RAM
+  RAMS.forEach(r=>{
+    items.push({
+      type:'ram',
+      name:r.name,
+      sub:`${r.capacity}GB ${r.type}`,
+      icon:'fa-memory',
+      data:r
+    });
+  });
+  return items;
+}
+
+let SEARCH_INDEX = [];
+
+function runSearch(query){
+  const q = query.trim().toLowerCase();
+  if(!q){
+    $('#searchResults').classList.remove('show');
+    return;
+  }
+  if(!SEARCH_INDEX.length) SEARCH_INDEX = buildSearchIndex();
+
+  let matches = SEARCH_INDEX.filter(it => it.name.toLowerCase().includes(q));
+  if(searchActiveFilter !== 'all'){
+    matches = matches.filter(it => it.type === searchActiveFilter);
+  }
+  // Rank: starts-with first, then contains
+  matches.sort((a,b)=>{
+    const aStarts = a.name.toLowerCase().startsWith(q) ? 0 : 1;
+    const bStarts = b.name.toLowerCase().startsWith(q) ? 0 : 1;
+    if(aStarts !== bStarts) return aStarts - bStarts;
+    return a.name.length - b.name.length;
+  });
+  matches = matches.slice(0, 12);
+
+  const body = $('#searchResultsBody');
+  const panel = $('#searchResults');
+
+  if(matches.length === 0){
+    body.innerHTML = `<div class="search-empty"><i class="fas fa-search" style="opacity:.4;display:block;font-size:1.6rem;margin-bottom:.4rem;"></i>No results for "<strong>${query.trim()}</strong>"</div>`;
+    panel.classList.add('show');
+    return;
+  }
+
+  // Group by type
+  const groups = {game:[], cpu:[], gpu:[], ram:[]};
+  matches.forEach(m=>groups[m.type].push(m));
+
+  const groupLabels = {game:'Games', cpu:'CPUs', gpu:'GPUs', ram:'RAM'};
+  let html = '';
+  ['game','cpu','gpu','ram'].forEach(type=>{
+    if(groups[type].length === 0) return;
+    html += `<div class="search-group">
+      <div class="search-group-title">${groupLabels[type]}</div>
+      ${groups[type].map(m=>`
+        <div class="search-item" data-type="${m.type}" data-name="${m.name.replace(/"/g,'&quot;')}">
+          <div class="search-item-icon ${m.type}"><i class="fas ${m.icon}"></i></div>
+          <div class="search-item-info">
+            <div class="search-item-name">${m.name}</div>
+            <div class="search-item-sub">${m.sub}</div>
+          </div>
+          <div class="search-item-arrow"><i class="fas fa-arrow-right"></i></div>
+        </div>
+      `).join('')}
+    </div>`;
+  });
+  body.innerHTML = html;
+  panel.classList.add('show');
+
+  // Wire clicks
+  $$('#searchResultsBody .search-item').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const type = el.dataset.type;
+      const name = el.dataset.name;
+      handleSearchSelect(type, name);
+    });
+  });
+}
+
+function handleSearchSelect(type, name){
+  hideSearch();
+  $('#globalSearch').value = '';
+
+  if(type === 'game'){
+    const g = GAMES.find(x=>x.name===name);
+    if(!g) return;
+    // If no analysis yet, tell them to configure first
+    if(!state.analysis){
+      toast('Configure your PC first to see ' + g.name, 'fa-triangle-exclamation');
+      navigate('mypc');
+      return;
+    }
+    // Find the analyzed game object
+    const analyzed = state.analysis.gameResults.find(x=>x.name===name);
+    if(analyzed){
+      openGameModal(analyzed);
+    } else {
+      openGameModal(g);
+    }
+  } else if(type === 'cpu'){
+    // Find which brand the CPU belongs to and select it
+    for(const brand in CPUS){
+      if(CPUS[brand].some(c=>c.name===name)){
+        state.build.cpuBrand = brand;
+        state.build.cpu = name;
+        CK.set('pcp_build', state.build);
+        syncBuildUI();
+        navigate('mypc');
+        toast('Selected CPU: ' + name, 'fa-microchip');
+        return;
+      }
+    }
+  } else if(type === 'gpu'){
+    for(const brand in GPUS){
+      if(GPUS[brand].some(g=>g.name===name)){
+        state.build.gpuBrand = brand;
+        state.build.gpu = name;
+        CK.set('pcp_build', state.build);
+        syncBuildUI();
+        navigate('mypc');
+        toast('Selected GPU: ' + name, 'fa-display');
+        return;
+      }
+    }
+  } else if(type === 'ram'){
+    state.build.ram = name;
+    CK.set('pcp_build', state.build);
+    syncBuildUI();
+    navigate('mypc');
+    toast('Selected RAM: ' + name, 'fa-memory');
+  }
+}
+
+function hideSearch(){
+  $('#searchResults').classList.remove('show');
+}
+
+// Input listener with debounce
+$('#globalSearch').addEventListener('input', (e)=>{
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(()=>runSearch(e.target.value), 180);
+});
+
+// Category filter chips
+$$('#searchFilters .search-chip').forEach(chip=>{
+  chip.addEventListener('click', ()=>{
+    $$('#searchFilters .search-chip').forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');
+    searchActiveFilter = chip.dataset.filter;
+    runSearch($('#globalSearch').value);
+  });
+});
+
+// Close on Escape
+$('#globalSearch').addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape'){ hideSearch(); e.target.blur(); }
+});
+
+// Close on click outside
+document.addEventListener('click', (e)=>{
+  const box = e.target.closest('.search-box');
+  if(!box) hideSearch();
+});
+
+// Keyboard shortcut: press "/" anywhere (not in an input) to focus search
+document.addEventListener('keydown', (e)=>{
+  if(e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT' && document.activeElement.tagName !== 'TEXTAREA'){
+    e.preventDefault();
+    $('#globalSearch').focus();
+  }
 });
 
 function checkMobile(){
