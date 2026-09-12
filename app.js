@@ -3228,8 +3228,17 @@ const b3d = (function(){
 
       for(const face of mesh.faces){
         const pts = face.idx.map(i=>projected[i]);
-        if(pts.some(p=>!p)) continue;    // skip face touching clip plane
-        // depth = average z
+        if(pts.some(p=>!p)) continue;
+
+        // back-face culling: skip faces pointing away from camera
+        let area = 0;
+        for(let k = 0; k < pts.length; k++){
+          const a = pts[k];
+          const b = pts[(k+1) % pts.length];
+          area += (a.x * b.y - b.x * a.y);
+        }
+        if(area >= 0) continue;
+
         let z = 0;
         for(const p of pts) z += p.z;
         z /= pts.length;
@@ -3341,7 +3350,6 @@ const b3d = (function(){
   function panelMesh(w, h, color, normal, opts){
     opts = opts || {};
     const x = w/2, y = h/2;
-    // two-sided quad; cull happens implicitly via painter's algorithm
     const verts = [
       [-x,-y,0], [ x,-y,0], [ x, y,0], [-x, y,0]
     ];
@@ -3349,6 +3357,8 @@ const b3d = (function(){
     const strokeWidth = opts.strokeWidth != null ? opts.strokeWidth : 1;
     const faces = [
       { idx:[0,1,2,3], color, normal, stroke, strokeWidth,
+        meta: opts.meta || {} },
+      { idx:[3,2,1,0], color, normal, stroke, strokeWidth,
         meta: opts.meta || {} }
     ];
     return { verts, faces };
