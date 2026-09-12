@@ -36,6 +36,7 @@ let state = {
     cpuBrand:'AMD', cpu:'',
     gpuBrand:'NVIDIA', gpu:'',
     ram:'', ramCapacity:'', ramType:'', ramSpeed:'',
+    moboSocket:'', moboChipset:'', mobo:'',
     storages:[{type:'NVMe Gen4', capacity:'1TB'}],
     psuWatt:'', psuEff:'80+ Gold',
     coolerType:'AIO 240mm'
@@ -89,6 +90,9 @@ function getRamData(){
 }
 function allCpus(){ return [...CPUS.AMD, ...CPUS.Intel]; }
 function allGpus(){ return [...GPUS.NVIDIA, ...GPUS.AMD, ...GPUS.Intel]; }
+function getMoboData(name){ return MOTHERBOARDS.find(m=>m.name===name) || null; }
+function chipsetsForSocket(socket){ return [...new Set(MOTHERBOARDS.filter(m=>m.socket===socket).map(m=>m.chipset))]; }
+function mobosForChipset(socket, chipset){ return MOTHERBOARDS.filter(m=>m.socket===socket && m.chipset===chipset); }
 
 /* ----------------------------------------------------------------
    TOASTS
@@ -247,7 +251,36 @@ function populateRamSpeed(){
   if(entry.speeds.includes(3200)) speedSel.value = '3200';
   else speedSel.value = entry.speeds[entry.speeds.length - 1];
 }
+function populateMoboSelect(){
+  const sockSel = $('#moboSocket');
+  const chipSel = $('#moboChipset');
+  const moboSel = $('#moboSelect');
+  if(!sockSel || !chipSel || !moboSel) return;
 
+  if(state.build.moboSocket) sockSel.value = state.build.moboSocket;
+
+  if(sockSel.value){
+    const chips = chipsetsForSocket(sockSel.value);
+    chipSel.innerHTML = `<option value="" disabled hidden>-</option>` +
+      chips.map(c=>`<option value="${c}">${c}</option>`).join('');
+    if(state.build.moboChipset && chips.includes(state.build.moboChipset)) chipSel.value = state.build.moboChipset;
+    else chipSel.value = '';
+  } else {
+    chipSel.innerHTML = `<option value="" disabled hidden>-</option>`;
+    chipSel.value = '';
+  }
+
+  if(sockSel.value && chipSel.value){
+    const boards = mobosForChipset(sockSel.value, chipSel.value);
+    moboSel.innerHTML = `<option value="" disabled hidden>-</option>` +
+      boards.map(m=>`<option value="${m.name}">${m.name} — ${m.form} · $${m.price}</option>`).join('');
+    if(state.build.mobo && boards.some(b=>b.name===state.build.mobo)) moboSel.value = state.build.mobo;
+    else moboSel.value = '';
+  } else {
+    moboSel.innerHTML = `<option value="" disabled hidden>-</option>`;
+    moboSel.value = '';
+  }
+}
 function renderStorage(){
   const container = $('#storageContainer');
   const list = state.build.storages;
@@ -323,6 +356,20 @@ function updateRamString(){
 $('#psuWatt').addEventListener('change', ()=>{ state.build.psuWatt = $('#psuWatt').value; });
 $('#psuEff').addEventListener('change', ()=>{ state.build.psuEff = $('#psuEff').value; });
 $('#coolerType').addEventListener('change', ()=>{ state.build.coolerType = $('#coolerType').value; });
+$('#moboSocket').addEventListener('change', ()=>{
+  state.build.moboSocket = $('#moboSocket').value;
+  state.build.moboChipset = '';
+  state.build.mobo = '';
+  populateMoboSelect();
+});
+$('#moboChipset').addEventListener('change', ()=>{
+  state.build.moboChipset = $('#moboChipset').value;
+  state.build.mobo = '';
+  populateMoboSelect();
+});
+$('#moboSelect').addEventListener('change', ()=>{
+  state.build.mobo = $('#moboSelect').value;
+});
 
 /* ----------------------------------------------------------------
    HERO TOWER — label + glow update
@@ -367,10 +414,14 @@ function analyze(){
   state.build.psuWatt = $('#psuWatt').value;
   state.build.psuEff = $('#psuEff').value;
   state.build.coolerType = $('#coolerType').value;
+  state.build.moboSocket = $('#moboSocket') ? $('#moboSocket').value : state.build.moboSocket;
+  state.build.moboChipset = $('#moboChipset') ? $('#moboChipset').value : state.build.moboChipset;
+  state.build.mobo = $('#moboSelect') ? $('#moboSelect').value : state.build.mobo;
 
   const cpu = getCpuData(state.build.cpu);
   const gpu = getGpuData(state.build.gpu);
   const ram = getRamData();
+  const mobo = getMoboData(state.build.mobo);
 
   const cpuScore = clamp(Math.round(cpu.mult * 42), 5, 100);
   const gpuScore = clamp(Math.round(gpu.mult * 30), 5, 100);
@@ -385,7 +436,8 @@ function analyze(){
 
   const totalScore = Math.round(cpuScore*0.28 + gpuScore*0.42 + ramScore*0.18 + storageScore*0.12);
 
-  const power = cpu.tdp + gpu.tdp + ram.tdp
+  const moboPower = mobo ? (mobo.chipset.startsWith('X') || mobo.chipset.startsWith('Z') ? 25 : 15) : 0;
+  const power = cpu.tdp + gpu.tdp + ram.tdp + moboPower
               + state.build.storages.reduce((sum,s)=>sum + (STORAGE_TYPES.find(t=>t.name===s.type)?.tdp || 5), 0)
               + 75;
   const psuWatt = +state.build.psuWatt || 0;
@@ -426,7 +478,7 @@ function analyze(){
   });
 
   state.analysis = {
-    cpu, gpu, ram, cpuScore, gpuScore, ramScore, storageScore, totalScore,
+    cpu, gpu, ram, mobo, cpuScore, gpuScore, ramScore, storageScore, totalScore,
     power, psuWatt, psuHeadroom,
     bottlenecks, gameResults
   };
@@ -467,6 +519,8 @@ function syncBuildUI(){
   if($('#ramCapacity')) $('#ramCapacity').value = state.build.ramCapacity || '';
   if($('#ramType')) $('#ramType').value = state.build.ramType || '';
   populateRamSpeed();
+  if($('#moboSocket')) $('#moboSocket').value = state.build.moboSocket || '';
+  populateMoboSelect();
   if($('#ramSpeed') && state.build.ramSpeed) $('#ramSpeed').value = state.build.ramSpeed;
   if($('#psuWatt') && state.build.psuWatt) $('#psuWatt').value = state.build.psuWatt;
   $('#psuEff').value = state.build.psuEff;
@@ -494,6 +548,7 @@ function renderHome(){
     <div class="spec-row"><div class="spec-icon"><i class="fas fa-microchip"></i></div><div class="spec-info"><div class="label">CPU</div><div class="value">${a.cpu.name} · ${a.cpu.cores}</div></div></div>
     <div class="spec-row"><div class="spec-icon"><i class="fas fa-display"></i></div><div class="spec-info"><div class="label">GPU</div><div class="value">${a.gpu.name} · ${a.gpu.vram}GB</div></div></div>
     <div class="spec-row"><div class="spec-icon"><i class="fas fa-memory"></i></div><div class="spec-info"><div class="label">RAM</div><div class="value">${a.ram.capacity}GB ${a.ram.type}${state.build.ramSpeed ? ' ' + state.build.ramSpeed : ''}</div></div></div>
+    <div class="spec-row"><div class="spec-icon"><i class="fas fa-square-poll-vertical"></i></div><div class="spec-info"><div class="label">Motherboard</div><div class="value">${a.mobo ? a.mobo.name : '—'}</div></div></div>
     <div class="spec-row"><div class="spec-icon"><i class="fas fa-hard-drive"></i></div><div class="spec-info"><div class="label">Storage</div><div class="value">${state.build.storages.map(s=>s.capacity+' '+s.type.split(' ')[0]).join(' · ')}</div></div></div>
   `;
 
@@ -1019,6 +1074,29 @@ function renderBuildHealth(){
   checks.push({ok:true, label:'Storage present', desc:`${state.build.storages.length} drive(s)`});
   const coolerOK = !(a.cpu.tdp > 120 && state.build.coolerType === 'Stock cooler');
   checks.push({ok:coolerOK, label:'Cooling adequate', desc:`${state.build.coolerType} for ${a.cpu.tdp}W TDP CPU`});
+  if(a.mobo){
+    const socketOK = a.mobo.socket === a.cpu.socket;
+    checks.push({ ok:socketOK, label:'CPU fits motherboard socket',
+      desc: socketOK ? `${a.cpu.name} (${a.cpu.socket}) matches ${a.mobo.name}`
+                     : `${a.cpu.name} is ${a.cpu.socket}, mobo is ${a.mobo.socket}.` });
+
+    const ramTypeOK = a.mobo.ramType === a.ram.type;
+    checks.push({ ok:ramTypeOK, label:'RAM type matches motherboard',
+      desc: ramTypeOK ? `${a.ram.type} supported`
+                      : `Mobo uses ${a.mobo.ramType}, you selected ${a.ram.type}.` });
+
+    const ramCapOK = a.ram.capacity <= a.mobo.maxRam;
+    checks.push({ ok:ramCapOK, label:'RAM capacity within board limit',
+      desc: ramCapOK ? `${a.ram.capacity}GB ≤ ${a.mobo.maxRam}GB max`
+                     : `${a.ram.capacity}GB exceeds ${a.mobo.maxRam}GB limit.` });
+
+    const vrmOK = !(a.cpu.tdp >= 150 && a.mobo.vrmTier === 'basic');
+    checks.push({ ok:vrmOK, label:'VRM adequate for CPU',
+      desc: vrmOK ? `${a.mobo.vrmTier} VRM for ${a.cpu.tdp}W CPU`
+                  : `${a.cpu.tdp}W CPU on a basic VRM — will throttle.` });
+  } else {
+    checks.push({ ok:false, label:'Motherboard not selected', desc:'Pick a motherboard to run platform checks.' });
+  }
   const passed = checks.filter(c=>c.ok).length;
   $('#healthList').innerHTML = `
     <div class="flex-between mb-2"><strong>${passed}/${checks.length} checks passed</strong></div>
@@ -2788,6 +2866,8 @@ window.addEventListener('resize', ()=>{
   if($('#ramCapacity')) $('#ramCapacity').value = state.build.ramCapacity || '';
   if($('#ramType')) $('#ramType').value = state.build.ramType || '';
   populateRamSpeed();
+  if($('#moboSocket')) $('#moboSocket').value = state.build.moboSocket || '';
+  populateMoboSelect();
   if($('#ramSpeed') && state.build.ramSpeed) $('#ramSpeed').value = state.build.ramSpeed;
   if($('#psuWatt') && state.build.psuWatt) $('#psuWatt').value = state.build.psuWatt;
   $('#psuEff').value = state.build.psuEff;
