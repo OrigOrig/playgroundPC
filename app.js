@@ -2303,12 +2303,19 @@ function populateBapcSelects(){
 function runBapcCompatibility(){
   const issues = [];
   const notes  = [];
-  const { case: cse, cpu, gpu, ram, cooler, psu } = bapc;
+  const cse    = bapc.case;
+  const cpu    = bapc.cpu;
+  const gpu    = bapc.gpu;
+  const ram    = bapc.ram;
+  const mobo   = bapc.mobo;
+  const cooler = bapc.cooler;
+  const psu    = bapc.psu;
+  const storage = bapc.storage;
 
-  if(!cpu || !gpu || !ram) {
+  if(!cpu || !gpu || !ram || !cse) {
     return {issues, notes, ready:false};
   }
-
+   
   /* --- Case vs GPU length --- */
   if(gpu.name){
     const gpuLenMap = {
@@ -2373,8 +2380,9 @@ function runBapcCompatibility(){
 
   /* --- PSU wattage vs estimated draw --- */
   if(psu){
+    const storageTdp = storage ? storage.tdp : 0;
     const estDraw = (cpu.tdp || 65) + (gpu.tdp || 100) + (ram.tdp || 10) +
-                    (bapc.storage.tdp || 5) * bapc.storageQty + 75;
+                    storageTdp * (bapc.storageQty || 0) + 75;
     const headroom = psu.wattage - estDraw;
     bapc.lastCompat = {...(bapc.lastCompat||{}), estDraw, headroom};
     if(headroom < 0){
@@ -2437,8 +2445,11 @@ function runBapcCompatibility(){
   }
    
   /* --- Storage vs case bays --- */
-  const storageNeeded = bapc.storageQty;
-  if(storageNeeded > (cse.bays2_5 + cse.bays3_5)){
+  const storageNeeded = bapc.storageQty || 0;
+  if(storageNeeded === 0){
+    notes.push({icon:'circle-info', level:'warn',
+      text:`No storage selected.`});
+  } else if(storageNeeded > (cse.bays2_5 + cse.bays3_5)){
     issues.push({icon:'hard-drive', level:'danger',
       text:`${storageNeeded} drives selected but case has only ${cse.bays2_5 + cse.bays3_5} bays.`});
   } else {
@@ -2558,7 +2569,7 @@ function renderBapcWarnings(){
   const compatCount = $('#bapcCompatCount');
   if(!wrap) return;
 
-  if(!bapc.cpu || !bapc.gpu || !bapc.ram){
+  if(!bapc.case || !bapc.cpu || !bapc.gpu || !bapc.ram){
     wrap.innerHTML = `<div class="empty"><i class="fas fa-circle-check" style="color:var(--success);"></i><p>Pick a case, CPU, GPU and RAM to run the compatibility check.</p></div>`;
     if(summary) summary.textContent = '—';
     if(compatCount) compatCount.textContent = '—';
