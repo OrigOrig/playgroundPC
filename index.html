@@ -1,893 +1,2313 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PC Playground · Advanced Dashboard</title>
-  <!-- Fonts & Icons -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <style>
-    /* ========== GLOBAL & THEMES ========== */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Inter', system-ui, sans-serif;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PC Playground — Know Your PC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+/* ============================================================
+   THEME ENGINE — everything is driven by CSS variables
+   ============================================================ */
+:root{
+  --bg:#0a0c14;
+  --bg-grad-1:rgba(59,130,246,.10);
+  --bg-grad-2:rgba(168,85,247,.08);
+  --surface:#12161f;
+  --surface-2:#1a1f2c;
+  --surface-3:#232a3a;
+  --border:#262d3d;
+  --border-2:#323a4e;
+  --text:#eef2f9;
+  --text-2:#a8b2c6;
+  --text-3:#6b7689;
+  --primary:#3b82f6;
+  --primary-2:#60a5fa;
+  --primary-glow:rgba(59,130,246,.35);
+  --accent:#a78bfa;
+  --success:#22c55e;
+  --warn:#f59e0b;
+  --danger:#ef4444;
+  --info:#06b6d4;
+  --gold:#fbbf24;
+  --radius:16px;
+  --radius-sm:10px;
+  --radius-lg:24px;
+  --radius-pill:999px;
+  --shadow-sm:0 2px 8px rgba(0,0,0,.25);
+  --shadow:0 12px 32px -8px rgba(0,0,0,.5);
+  --shadow-lg:0 24px 60px -20px rgba(0,0,0,.7);
+  --sidebar-w:248px;
+  --transition:180ms cubic-bezier(.4,0,.2,1);
+}
 
-    :root {
-      /* Default dark theme */
-      --bg: #0b0d15;
-      --bg-gradient: radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
-                     radial-gradient(circle at 90% 70%, rgba(168, 85, 247, 0.06) 0%, transparent 50%);
-      --card: #151a26;
-      --card-soft: #1f2633;
-      --border: #2c3444;
-      --text: #eef2f9;
-      --text-dim: #9aa7bc;
-      --primary: #3b82f6;
-      --primary-glow: #2563eb;
-      --success: #22c55e;
-      --warn: #eab308;
-      --danger: #ef4444;
-      --radius: 20px;
-      --radius-sm: 12px;
-      --shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.6);
-      --transition: all 0.2s ease;
-    }
+body.theme-light{
+  --bg:#f4f6fb;
+  --bg-grad-1:rgba(59,130,246,.08);
+  --bg-grad-2:rgba(168,85,247,.06);
+  --surface:#ffffff;
+  --surface-2:#f7f9fc;
+  --surface-3:#eef2f8;
+  --border:#e2e8f0;
+  --border-2:#cbd5e1;
+  --text:#0f172a;
+  --text-2:#475569;
+  --text-3:#94a3b8;
+  --shadow-sm:0 2px 8px rgba(15,23,42,.06);
+  --shadow:0 12px 32px -8px rgba(15,23,42,.15);
+  --shadow-lg:0 24px 60px -20px rgba(15,23,42,.25);
+}
 
-    /* Light theme class on body */
-    body.light {
-      --bg: #f1f5f9;
-      --bg-gradient: radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
-      --card: #ffffff;
-      --card-soft: #f8fafc;
-      --border: #cbd5e1;
-      --text: #0f172a;
-      --text-dim: #475569;
-      --primary: #3b82f6;
-      --primary-glow: #2563eb;
-      --shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.1);
-    }
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.5;
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+  transition:background var(--transition),color var(--transition);
+}
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background:
+    radial-gradient(1000px 600px at 15% 10%, var(--bg-grad-1), transparent 60%),
+    radial-gradient(900px 700px at 85% 80%, var(--bg-grad-2), transparent 60%);
+  pointer-events:none;z-index:0;
+  transition:background var(--transition);
+}
+#app{position:relative;z-index:1;display:flex;height:100vh;overflow:hidden;}
 
-    /* Custom gradient theme (injected via JS) */
-    body.custom {
-      /* overrides via JS */
-    }
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.sidebar{
+  width:var(--sidebar-w);
+  flex-shrink:0;
+  background:color-mix(in srgb, var(--surface) 92%, transparent);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  padding:1.25rem 1rem;
+  backdrop-filter:blur(20px);
+  transition:background var(--transition),border-color var(--transition);
+}
+.brand{
+  display:flex;align-items:center;gap:.65rem;
+  padding:.5rem .5rem 1.5rem;
+  font-weight:800;font-size:1.15rem;letter-spacing:-.02em;
+}
+.brand-icon{
+  width:34px;height:34px;border-radius:10px;
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  display:grid;place-items:center;color:#fff;font-size:1rem;
+  box-shadow:0 8px 20px -6px var(--primary-glow);
+}
+.brand small{display:block;font-size:.65rem;color:var(--text-3);font-weight:500;letter-spacing:.04em;text-transform:uppercase;margin-top:1px;}
 
-    body {
-      background: var(--bg);
-      background-image: var(--bg-gradient);
-      color: var(--text);
-      min-height: 100vh;
-      padding: 1.5rem;
-      transition: background 0.3s, color 0.3s;
-      line-height: 1.5;
-    }
+.nav{display:flex;flex-direction:column;gap:.15rem;flex:1;overflow-y:auto;}
+.nav-section{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);font-weight:700;padding:1rem .75rem .4rem;}
+.nav-item{
+  display:flex;align-items:center;gap:.75rem;
+  padding:.6rem .75rem;border-radius:var(--radius-sm);
+  color:var(--text-2);font-size:.875rem;font-weight:500;
+  cursor:pointer;user-select:none;
+  transition:var(--transition);
+  border:1px solid transparent;
+}
+.nav-item i{width:18px;text-align:center;font-size:.95rem;color:var(--text-3);transition:var(--transition);}
+.nav-item:hover{background:var(--surface-2);color:var(--text);}
+.nav-item:hover i{color:var(--primary);}
+.nav-item.active{background:linear-gradient(90deg,color-mix(in srgb,var(--primary) 18%,transparent),transparent);color:var(--text);border-color:color-mix(in srgb,var(--primary) 30%,transparent);}
+.nav-item.active i{color:var(--primary);}
+.nav-badge{margin-left:auto;font-size:.65rem;background:var(--surface-3);color:var(--text-2);padding:.1rem .45rem;border-radius:var(--radius-pill);font-weight:600;}
 
-    .container {
-      max-width: 1600px;
-      margin: 0 auto;
-    }
+.sidebar-footer{padding-top:1rem;border-top:1px solid var(--border);margin-top:.5rem;}
+.user-chip{display:flex;align-items:center;gap:.65rem;padding:.5rem;border-radius:var(--radius-sm);cursor:pointer;transition:var(--transition);}
+.user-chip:hover{background:var(--surface-2);}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--info),var(--primary));display:grid;place-items:center;font-weight:700;font-size:.85rem;color:#fff;}
+.user-info{font-size:.8rem;font-weight:600;line-height:1.2;}
+.user-info span{display:block;font-size:.7rem;color:var(--text-3);font-weight:500;}
 
-    /* ========== UTILITIES ========== */
-    .flex-between { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
-    .flex { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
-    .gap-1 { gap: 0.5rem; }
-    .gap-2 { gap: 1rem; }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
-    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2rem; }
-    @media (max-width: 1200px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 900px) { .grid-3, .grid-2 { grid-template-columns: 1fr; } .grid-4 { grid-template-columns: 1fr; } }
+/* ============================================================
+   MAIN AREA
+   ============================================================ */
+.main{
+  flex:1;display:flex;flex-direction:column;
+  overflow:hidden;
+}
+.topbar{
+  height:60px;flex-shrink:0;
+  display:flex;align-items:center;gap:1rem;
+  padding:0 1.5rem;
+  border-bottom:1px solid var(--border);
+  background:color-mix(in srgb,var(--surface) 88%, transparent);
+  backdrop-filter:blur(20px);
+  transition:background var(--transition),border-color var(--transition);
+}
+.search-box{
+  flex:1;max-width:420px;
+  display:flex;align-items:center;gap:.6rem;
+  background:var(--surface-2);border:1px solid var(--border);
+  border-radius:var(--radius-pill);
+  padding:.5rem 1rem;
+  transition:var(--transition);
+}
+.search-box:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow);}
+.search-box i{color:var(--text-3);font-size:.9rem;}
+.search-box input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:.875rem;font-family:inherit;}
+.search-box input::placeholder{color:var(--text-3);}
+.topbar-right{display:flex;align-items:center;gap:.6rem;margin-left:auto;}
+.icon-btn{
+  width:36px;height:36px;border-radius:10px;
+  display:grid;place-items:center;
+  background:var(--surface-2);border:1px solid var(--border);
+  color:var(--text-2);cursor:pointer;transition:var(--transition);
+  position:relative;
+}
+.icon-btn:hover{background:var(--surface-3);color:var(--text);border-color:var(--border-2);}
+.icon-btn .dot{position:absolute;top:8px;right:9px;width:6px;height:6px;background:var(--danger);border-radius:50%;border:2px solid var(--surface);}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+  padding:.55rem 1rem;border-radius:var(--radius-pill);
+  background:var(--surface-2);border:1px solid var(--border);
+  color:var(--text);font-family:inherit;font-size:.85rem;font-weight:600;
+  cursor:pointer;transition:var(--transition);white-space:nowrap;
+}
+.btn:hover{background:var(--surface-3);border-color:var(--border-2);transform:translateY(-1px);}
+.btn-primary{
+  background:linear-gradient(135deg,var(--primary),var(--primary-2));
+  border:none;color:#fff;box-shadow:0 8px 20px -6px var(--primary-glow);
+}
+.btn-primary:hover{box-shadow:0 12px 28px -6px var(--primary-glow);}
+.btn-ghost{background:transparent;border:1px solid var(--border);}
+.btn-sm{padding:.4rem .75rem;font-size:.78rem;}
+.btn-danger{background:color-mix(in srgb,var(--danger) 15%,transparent);border-color:color-mix(in srgb,var(--danger) 40%,transparent);color:var(--danger);}
 
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.8rem;
-      box-shadow: var(--shadow);
-      transition: var(--transition);
-    }
-    .card-soft {
-      background: var(--card-soft);
-      border-radius: var(--radius-sm);
-      padding: 1.2rem;
-    }
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
-      background: var(--card-soft); border: 1px solid var(--border); color: var(--text);
-      padding: 0.6rem 1.2rem; border-radius: 60px; font-weight: 500; font-size: 0.9rem;
-      cursor: pointer; transition: var(--transition); text-decoration: none;
-    }
-    .btn:hover { background: var(--border); border-color: var(--primary); }
-    .btn-primary { background: var(--primary); border: none; color: white; box-shadow: 0 8px 18px -6px var(--primary-glow); }
-    .btn-primary:hover { background: var(--primary-glow); transform: translateY(-1px); }
-    .btn-sm { padding: 0.4rem 0.9rem; font-size: 0.8rem; }
-    .btn-ghost { background: transparent; border: 1px solid var(--border); }
+/* ============================================================
+   PAGES
+   ============================================================ */
+.pages{flex:1;overflow-y:auto;overflow-x:hidden;padding:1.75rem;scroll-behavior:smooth;}
+.pages::-webkit-scrollbar{width:10px;}
+.pages::-webkit-scrollbar-track{background:transparent;}
+.pages::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:5px;border:2px solid var(--bg);}
+.pages::-webkit-scrollbar-thumb:hover{background:var(--border-2);}
 
-    .badge { background: var(--card-soft); border: 1px solid var(--border); border-radius: 40px; padding: 0.2rem 0.8rem; font-size: 0.75rem; font-weight: 500; color: var(--text-dim); }
+.page{display:none;animation:fadeIn .3s ease;}
+.page.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 
-    h1, h2, h3 { font-weight: 600; letter-spacing: -0.02em; }
-    h2 { font-size: 1.3rem; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.6rem; }
+.page-header{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;}
+.page-header h1{font-size:1.75rem;font-weight:800;letter-spacing:-.03em;}
+.page-header p{color:var(--text-2);font-size:.9rem;margin-top:.2rem;}
 
-    /* ========== HEADER ========== */
-    .top-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
-    .logo-area { display: flex; align-items: center; gap: 0.7rem; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.03em; }
-    .logo-area i { color: var(--primary); font-size: 1.8rem; }
+/* ============================================================
+   CARDS & GRID
+   ============================================================ */
+.grid{display:grid;gap:1.25rem;}
+.grid-2{grid-template-columns:repeat(2,1fr);}
+.grid-3{grid-template-columns:repeat(3,1fr);}
+.grid-4{grid-template-columns:repeat(4,1fr);}
+@media(max-width:1400px){.grid-4{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:1100px){.grid-3{grid-template-columns:repeat(2,1fr);}.grid-2{grid-template-columns:1fr;}}
+@media(max-width:700px){.grid-3,.grid-4{grid-template-columns:1fr;}}
 
-    /* ========== FORMS ========== */
-    .spec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin: 1rem 0; }
-    .input-group { display: flex; flex-direction: column; gap: 0.3rem; }
-    .input-group label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.03em; font-weight: 600; color: var(--text-dim); }
-    .input-group select, .input-group input {
-      background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
-      padding: 0.7rem 1rem; color: var(--text); font-size: 0.9rem; transition: var(--transition);
-    }
-    .input-group select:focus, .input-group input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+.card{
+  background:color-mix(in srgb,var(--surface) 95%, transparent);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:1.25rem;
+  transition:var(--transition);
+  backdrop-filter:blur(10px);
+}
+.card:hover{border-color:var(--border-2);}
+.card-header{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:1rem;}
+.card-title{font-size:.95rem;font-weight:700;display:flex;align-items:center;gap:.55rem;letter-spacing:-.01em;}
+.card-title i{color:var(--primary);font-size:.9rem;}
+.card-sub{font-size:.78rem;color:var(--text-3);font-weight:500;}
 
-    /* ========== SCORE ========== */
-    .score-number { font-size: 3.2rem; font-weight: 700; line-height: 1; }
-    .meter { margin-top: 1rem; }
-    .meter-row { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.7rem; font-size: 0.9rem; }
-    .meter-label { width: 100px; color: var(--text-dim); }
-    .meter-bar-bg { flex: 1; height: 8px; background: var(--bg); border-radius: 20px; overflow: hidden; }
-    .meter-bar-fill { height: 100%; border-radius: 20px; background: linear-gradient(90deg, var(--primary), #a78bfa); width: 0%; transition: width 0.5s ease; }
-    .meter-value { width: 30px; text-align: right; font-weight: 600; }
+/* ============================================================
+   HERO
+   ============================================================ */
+.hero{
+  position:relative;overflow:hidden;
+  background:
+    radial-gradient(900px 400px at 80% 10%, color-mix(in srgb,var(--primary) 25%,transparent), transparent 60%),
+    radial-gradient(700px 400px at 10% 90%, color-mix(in srgb,var(--accent) 20%,transparent), transparent 60%),
+    var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:2.25rem;
+  margin-bottom:1.5rem;
+}
+.hero-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:2rem;align-items:center;}
+@media(max-width:900px){.hero-grid{grid-template-columns:1fr;}}
+.hero h1{font-size:2.4rem;font-weight:900;letter-spacing:-.04em;line-height:1.1;margin-bottom:.75rem;}
+.hero h1 .accent{background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.hero p{color:var(--text-2);font-size:1rem;margin-bottom:1.5rem;max-width:520px;}
+.hero-actions{display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1.5rem;}
+.hero-chips{display:flex;gap:.5rem;flex-wrap:wrap;}
+.chip{
+  display:inline-flex;align-items:center;gap:.4rem;
+  padding:.35rem .75rem;border-radius:var(--radius-pill);
+  background:color-mix(in srgb,var(--surface-2) 90%, transparent);
+  border:1px solid var(--border);
+  font-size:.75rem;font-weight:600;color:var(--text-2);
+}
+.chip i{color:var(--primary);font-size:.7rem;}
+.hero-visual{
+  position:relative;height:260px;
+  display:grid;place-items:center;
+}
+.pc-tower{
+  width:150px;height:230px;
+  background:linear-gradient(180deg,var(--surface-2),var(--surface));
+  border:1px solid var(--border-2);
+  border-radius:14px;
+  position:relative;
+  box-shadow:0 30px 60px -20px rgba(0,0,0,.7), inset 0 0 40px rgba(59,130,246,.08);
+}
+.pc-tower::before{
+  content:'';position:absolute;inset:12px;border-radius:8px;
+  background:repeating-linear-gradient(0deg,transparent,transparent 18px,color-mix(in srgb,var(--primary) 20%,transparent) 18px,color-mix(in srgb,var(--primary) 20%,transparent) 19px);
+  opacity:.6;
+}
+.pc-tower::after{
+  content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:60px;height:60px;border-radius:50%;
+  background:radial-gradient(circle,var(--primary),transparent 70%);
+  filter:blur(6px);animation:pulse 3s infinite;
+}
+@keyframes pulse{0%,100%{opacity:.6;}50%{opacity:1;}}
+.pc-glow{position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,var(--primary-glow),transparent 60%);filter:blur(40px);z-index:-1;}
 
-    /* ========== GAME CARDS ========== */
-    .game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin-top: 1.2rem; }
-    .game-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; transition: var(--transition); cursor: default; }
-    .game-card:hover { border-color: var(--primary); transform: translateY(-2px); }
-    .game-title { font-weight: 600; display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-    .fps-badge { font-size: 1.2rem; font-weight: 700; }
-    .tag { font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 40px; background: var(--card-soft); color: var(--text-dim); }
-    .tag-green { background: #22c55e20; color: #22c55e; border: 1px solid #22c55e40; }
-    .tag-yellow { background: #eab30820; color: #eab308; border: 1px solid #eab30840; }
-    .tag-red { background: #ef444420; color: #ef4444; border: 1px solid #ef444440; }
-    .tag-blue { background: #3b82f620; color: #3b82f6; border: 1px solid #3b82f640; }
+/* ============================================================
+   BUILD PANEL (sidebar-style quick view)
+   ============================================================ */
+.build-panel{
+  display:grid;grid-template-columns:1.4fr 1fr;gap:1.25rem;
+  margin-bottom:1.5rem;
+}
+@media(max-width:1100px){.build-panel{grid-template-columns:1fr;}}
 
-    /* ========== BOTTLENECK ========== */
-    .bottleneck-row { display: flex; align-items: center; gap: 1rem; padding: 0.8rem 0; border-bottom: 1px solid var(--border); }
-    .bottleneck-row:last-child { border-bottom: none; }
-    .bn-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); display: flex; align-items: center; justify-content: center; color: var(--primary); }
+.build-specs{display:flex;flex-direction:column;gap:.6rem;}
+.spec-row{
+  display:flex;align-items:center;gap:.75rem;
+  padding:.7rem .9rem;border-radius:var(--radius-sm);
+  background:var(--surface-2);border:1px solid var(--border);
+  transition:var(--transition);
+}
+.spec-row:hover{border-color:var(--primary);}
+.spec-icon{width:32px;height:32px;border-radius:8px;background:color-mix(in srgb,var(--primary) 15%,transparent);display:grid;place-items:center;color:var(--primary);font-size:.85rem;flex-shrink:0;}
+.spec-info{flex:1;min-width:0;}
+.spec-info .label{font-size:.65rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);font-weight:700;}
+.spec-info .value{font-size:.875rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.spec-edit{color:var(--text-3);cursor:pointer;font-size:.8rem;padding:.25rem;}
+.spec-edit:hover{color:var(--primary);}
 
-    /* ========== UPGRADE ========== */
-    .upgrade-path { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; margin: 1rem 0; }
-    .upgrade-step { background: var(--bg); border: 1px solid var(--border); border-radius: 40px; padding: 0.5rem 1rem; font-weight: 500; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; }
-    .upgrade-arrow { color: var(--text-dim); }
-    .upgrade-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-    .upgrade-table th { text-align: left; color: var(--text-dim); font-weight: 500; padding: 0.5rem 0; }
-    .upgrade-table td { padding: 0.6rem 0; border-bottom: 1px solid var(--border); }
-    .stars { color: #fbbf24; letter-spacing: 2px; }
+/* ============================================================
+   SCORE RING
+   ============================================================ */
+.score-ring{position:relative;width:130px;height:130px;flex-shrink:0;}
+.score-ring svg{transform:rotate(-90deg);}
+.score-ring .track{stroke:var(--surface-3);}
+.score-ring .progress{
+  stroke:url(#scoreGrad);
+  stroke-linecap:round;
+  transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1);
+}
+.score-value{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+.score-value .num{font-size:2rem;font-weight:800;letter-spacing:-.03em;line-height:1;}
+.score-value .max{font-size:.75rem;color:var(--text-3);font-weight:600;}
 
-    /* ========== MODAL ========== */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
-      display: none; align-items: center; justify-content: center; z-index: 1000; padding: 1rem;
-    }
-    .modal-overlay.active { display: flex; }
-    .modal {
-      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-      max-width: 600px; width: 100%; padding: 2rem; box-shadow: var(--shadow);
-      max-height: 90vh; overflow-y: auto;
-    }
-    .setting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
-    .color-options { display: flex; gap: 0.5rem; }
-    .color-dot { width: 32px; height: 32px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: var(--transition); }
-    .color-dot.active { border-color: white; transform: scale(1.1); }
+/* ============================================================
+   METERS
+   ============================================================ */
+.meter-group{display:flex;flex-direction:column;gap:.85rem;}
+.meter{display:grid;grid-template-columns:110px 1fr 40px;align-items:center;gap:.75rem;font-size:.82rem;}
+.meter-label{color:var(--text-2);font-weight:600;display:flex;align-items:center;gap:.4rem;}
+.meter-label i{font-size:.75rem;color:var(--text-3);}
+.meter-track{height:8px;background:var(--surface-3);border-radius:var(--radius-pill);overflow:hidden;}
+.meter-fill{height:100%;border-radius:var(--radius-pill);transition:width .8s cubic-bezier(.4,0,.2,1);background:linear-gradient(90deg,var(--primary),var(--accent));}
+.meter-fill.warn{background:linear-gradient(90deg,var(--warn),var(--danger));}
+.meter-fill.good{background:linear-gradient(90deg,var(--success),#4ade80);}
+.meter-value{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;}
 
-    /* ========== MISC ========== */
-    .empty-state { text-align: center; padding: 2rem 1rem; color: var(--text-dim); }
-    .divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
-    .text-small { font-size: 0.8rem; color: var(--text-dim); }
-    .cursor-pointer { cursor: pointer; }
-    .component-row { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
-    .component-row:last-child { border-bottom: none; }
-    .storage-item { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem; }
-    .storage-item select { flex: 1; }
-    .remove-storage { color: var(--danger); cursor: pointer; padding: 0.2rem 0.5rem; }
-    .add-storage-btn { font-size: 0.8rem; padding: 0.3rem 0.8rem; }
+/* ============================================================
+   GAME CARDS
+   ============================================================ */
+.game-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;}
+.game-card{
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:1rem;
+  cursor:pointer;
+  transition:var(--transition);
+  position:relative;
+  overflow:hidden;
+}
+.game-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,transparent 60%,color-mix(in srgb,var(--primary) 12%,transparent));
+  opacity:0;transition:var(--transition);
+}
+.game-card:hover{transform:translateY(-3px);border-color:var(--primary);box-shadow:var(--shadow);}
+.game-card:hover::before{opacity:1;}
+.game-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.75rem;position:relative;}
+.game-name{font-weight:700;font-size:.9rem;letter-spacing:-.01em;}
+.game-genre{font-size:.7rem;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.game-fps{text-align:right;position:relative;}
+.game-fps .val{font-size:1.4rem;font-weight:800;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums;}
+.game-fps .unit{font-size:.7rem;color:var(--text-3);font-weight:600;}
+.game-meta{display:flex;justify-content:space-between;align-items:center;position:relative;font-size:.72rem;color:var(--text-3);}
+.quality-tag{
+  padding:.15rem .5rem;border-radius:var(--radius-pill);
+  font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+  border:1px solid transparent;
+}
+.q-excellent{background:color-mix(in srgb,var(--success) 15%,transparent);color:var(--success);border-color:color-mix(in srgb,var(--success) 35%,transparent);}
+.q-great{background:color-mix(in srgb,var(--info) 15%,transparent);color:var(--info);border-color:color-mix(in srgb,var(--info) 35%,transparent);}
+.q-good{background:color-mix(in srgb,var(--primary) 15%,transparent);color:var(--primary);border-color:color-mix(in srgb,var(--primary) 35%,transparent);}
+.q-playable{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn);border-color:color-mix(in srgb,var(--warn) 35%,transparent);}
+.q-poor{background:color-mix(in srgb,var(--danger) 15%,transparent);color:var(--danger);border-color:color-mix(in srgb,var(--danger) 35%,transparent);}
 
-    /* Custom theme overrides via JS will set these variables */
-  </style>
+/* ============================================================
+   BOTTLENECK
+   ============================================================ */
+.bn-item{
+  display:flex;align-items:center;gap:.9rem;
+  padding:.85rem;border-radius:var(--radius-sm);
+  background:var(--surface-2);border:1px solid var(--border);
+  margin-bottom:.6rem;
+}
+.bn-icon{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-size:1rem;flex-shrink:0;}
+.bn-icon.cpu{background:color-mix(in srgb,var(--danger) 15%,transparent);color:var(--danger);}
+.bn-icon.gpu{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn);}
+.bn-icon.ram{background:color-mix(in srgb,var(--info) 15%,transparent);color:var(--info);}
+.bn-body{flex:1;min-width:0;}
+.bn-head{display:flex;justify-content:space-between;align-items:center;font-size:.85rem;font-weight:700;margin-bottom:.15rem;}
+.bn-head span{font-size:.75rem;color:var(--text-3);font-weight:600;}
+.bn-desc{font-size:.78rem;color:var(--text-2);}
+
+/* ============================================================
+   UPGRADE
+   ============================================================ */
+.upgrade-path{
+  display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;
+  padding:1rem;border-radius:var(--radius-sm);
+  background:var(--surface-2);border:1px solid var(--border);margin-bottom:1rem;
+}
+.up-step{
+  padding:.5rem .85rem;border-radius:var(--radius-pill);
+  background:var(--surface-3);font-size:.8rem;font-weight:600;
+  border:1px solid var(--border);
+  display:flex;align-items:center;gap:.4rem;
+}
+.up-step.current{border-color:var(--primary);color:var(--primary);}
+.up-step.best{border-color:var(--success);color:var(--success);}
+.up-arrow{color:var(--text-3);font-size:.7rem;}
+
+table.data{width:100%;border-collapse:collapse;font-size:.82rem;}
+table.data th{text-align:left;font-weight:700;color:var(--text-3);text-transform:uppercase;font-size:.7rem;letter-spacing:.05em;padding:.5rem .5rem .5rem 0;border-bottom:1px solid var(--border);}
+table.data td{padding:.7rem .5rem .7rem 0;border-bottom:1px solid var(--border);font-weight:500;}
+table.data tr:last-child td{border-bottom:none;}
+table.data tr:hover td{background:var(--surface-2);}
+.stars{color:var(--gold);letter-spacing:1px;}
+.pill{display:inline-block;padding:.15rem .5rem;border-radius:var(--radius-pill);font-size:.7rem;font-weight:700;}
+.pill-green{background:color-mix(in srgb,var(--success) 15%,transparent);color:var(--success);}
+.pill-blue{background:color-mix(in srgb,var(--primary) 15%,transparent);color:var(--primary);}
+.pill-gray{background:var(--surface-3);color:var(--text-2);}
+
+/* ============================================================
+   INPUTS
+   ============================================================ */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.9rem;}
+.field{display:flex;flex-direction:column;gap:.35rem;}
+.field label{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);font-weight:700;}
+.field select,.field input{
+  background:var(--surface-2);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:.6rem .75rem;
+  color:var(--text);font-family:inherit;font-size:.85rem;font-weight:500;
+  transition:var(--transition);
+}
+.field select:focus,.field input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow);}
+.field.full{grid-column:1/-1;}
+
+.storage-row{display:grid;grid-template-columns:1fr 1fr 100px 40px;gap:.5rem;align-items:center;margin-bottom:.5rem;}
+.storage-row select{width:100%;}
+.storage-row .remove{color:var(--danger);cursor:pointer;padding:.5rem;text-align:center;border-radius:var(--radius-sm);transition:var(--transition);}
+.storage-row .remove:hover{background:color-mix(in srgb,var(--danger) 15%,transparent);}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+.modal-backdrop{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);
+  display:none;align-items:center;justify-content:center;z-index:999;padding:1rem;
+  animation:fadeIn .2s ease;
+}
+.modal-backdrop.show{display:flex;}
+.modal{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:1.75rem;
+  max-width:600px;width:100%;max-height:88vh;overflow-y:auto;
+  box-shadow:var(--shadow-lg);
+  animation:slideUp .3s cubic-bezier(.4,0,.2,1);
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+.modal h3{font-size:1.15rem;font-weight:800;margin-bottom:1.25rem;display:flex;align-items:center;gap:.55rem;letter-spacing:-.02em;}
+.modal h3 i{color:var(--primary);}
+.modal-close{position:absolute;top:1rem;right:1rem;}
+
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:.75rem 0;border-bottom:1px solid var(--border);gap:1rem;}
+.setting-row:last-of-type{border-bottom:none;}
+.setting-row > span{font-size:.875rem;font-weight:600;color:var(--text-2);}
+.setting-row > .controls{display:flex;gap:.5rem;align-items:center;}
+
+.theme-swatches{display:flex;gap:.5rem;}
+.swatch{
+  width:38px;height:38px;border-radius:10px;cursor:pointer;
+  border:2px solid var(--border);transition:var(--transition);
+  position:relative;
+}
+.swatch:hover{transform:scale(1.08);}
+.swatch.active{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow);}
+.swatch.dark{background:linear-gradient(135deg,#0a0c14,#1a1f2c);}
+.swatch.light{background:linear-gradient(135deg,#f4f6fb,#e2e8f0);}
+.swatch.custom{background:linear-gradient(135deg,#3b82f6,#a78bfa);}
+
+.gradient-picker{display:flex;gap:.5rem;}
+.gradient-picker input[type=color]{
+  width:44px;height:36px;border:1px solid var(--border);border-radius:10px;
+  background:var(--surface-2);cursor:pointer;padding:3px;
+}
+input[type=color]::-webkit-color-swatch-wrapper{padding:0;}
+input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
+
+/* ============================================================
+   TOASTS
+   ============================================================ */
+.toast-container{position:fixed;bottom:1.5rem;right:1.5rem;z-index:1000;display:flex;flex-direction:column;gap:.5rem;}
+.toast{
+  background:var(--surface);border:1px solid var(--border);
+  border-left:3px solid var(--primary);
+  border-radius:var(--radius-sm);padding:.75rem 1rem;
+  font-size:.85rem;font-weight:500;
+  box-shadow:var(--shadow);min-width:240px;
+  animation:slideIn .3s cubic-bezier(.4,0,.2,1);
+  display:flex;align-items:center;gap:.6rem;
+}
+.toast i{color:var(--primary);}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
+
+/* ============================================================
+   MISC
+   ============================================================ */
+.empty{
+  text-align:center;padding:2.5rem 1rem;color:var(--text-3);
+}
+.empty i{font-size:2.5rem;opacity:.4;margin-bottom:.75rem;display:block;}
+.empty p{font-size:.875rem;}
+.text-muted{color:var(--text-2);font-size:.82rem;}
+.mb-1{margin-bottom:.5rem;}
+.mb-2{margin-bottom:1rem;}
+.mb-3{margin-bottom:1.5rem;}
+.mt-1{margin-top:.5rem;}
+.mt-2{margin-top:1rem;}
+.mt-3{margin-top:1.5rem;}
+.flex{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;}
+.flex-between{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;}
+.hidden{display:none !important;}
+
+.confidence{display:inline-flex;align-items:center;gap:.3rem;font-size:.7rem;color:var(--text-3);font-weight:600;}
+.confidence-dot{width:6px;height:6px;border-radius:50%;background:var(--success);}
+.confidence-dot.medium{background:var(--warn);}
+.confidence-dot.low{background:var(--danger);}
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+@media(max-width:760px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:100;transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .hero h1{font-size:1.75rem;}
+  .pages{padding:1rem;}
+  .topbar{padding:0 1rem;}
+  .search-box{max-width:none;}
+}
+</style>
 </head>
-<body id="appBody">
-  <div class="container">
-    <!-- Top Bar -->
-    <div class="top-bar">
-      <div class="logo-area">
-        <i class="fas fa-microchip"></i>
-        <span>PC Playground</span>
-      </div>
-      <div class="flex gap-2">
-        <button class="btn btn-ghost btn-sm" id="settingsBtn"><i class="fas fa-cog"></i> Settings</button>
-        <button class="btn btn-ghost btn-sm" id="themeToggle"><i class="fas fa-moon"></i> Dark</button>
+<body>
+<div id="app">
+
+  <!-- ============================ SIDEBAR ============================ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-icon"><i class="fas fa-microchip"></i></div>
+      <div>
+        PC Playground
+        <small>Know · Play · Upgrade</small>
       </div>
     </div>
+    <nav class="nav" id="nav">
+      <div class="nav-section">Main</div>
+      <div class="nav-item active" data-page="home"><i class="fas fa-house"></i> Home</div>
+      <div class="nav-item" data-page="mypc"><i class="fas fa-desktop"></i> My PC</div>
+      <div class="nav-item" data-page="games"><i class="fas fa-gamepad"></i> Games <span class="nav-badge" id="gamesCountBadge">0</span></div>
+      <div class="nav-item" data-page="compare"><i class="fas fa-code-compare"></i> Compare</div>
+      <div class="nav-section">Tools</div>
+      <div class="nav-item" data-page="upgrade"><i class="fas fa-arrow-up"></i> Upgrade Path</div>
+      <div class="nav-item" data-page="benchmarks"><i class="fas fa-chart-line"></i> Benchmarks</div>
+      <div class="nav-item" data-page="advisor"><i class="fas fa-wand-magic-sparkles"></i> PC Advisor</div>
+      <div class="nav-section">Account</div>
+      <div class="nav-item" data-page="builds"><i class="fas fa-cubes"></i> My Builds</div>
+      <div class="nav-item" data-page="settings"><i class="fas fa-sliders"></i> Settings</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="user-avatar">KB</div>
+        <div class="user-info">KhanBaba<span>Free plan</span></div>
+      </div>
+    </div>
+  </aside>
 
-    <!-- DASHBOARD GRID -->
-    <div class="grid-2" style="align-items: start;">
-      <!-- LEFT COLUMN -->
-      <div>
-        <!-- SPECS CARD -->
-        <div class="card" id="specsCard">
-          <h2><i class="fas fa-desktop"></i> Your PC</h2>
-          <div class="spec-grid" id="specForm">
-            <!-- CPU -->
-            <div class="input-group">
-              <label>CPU Brand</label>
+  <!-- ============================ MAIN ============================ -->
+  <main class="main">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <button class="icon-btn" id="menuBtn" style="display:none;"><i class="fas fa-bars"></i></button>
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="globalSearch" placeholder="Search games, CPUs, GPUs, or anything…">
+      </div>
+      <div class="topbar-right">
+        <button class="icon-btn" id="quickSettings" title="Settings"><i class="fas fa-cog"></i></button>
+        <button class="icon-btn" id="quickTheme" title="Toggle theme"><i class="fas fa-moon"></i></button>
+        <button class="icon-btn" title="Notifications"><i class="fas fa-bell"></i><span class="dot"></span></button>
+      </div>
+    </header>
+
+    <!-- PAGES -->
+    <div class="pages" id="pages">
+
+      <!-- ============================ HOME ============================ -->
+      <section class="page active" id="page-home">
+        <div class="hero">
+          <div class="hero-grid">
+            <div>
+              <h1>Know exactly what <span class="accent">your PC</span> can do.</h1>
+              <p>Enter your hardware once. See your FPS. Find your bottleneck. Plan your next upgrade.</p>
+              <div class="hero-actions">
+                <button class="btn btn-primary" onclick="navigate('mypc')"><i class="fas fa-bolt"></i> Analyze My PC</button>
+                <button class="btn btn-ghost" onclick="navigate('advisor')"><i class="fas fa-wand-magic-sparkles"></i> Ask PC Advisor</button>
+              </div>
+              <div class="hero-chips">
+                <div class="chip"><i class="fas fa-microchip"></i> <span id="heroCpu">—</span></div>
+                <div class="chip"><i class="fas fa-display"></i> <span id="heroGpu">—</span></div>
+                <div class="chip"><i class="fas fa-memory"></i> <span id="heroRam">—</span></div>
+              </div>
+            </div>
+            <div class="hero-visual">
+              <div class="pc-glow"></div>
+              <div class="pc-tower"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BUILD PANEL -->
+        <div class="build-panel">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-desktop"></i> Your PC</div>
+              <button class="btn btn-sm btn-ghost" onclick="navigate('mypc')"><i class="fas fa-pen"></i> Edit build</button>
+            </div>
+            <div class="build-specs" id="buildSpecs">
+              <!-- injected -->
+            </div>
+          </div>
+
+          <div class="card" style="display:flex;align-items:center;gap:1.25rem;">
+            <div class="score-ring">
+              <svg width="130" height="130" viewBox="0 0 130 130">
+                <defs>
+                  <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="var(--primary)"/>
+                    <stop offset="100%" stop-color="var(--accent)"/>
+                  </linearGradient>
+                </defs>
+                <circle class="track" cx="65" cy="65" r="54" fill="none" stroke-width="10"/>
+                <circle class="progress" id="scoreRing" cx="65" cy="65" r="54" fill="none" stroke-width="10" stroke-dasharray="339.3" stroke-dashoffset="339.3"/>
+              </svg>
+              <div class="score-value">
+                <div class="num" id="scoreNum">—</div>
+                <div class="max">/ 100</div>
+              </div>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">Overall Score</div>
+              <div style="font-size:1.4rem;font-weight:800;margin:.1rem 0 .35rem;letter-spacing:-.02em;" id="scoreLabel">No build</div>
+              <div class="text-muted" id="scoreHint">Add components to unlock your analysis.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- QUICK STATS -->
+        <div class="grid grid-4 mb-3">
+          <div class="card">
+            <div class="card-title mb-1"><i class="fas fa-microchip"></i> CPU</div>
+            <div style="font-size:1.1rem;font-weight:700;" id="statCpuScore">—</div>
+            <div class="text-muted" id="statCpuName">Not selected</div>
+          </div>
+          <div class="card">
+            <div class="card-title mb-1"><i class="fas fa-display"></i> GPU</div>
+            <div style="font-size:1.1rem;font-weight:700;" id="statGpuScore">—</div>
+            <div class="text-muted" id="statGpuName">Not selected</div>
+          </div>
+          <div class="card">
+            <div class="card-title mb-1"><i class="fas fa-memory"></i> RAM</div>
+            <div style="font-size:1.1rem;font-weight:700;" id="statRamScore">—</div>
+            <div class="text-muted" id="statRamName">Not selected</div>
+          </div>
+          <div class="card">
+            <div class="card-title mb-1"><i class="fas fa-bolt"></i> Est. Power</div>
+            <div style="font-size:1.1rem;font-weight:700;" id="statPower">—</div>
+            <div class="text-muted">Total system draw</div>
+          </div>
+        </div>
+
+        <!-- BOTTLENECK + SCORE METERS -->
+        <div class="grid grid-2 mb-3">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-diagram-project"></i> Bottleneck Analysis</div>
+              <span class="card-sub" id="bnSummary">—</span>
+            </div>
+            <div id="bnList"><div class="empty"><i class="fas fa-diagram-project"></i><p>Add your components to see bottleneck analysis.</p></div></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-chart-simple"></i> Performance Breakdown</div>
+            </div>
+            <div class="meter-group" id="meterGroup">
+              <div class="empty"><i class="fas fa-chart-simple"></i><p>Analysis pending.</p></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TOP GAMES PREVIEW -->
+        <div class="card mb-3">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-gamepad"></i> What Can I Run?</div>
+            <button class="btn btn-sm btn-ghost" onclick="navigate('games')">View all games <i class="fas fa-arrow-right"></i></button>
+          </div>
+          <div id="homeGames" class="game-grid">
+            <div class="empty"><i class="fas fa-gamepad"></i><p>Enter your specs to see FPS estimates.</p></div>
+          </div>
+        </div>
+
+        <!-- UPGRADE TEASER -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-arrow-up"></i> Upgrade Path</div>
+            <button class="btn btn-sm btn-ghost" onclick="navigate('upgrade')">Full analysis <i class="fas fa-arrow-right"></i></button>
+          </div>
+          <div id="homeUpgrade"><div class="empty"><i class="fas fa-arrow-up"></i><p>Upgrade recommendations appear after analysis.</p></div></div>
+        </div>
+      </section>
+
+      <!-- ============================ MY PC ============================ -->
+      <section class="page" id="page-mypc">
+        <div class="page-header">
+          <div>
+            <h1>My PC</h1>
+            <p>Configure your hardware and get a full performance analysis.</p>
+          </div>
+          <div class="flex">
+            <button class="btn btn-ghost" id="resetBuildBtn"><i class="fas fa-rotate-left"></i> Reset</button>
+            <button class="btn btn-primary" id="analyzeBtn"><i class="fas fa-bolt"></i> Analyze</button>
+          </div>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-header"><div class="card-title"><i class="fas fa-microchip"></i> CPU</div></div>
+          <div class="form-grid">
+            <div class="field">
+              <label>Brand</label>
               <select id="cpuBrand">
                 <option value="AMD">AMD</option>
                 <option value="Intel">Intel</option>
               </select>
             </div>
-            <div class="input-group">
-              <label>CPU Model</label>
+            <div class="field" style="grid-column:span 2;">
+              <label>Model</label>
               <select id="cpuSelect"></select>
             </div>
-            <!-- GPU -->
-            <div class="input-group">
-              <label>GPU Brand</label>
+          </div>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-header"><div class="card-title"><i class="fas fa-display"></i> Graphics Card</div></div>
+          <div class="form-grid">
+            <div class="field">
+              <label>Brand</label>
               <select id="gpuBrand">
                 <option value="NVIDIA">NVIDIA</option>
                 <option value="AMD">AMD</option>
                 <option value="Intel">Intel</option>
               </select>
             </div>
-            <div class="input-group">
-              <label>GPU Model</label>
+            <div class="field" style="grid-column:span 2;">
+              <label>Model</label>
               <select id="gpuSelect"></select>
             </div>
-            <!-- RAM -->
-            <div class="input-group">
-              <label>RAM</label>
-              <select id="ramSelect">
-                <option value="8GB DDR4">8GB DDR4</option>
-                <option value="16GB DDR4" selected>16GB DDR4</option>
-                <option value="32GB DDR5">32GB DDR5</option>
-                <option value="64GB DDR5">64GB DDR5</option>
-                <option value="128GB DDR5">128GB DDR5</option>
+          </div>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-header"><div class="card-title"><i class="fas fa-memory"></i> Memory</div></div>
+          <div class="form-grid">
+            <div class="field">
+              <label>Capacity & Type</label>
+              <select id="ramSelect"></select>
+            </div>
+            <div class="field">
+              <label>Speed (MHz)</label>
+              <select id="ramSpeed">
+                <option>2400</option><option>2666</option><option>3000</option>
+                <option>3200</option><option>3600</option><option>5200</option>
+                <option>6000</option><option>6400</option>
               </select>
             </div>
-            <!-- STORAGE (Multi) -->
-            <div class="input-group" style="grid-column: span 2;">
-              <label>Storage (up to 4 drives)</label>
-              <div id="storageContainer">
-                <!-- Dynamically added storage rows -->
+          </div>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-hard-drive"></i> Storage <span class="card-sub" id="storageCount">0/4 drives</span></div>
+            <button class="btn btn-sm btn-ghost" id="addStorage"><i class="fas fa-plus"></i> Add drive</button>
+          </div>
+          <div id="storageContainer"></div>
+        </div>
+
+        <div class="grid grid-2 mb-3">
+          <div class="card">
+            <div class="card-header"><div class="card-title"><i class="fas fa-plug"></i> Power Supply</div></div>
+            <div class="form-grid">
+              <div class="field">
+                <label>Wattage</label>
+                <select id="psuWatt">
+                  <option>450</option><option>550</option><option>650</option>
+                  <option selected>750</option><option>850</option><option>1000</option><option>1200</option>
+                </select>
               </div>
-              <button class="btn btn-ghost btn-sm add-storage-btn" id="addStorageBtn" style="margin-top:0.3rem;"><i class="fas fa-plus"></i> Add drive</button>
+              <div class="field">
+                <label>Efficiency</label>
+                <select id="psuEff">
+                  <option>80+ White</option><option>80+ Bronze</option>
+                  <option selected>80+ Gold</option><option>80+ Platinum</option><option>80+ Titanium</option>
+                </select>
+              </div>
             </div>
           </div>
-          <div class="flex-between" style="margin-top:1rem;">
-            <button class="btn btn-primary" id="analyzeBtn"><i class="fas fa-bolt"></i> Analyze my PC</button>
-            <span class="badge" id="buildStatus">No build configured</span>
-          </div>
-        </div>
-
-        <!-- SCORE CARD -->
-        <div class="card" style="margin-top:1.5rem;" id="scoreCard">
-          <h2><i class="fas fa-chart-simple"></i> PC Score</h2>
-          <div id="scoreContent">
-            <div class="empty-state">
-              <i class="fas fa-chart-bar" style="font-size:2rem; opacity:0.4; margin-bottom:0.8rem;"></i>
-              <p>Enter your specs to unlock your performance analysis.</p>
-              <p class="text-small" style="margin-top:0.8rem;">🎮 FPS estimates for 100+ games<br>📊 Overall performance score<br>🔧 Bottleneck analysis<br>⚡ Estimated power consumption</p>
+          <div class="card">
+            <div class="card-header"><div class="card-title"><i class="fas fa-fan"></i> Cooling</div></div>
+            <div class="form-grid">
+              <div class="field">
+                <label>Type</label>
+                <select id="coolerType">
+                  <option>Stock cooler</option>
+                  <option>Tower air</option>
+                  <option>Dual-tower air</option>
+                  <option selected>AIO 240mm</option>
+                  <option>AIO 360mm</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- QUICK TOOLS -->
-        <div class="card" style="margin-top:1.5rem;">
-          <h2><i class="fas fa-tools"></i> Quick Tools</h2>
-          <div class="grid-3" style="gap:0.8rem;">
-            <button class="btn btn-ghost" style="flex-direction:column; padding:1rem;"><i class="fas fa-gamepad" style="font-size:1.5rem;"></i><span>FPS Calculator</span></button>
-            <button class="btn btn-ghost" style="flex-direction:column; padding:1rem;"><i class="fas fa-diagram-project" style="font-size:1.5rem;"></i><span>Bottleneck</span></button>
-            <button class="btn btn-ghost" style="flex-direction:column; padding:1rem;"><i class="fas fa-arrow-up" style="font-size:1.5rem;"></i><span>Upgrade</span></button>
-          </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i class="fas fa-clipboard-check"></i> Build Health</div></div>
+          <div id="healthList"><div class="empty"><i class="fas fa-clipboard-check"></i><p>Select components to run compatibility checks.</p></div></div>
         </div>
-      </div>
+      </section>
 
-      <!-- RIGHT COLUMN -->
-      <div>
-        <!-- BOTTLENECK CARD -->
-        <div class="card" id="bottleneckCard">
-          <h2><i class="fas fa-diagram-project"></i> What's holding your PC back?</h2>
-          <div id="bottleneckContent">
-            <div class="empty-state"><p>Add your components to see bottleneck analysis.</p></div>
+      <!-- ============================ GAMES ============================ -->
+      <section class="page" id="page-games">
+        <div class="page-header">
+          <div>
+            <h1>Games</h1>
+            <p>Personalized FPS estimates for your build. Click a game for details.</p>
+          </div>
+          <div class="flex">
+            <select class="field" id="gameFilterQuality" style="padding:.5rem .75rem;border-radius:var(--radius-sm);background:var(--surface-2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:.82rem;">
+              <option value="all">All qualities</option>
+              <option value="excellent">Excellent only</option>
+              <option value="playable">Playable+</option>
+            </select>
+            <select class="field" id="gameSort" style="padding:.5rem .75rem;border-radius:var(--radius-sm);background:var(--surface-2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:.82rem;">
+              <option value="fps-desc">Highest FPS</option>
+              <option value="fps-asc">Lowest FPS</option>
+              <option value="name">Name (A-Z)</option>
+            </select>
+          </div>
+        </div>
+        <div id="gamesList" class="game-grid"></div>
+      </section>
+
+      <!-- ============================ COMPARE ============================ -->
+      <section class="page" id="page-compare">
+        <div class="page-header">
+          <div>
+            <h1>Compare Builds</h1>
+            <p>See how two configurations stack up head-to-head.</p>
+          </div>
+          <button class="btn btn-primary" id="runCompare"><i class="fas fa-code-compare"></i> Compare</button>
+        </div>
+
+        <div class="grid grid-2 mb-3">
+          <div class="card">
+            <div class="card-header"><div class="card-title"><i class="fas fa-desktop"></i> Build A</div></div>
+            <div class="form-grid">
+              <div class="field"><label>CPU</label><select id="cmpACpu"></select></div>
+              <div class="field"><label>GPU</label><select id="cmpAGpu"></select></div>
+              <div class="field"><label>RAM</label><select id="cmpARam"></select></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title"><i class="fas fa-desktop"></i> Build B</div></div>
+            <div class="form-grid">
+              <div class="field"><label>CPU</label><select id="cmpBCpu"></select></div>
+              <div class="field"><label>GPU</label><select id="cmpBGpu"></select></div>
+              <div class="field"><label>RAM</label><select id="cmpBRam"></select></div>
+            </div>
           </div>
         </div>
 
-        <!-- GAME PERFORMANCE -->
-        <div class="card" style="margin-top:1.5rem;" id="gameCard">
-          <h2><i class="fas fa-gamepad"></i> Game performance</h2>
-          <div id="gameContent">
-            <div class="empty-state"><p>Your personalized FPS estimates will appear here.</p></div>
+        <div class="card" id="compareResult">
+          <div class="empty"><i class="fas fa-code-compare"></i><p>Select two builds and hit Compare.</p></div>
+        </div>
+      </section>
+
+      <!-- ============================ UPGRADE ============================ -->
+      <section class="page" id="page-upgrade">
+        <div class="page-header">
+          <div>
+            <h1>Upgrade Path</h1>
+            <p>Get the most performance for your money.</p>
+          </div>
+        </div>
+        <div class="card mb-3">
+          <div class="card-header"><div class="card-title"><i class="fas fa-route"></i> Your Upgrade Path</div></div>
+          <div id="fullUpgrade"><div class="empty"><i class="fas fa-route"></i><p>Analyze your PC first.</p></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i class="fas fa-list-check"></i> What to Upgrade First?</div></div>
+          <div id="priorityList"><div class="empty"><i class="fas fa-list-check"></i><p>Awaiting analysis.</p></div></div>
+        </div>
+      </section>
+
+      <!-- ============================ BENCHMARKS ============================ -->
+      <section class="page" id="page-benchmarks">
+        <div class="page-header">
+          <div>
+            <h1>Benchmarks</h1>
+            <p>Compare your components against our reference database.</p>
+          </div>
+        </div>
+        <div class="card mb-3">
+          <div class="card-header"><div class="card-title"><i class="fas fa-chart-bar"></i> CPU Benchmark (Cinebench R23 Multi)</div></div>
+          <div id="cpuBench"><div class="empty"><i class="fas fa-microchip"></i><p>Select a CPU to see benchmark.</p></div></div>
+        </div>
+        <div class="card mb-3">
+          <div class="card-header"><div class="card-title"><i class="fas fa-chart-bar"></i> GPU Benchmark (3DMark Time Spy)</div></div>
+          <div id="gpuBench"><div class="empty"><i class="fas fa-display"></i><p>Select a GPU to see benchmark.</p></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i class="fas fa-database"></i> Reference Database</div></div>
+          <div id="benchDb"><div class="empty"><i class="fas fa-database"></i><p>Loading database…</p></div></div>
+        </div>
+      </section>
+
+      <!-- ============================ ADVISOR ============================ -->
+      <section class="page" id="page-advisor">
+        <div class="page-header">
+          <div>
+            <h1>PC Advisor</h1>
+            <p>Tell us your goal, and we'll recommend the smartest moves.</p>
           </div>
         </div>
 
-        <!-- UPGRADE PATH -->
-        <div class="card" style="margin-top:1.5rem;" id="upgradeCard">
-          <h2><i class="fas fa-arrow-up"></i> Upgrade path</h2>
-          <div id="upgradeContent">
-            <div class="empty-state"><p>Upgrade recommendations will be shown after analysis.</p></div>
+        <div class="card mb-3">
+          <div class="card-header"><div class="card-title"><i class="fas fa-bullseye"></i> What are you trying to do?</div></div>
+          <div class="grid grid-3" id="advisorGoals">
+            <button class="btn" data-goal="fps" style="padding:1rem;flex-direction:column;height:auto;">
+              <i class="fas fa-gamepad" style="font-size:1.5rem;margin-bottom:.5rem;"></i>
+              <div style="font-weight:700;">Max FPS</div>
+              <div class="text-muted" style="font-size:.75rem;">Push frames in competitive games</div>
+            </button>
+            <button class="btn" data-goal="graphics" style="padding:1rem;flex-direction:column;height:auto;">
+              <i class="fas fa-palette" style="font-size:1.5rem;margin-bottom:.5rem;"></i>
+              <div style="font-weight:700;">Better Graphics</div>
+              <div class="text-muted" style="font-size:.75rem;">Ray tracing, high/ultra settings</div>
+            </button>
+            <button class="btn" data-goal="value" style="padding:1rem;flex-direction:column;height:auto;">
+              <i class="fas fa-dollar-sign" style="font-size:1.5rem;margin-bottom:.5rem;"></i>
+              <div style="font-weight:700;">Best Value</div>
+              <div class="text-muted" style="font-size:.75rem;">Most FPS per dollar</div>
+            </button>
+            <button class="btn" data-goal="fix" style="padding:1rem;flex-direction:column;height:auto;">
+              <i class="fas fa-wrench" style="font-size:1.5rem;margin-bottom:.5rem;"></i>
+              <div style="font-weight:700;">Fix Bottleneck</div>
+              <div class="text-muted" style="font-size:.75rem;">Balance the system</div>
+            </button>
+            <button class="btn" data-goal="upgrade" style="padding:1rem;flex-direction:column;height:auto;">
+              <i class="fas fa-arrow-up" style="font-size:1.5rem;margin-bottom:.5rem;"></i>
+              <div style="font-weight:700;">Upgrade PC</div>
+              <div class="text-muted" style="font-size:.75rem;">Plan the next big jump</div>
+            </button>
+            <button class="btn" data-goal="144" style="padding:1rem;flex-direction:column;height:auto;">
+              <i class="fas fa-gauge-high" style="font-size:1.5rem;margin-bottom:.5rem;"></i>
+              <div style="font-weight:700;">Reach 144 FPS</div>
+              <div class="text-muted" style="font-size:.75rem;">For high-refresh monitors</div>
+            </button>
           </div>
         </div>
-      </div>
+
+        <div class="card" id="advisorResult">
+          <div class="empty"><i class="fas fa-wand-magic-sparkles"></i><p>Pick a goal above to get recommendations.</p></div>
+        </div>
+      </section>
+
+      <!-- ============================ BUILDS ============================ -->
+      <section class="page" id="page-builds">
+        <div class="page-header">
+          <div>
+            <h1>My Builds</h1>
+            <p>Save, load, and manage multiple configurations.</p>
+          </div>
+          <button class="btn btn-primary" id="saveBuildBtn"><i class="fas fa-save"></i> Save current build</button>
+        </div>
+        <div id="savedBuilds"><div class="empty"><i class="fas fa-cubes"></i><p>No saved builds yet.</p></div></div>
+      </section>
+
+      <!-- ============================ SETTINGS ============================ -->
+      <section class="page" id="page-settings">
+        <div class="page-header">
+          <div>
+            <h1>Settings</h1>
+            <p>Customize your experience. Everything is stored in cookies.</p>
+          </div>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-header"><div class="card-title"><i class="fas fa-palette"></i> Appearance</div></div>
+          <div class="setting-row">
+            <span>Theme</span>
+            <div class="controls">
+              <div class="theme-swatches" id="themeSwatches">
+                <div class="swatch dark" data-theme="dark" title="Dark"></div>
+                <div class="swatch light" data-theme="light" title="Light"></div>
+                <div class="swatch custom" data-theme="custom" title="Custom gradient"></div>
+              </div>
+            </div>
+          </div>
+          <div class="setting-row">
+            <span>Accent color</span>
+            <div class="controls">
+              <input type="color" id="accentPicker" value="#3b82f6">
+            </div>
+          </div>
+          <div class="setting-row">
+            <span>Custom gradient</span>
+            <div class="controls gradient-picker">
+              <input type="color" id="grad1" value="#3b82f6">
+              <input type="color" id="grad2" value="#a78bfa">
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-header"><div class="card-title"><i class="fas fa-gauge-high"></i> Performance Defaults</div></div>
+          <div class="setting-row">
+            <span>Default resolution</span>
+            <div class="controls">
+              <select id="defaultRes" style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.5rem .75rem;color:var(--text);font-family:inherit;">
+                <option>1080p</option><option>1440p</option><option>4K</option>
+              </select>
+            </div>
+          </div>
+          <div class="setting-row">
+            <span>Default FPS target</span>
+            <div class="controls">
+              <select id="defaultFps" style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.5rem .75rem;color:var(--text);font-family:inherit;">
+                <option>30</option><option>60</option><option>120</option><option>144</option><option>240</option>
+              </select>
+            </div>
+          </div>
+          <div class="setting-row">
+            <span>Default quality preset</span>
+            <div class="controls">
+              <select id="defaultQuality" style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.5rem .75rem;color:var(--text);font-family:inherit;">
+                <option>Low</option><option>Medium</option><option selected>High</option><option>Ultra</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-header"><div class="card-title"><i class="fas fa-database"></i> Data</div></div>
+          <div class="setting-row">
+            <span>Export build</span>
+            <div class="controls">
+              <button class="btn btn-sm" id="exportBtn"><i class="fas fa-download"></i> Download .pcp</button>
+            </div>
+          </div>
+          <div class="setting-row">
+            <span>Import build</span>
+            <div class="controls">
+              <input type="file" id="importFile" accept=".pcp,.json" style="display:none;">
+              <button class="btn btn-sm" id="importBtn"><i class="fas fa-upload"></i> Load file</button>
+            </div>
+          </div>
+          <div class="setting-row">
+            <span>Reset preferences</span>
+            <div class="controls">
+              <button class="btn btn-sm" id="resetPrefs"><i class="fas fa-rotate-left"></i> Reset</button>
+            </div>
+          </div>
+          <div class="setting-row">
+            <span>Clear all data</span>
+            <div class="controls">
+              <button class="btn btn-sm btn-danger" id="clearAll"><i class="fas fa-trash"></i> Clear everything</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i class="fas fa-circle-info"></i> About</div></div>
+          <p class="text-muted mb-2">PC Playground is a client-side performance modeler. All estimates are algorithmic, based on a curated component database and relative-weight FPS model. For production use, plug a live benchmark API into <code>DATA_MODE</code>.</p>
+          <p class="text-muted" style="font-size:.75rem;">Version 3.0 · Built with vanilla HTML/CSS/JS · No tracking · No server.</p>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- ============================ TOASTS ============================ -->
+<div class="toast-container" id="toasts"></div>
+
+<!-- ============================ GAME MODAL ============================ -->
+<div class="modal-backdrop" id="gameModal">
+  <div class="modal">
+    <h3><i class="fas fa-gamepad"></i> <span id="modalGameName">Game</span></h3>
+    <div id="modalGameBody"></div>
+    <div class="flex-between mt-3">
+      <span class="text-muted" id="modalGameSub"></span>
+      <button class="btn btn-primary" onclick="closeModal('gameModal')">Close</button>
     </div>
   </div>
+</div>
 
-  <!-- SETTINGS MODAL -->
-  <div class="modal-overlay" id="settingsModal">
-    <div class="modal">
-      <div class="flex-between" style="margin-bottom:1.5rem;">
-        <h3><i class="fas fa-sliders-h"></i> Settings</h3>
-        <button class="btn btn-ghost btn-sm" id="closeSettings"><i class="fas fa-times"></i></button>
-      </div>
-      <div class="setting-row">
-        <span>Theme</span>
-        <div class="color-options" id="themeColors">
-          <div class="color-dot" style="background:#0b0d15;" data-theme="dark" title="Dark"></div>
-          <div class="color-dot" style="background:#f1f5f9;" data-theme="light" title="Light"></div>
-          <div class="color-dot" style="background:linear-gradient(135deg,#3b82f6,#a78bfa);" data-theme="custom" title="Custom gradient"></div>
-        </div>
-      </div>
-      <div class="setting-row">
-        <span>Accent color</span>
-        <input type="color" id="accentColorPicker" value="#3b82f6">
-      </div>
-      <div class="setting-row">
-        <span>Background gradient (custom)</span>
-        <div class="flex gap-1">
-          <input type="color" id="gradientColor1" value="#3b82f6">
-          <input type="color" id="gradientColor2" value="#a78bfa">
-        </div>
-      </div>
-      <div class="divider"></div>
-      <div class="setting-row">
-        <span>Default resolution</span>
-        <select id="defaultRes" class="input-group" style="background:var(--bg); border-radius:8px; padding:0.3rem;">
-          <option>1080p</option><option>1440p</option><option>4K</option>
-        </select>
-      </div>
-      <div class="setting-row">
-        <span>Target FPS</span>
-        <select id="defaultFps" class="input-group" style="background:var(--bg); border-radius:8px; padding:0.3rem;">
-          <option>60</option><option>120</option><option>144</option><option>240</option>
-        </select>
-      </div>
-      <div class="divider"></div>
-      <div class="flex-between">
-        <button class="btn btn-ghost" id="resetSettings"><i class="fas fa-undo-alt"></i> Reset</button>
-        <button class="btn btn-primary" id="saveSettings"><i class="fas fa-check"></i> Save</button>
-      </div>
-      <p class="text-small" style="margin-top:1rem;">All settings are stored in cookies.</p>
+<!-- ============================ CONFIRM MODAL ============================ -->
+<div class="modal-backdrop" id="confirmModal">
+  <div class="modal" style="max-width:420px;">
+    <h3><i class="fas fa-triangle-exclamation" style="color:var(--warn);"></i> Confirm</h3>
+    <p id="confirmText" class="mb-3">Are you sure?</p>
+    <div class="flex" style="justify-content:flex-end;">
+      <button class="btn" id="confirmCancel">Cancel</button>
+      <button class="btn btn-primary" id="confirmOk">Confirm</button>
     </div>
   </div>
+</div>
 
-  <script>
-    (function() {
-      // ============================================================
-      // 1. COMPONENT DATABASE (Comprehensive)
-      // ============================================================
-      const CPUS = {
-        AMD: [
-          { name: "Ryzen 5 2600", mult: 1.00, tdp: 65, cores: "6C/12T", base: 3.4, boost: 3.9 },
-          { name: "Ryzen 5 3600", mult: 1.20, tdp: 65, cores: "6C/12T", base: 3.6, boost: 4.2 },
-          { name: "Ryzen 5 5600X", mult: 1.45, tdp: 65, cores: "6C/12T", base: 3.7, boost: 4.6 },
-          { name: "Ryzen 7 5800X3D", mult: 1.85, tdp: 105, cores: "8C/16T", base: 3.4, boost: 4.5 },
-          { name: "Ryzen 7 7800X3D", mult: 2.10, tdp: 120, cores: "8C/16T", base: 4.2, boost: 5.0 },
-          { name: "Ryzen 9 7950X3D", mult: 2.45, tdp: 120, cores: "16C/32T", base: 4.2, boost: 5.7 },
-          { name: "Ryzen 9 9950X3D", mult: 2.70, tdp: 170, cores: "16C/32T", base: 4.3, boost: 5.7 },
-          { name: "Ryzen 5 9600X", mult: 1.85, tdp: 65, cores: "6C/12T", base: 3.9, boost: 5.4 },
-          { name: "Ryzen 7 9700X", mult: 2.05, tdp: 65, cores: "8C/16T", base: 3.8, boost: 5.5 },
-          { name: "Ryzen 9 9900X", mult: 2.35, tdp: 120, cores: "12C/24T", base: 4.4, boost: 5.6 },
-        ],
-        Intel: [
-          { name: "Intel i3-12100F", mult: 1.20, tdp: 58, cores: "4C/8T", base: 3.3, boost: 4.3 },
-          { name: "Intel i5-12400F", mult: 1.55, tdp: 65, cores: "6C/12T", base: 2.5, boost: 4.4 },
-          { name: "Intel i5-13600K", mult: 1.95, tdp: 125, cores: "14C/20T", base: 3.5, boost: 5.1 },
-          { name: "Intel i7-13700K", mult: 2.20, tdp: 125, cores: "16C/24T", base: 3.4, boost: 5.4 },
-          { name: "Intel i9-13900K", mult: 2.30, tdp: 253, cores: "24C/32T", base: 3.0, boost: 5.8 },
-          { name: "Intel i9-14900K", mult: 2.35, tdp: 253, cores: "24C/32T", base: 3.2, boost: 6.0 },
-          { name: "Intel Core Ultra 9 285K", mult: 2.50, tdp: 250, cores: "24C/24T", base: 3.7, boost: 5.7 },
-          { name: "Intel Core Ultra 7 265K", mult: 2.25, tdp: 125, cores: "20C/20T", base: 3.9, boost: 5.5 },
-          { name: "Intel Core Ultra 5 245K", mult: 1.95, tdp: 125, cores: "14C/14T", base: 4.2, boost: 5.2 },
-        ]
-      };
+<script>
+/* ================================================================
+   PC PLAYGROUND — CORE ENGINE v3.0
+   ================================================================ */
 
-      const GPUS = {
-        NVIDIA: [
-          { name: "RTX 3060 12GB", mult: 1.65, tdp: 170, vram: 12 },
-          { name: "RTX 3070", mult: 2.00, tdp: 220, vram: 8 },
-          { name: "RTX 3080", mult: 2.50, tdp: 320, vram: 10 },
-          { name: "RTX 4060", mult: 1.85, tdp: 115, vram: 8 },
-          { name: "RTX 4060 Ti", mult: 2.15, tdp: 160, vram: 8 },
-          { name: "RTX 4070", mult: 2.80, tdp: 200, vram: 12 },
-          { name: "RTX 4070 Ti", mult: 3.20, tdp: 285, vram: 12 },
-          { name: "RTX 4080", mult: 3.80, tdp: 320, vram: 16 },
-          { name: "RTX 4090", mult: 4.50, tdp: 450, vram: 24 },
-          { name: "RTX 5070", mult: 3.50, tdp: 250, vram: 12 },
-          { name: "RTX 5080", mult: 4.20, tdp: 360, vram: 16 },
-          { name: "RTX 5090", mult: 5.50, tdp: 575, vram: 32 },
-        ],
-        AMD: [
-          { name: "RX 580 8GB", mult: 1.00, tdp: 185, vram: 8 },
-          { name: "RX 5500 XT", mult: 1.20, tdp: 130, vram: 8 },
-          { name: "RX 5600 XT", mult: 1.50, tdp: 150, vram: 6 },
-          { name: "RX 5700 XT", mult: 1.80, tdp: 225, vram: 8 },
-          { name: "RX 6600", mult: 1.70, tdp: 132, vram: 8 },
-          { name: "RX 6700 XT", mult: 2.30, tdp: 230, vram: 12 },
-          { name: "RX 6800 XT", mult: 2.90, tdp: 300, vram: 16 },
-          { name: "RX 7600", mult: 1.95, tdp: 165, vram: 8 },
-          { name: "RX 7700 XT", mult: 2.60, tdp: 245, vram: 12 },
-          { name: "RX 7800 XT", mult: 3.10, tdp: 263, vram: 16 },
-          { name: "RX 7900 XTX", mult: 4.00, tdp: 355, vram: 24 },
-          { name: "RX 9070 XT", mult: 4.50, tdp: 300, vram: 16 },
-        ],
-        Intel: [
-          { name: "Intel Arc A750", mult: 1.60, tdp: 225, vram: 8 },
-          { name: "Intel Arc A770", mult: 1.90, tdp: 225, vram: 16 },
-          { name: "Intel Arc B580", mult: 2.20, tdp: 190, vram: 12 },
-        ]
-      };
+/* ----------------------------------------------------------------
+   DATA LAYER
+   NOTE: All component performance multipliers are normalized to a
+   reference build (Ryzen 5 2600 + RX 580 + 16GB DDR4). Live data
+   can be plugged into DATA_MODE below by fetching a JSON endpoint.
+   ---------------------------------------------------------------- */
+const DATA_MODE = 'local'; // 'local' | 'remote'
 
-      const RAMS = {
-        "8GB DDR4": { mult: 0.85, tdp: 10 },
-        "16GB DDR4": { mult: 1.00, tdp: 15 },
-        "32GB DDR5": { mult: 1.25, tdp: 20 },
-        "64GB DDR5": { mult: 1.40, tdp: 25 },
-        "128GB DDR5": { mult: 1.50, tdp: 35 }
-      };
+const CPUS = {
+  AMD: [
+    {name:'Ryzen 3 1200',         tier:'entry',    mult:0.75, tdp:65,  cores:'4C/4T',  clock:'3.1–3.4GHz', cb23:3800,  socket:'AM4',  gen:'Zen'},
+    {name:'Ryzen 5 2600',         tier:'mainstream',mult:1.00, tdp:65,  cores:'6C/12T', clock:'3.4–3.9GHz', cb23:7200,  socket:'AM4',  gen:'Zen+'},
+    {name:'Ryzen 5 3600',         tier:'mainstream',mult:1.22, tdp:65,  cores:'6C/12T', clock:'3.6–4.2GHz', cb23:9400,  socket:'AM4',  gen:'Zen 2'},
+    {name:'Ryzen 5 5600X',        tier:'mainstream',mult:1.45, tdp:65,  cores:'6C/12T', clock:'3.7–4.6GHz', cb23:11400, socket:'AM4',  gen:'Zen 3'},
+    {name:'Ryzen 7 5700X',        tier:'performance',mult:1.62, tdp:65,  cores:'8C/16T', clock:'3.4–4.6GHz', cb23:13800, socket:'AM4',  gen:'Zen 3'},
+    {name:'Ryzen 7 5800X3D',      tier:'gaming',    mult:1.85, tdp:105, cores:'8C/16T', clock:'3.4–4.5GHz', cb23:14200, socket:'AM4',  gen:'Zen 3 3D'},
+    {name:'Ryzen 5 7600X',        tier:'mainstream',mult:1.78, tdp:105, cores:'6C/12T', clock:'4.7–5.3GHz', cb23:15100, socket:'AM5',  gen:'Zen 4'},
+    {name:'Ryzen 7 7700X',        tier:'performance',mult:1.98, tdp:105, cores:'8C/16T', clock:'4.5–5.4GHz', cb23:19100, socket:'AM5',  gen:'Zen 4'},
+    {name:'Ryzen 7 7800X3D',      tier:'gaming',    mult:2.10, tdp:120, cores:'8C/16T', clock:'4.2–5.0GHz', cb23:18200, socket:'AM5',  gen:'Zen 4 3D'},
+    {name:'Ryzen 9 7900X',        tier:'enthusiast',mult:2.25, tdp:170, cores:'12C/24T',clock:'4.7–5.6GHz', cb23:29300, socket:'AM5',  gen:'Zen 4'},
+    {name:'Ryzen 9 7950X3D',      tier:'flagship',  mult:2.55, tdp:120, cores:'16C/32T',clock:'4.2–5.7GHz', cb23:36400, socket:'AM5',  gen:'Zen 4 3D'},
+    {name:'Ryzen 5 9600X',        tier:'mainstream',mult:1.88, tdp:65,  cores:'6C/12T', clock:'3.9–5.4GHz', cb23:16400, socket:'AM5',  gen:'Zen 5'},
+    {name:'Ryzen 7 9700X',        tier:'performance',mult:2.06, tdp:65,  cores:'8C/16T', clock:'3.8–5.5GHz', cb23:21800, socket:'AM5',  gen:'Zen 5'},
+    {name:'Ryzen 9 9900X',        tier:'enthusiast',mult:2.32, tdp:120, cores:'12C/24T',clock:'4.4–5.6GHz', cb23:31800, socket:'AM5',  gen:'Zen 5'},
+    {name:'Ryzen 9 9950X3D',      tier:'flagship',  mult:2.72, tdp:170, cores:'16C/32T',clock:'4.3–5.7GHz', cb23:41200, socket:'AM5',  gen:'Zen 5 3D'},
+  ],
+  Intel: [
+    {name:'Core i3-10100F',       tier:'entry',     mult:0.82, tdp:65,  cores:'4C/8T',  clock:'3.6–4.3GHz', cb23:5100,  socket:'LGA1200', gen:'Comet Lake'},
+    {name:'Core i5-10400F',       tier:'mainstream',mult:0.98, tdp:65,  cores:'6C/12T', clock:'2.9–4.3GHz', cb23:8200,  socket:'LGA1200', gen:'Comet Lake'},
+    {name:'Core i5-11400F',       tier:'mainstream',mult:1.12, tdp:65,  cores:'6C/12T', clock:'2.6–4.4GHz', cb23:9500,  socket:'LGA1200', gen:'Rocket Lake'},
+    {name:'Core i5-12400F',       tier:'mainstream',mult:1.55, tdp:65,  cores:'6C/12T', clock:'2.5–4.4GHz', cb23:12400, socket:'LGA1700', gen:'Alder Lake'},
+    {name:'Core i5-12600K',       tier:'performance',mult:1.75, tdp:125, cores:'10C/16T',clock:'3.7–4.9GHz', cb23:17500, socket:'LGA1700', gen:'Alder Lake'},
+    {name:'Core i7-12700K',       tier:'performance',mult:1.98, tdp:125, cores:'12C/20T',clock:'3.6–5.0GHz', cb23:22000, socket:'LGA1700', gen:'Alder Lake'},
+    {name:'Core i5-13600K',       tier:'performance',mult:2.05, tdp:125, cores:'14C/20T',clock:'3.5–5.1GHz', cb23:24000, socket:'LGA1700', gen:'Raptor Lake'},
+    {name:'Core i7-13700K',       tier:'enthusiast',mult:2.30, tdp:125, cores:'16C/24T',clock:'3.4–5.4GHz', cb23:30000, socket:'LGA1700', gen:'Raptor Lake'},
+    {name:'Core i9-13900K',       tier:'flagship',  mult:2.52, tdp:253, cores:'24C/32T',clock:'3.0–5.8GHz', cb23:38500, socket:'LGA1700', gen:'Raptor Lake'},
+    {name:'Core i9-14900K',       tier:'flagship',  mult:2.62, tdp:253, cores:'24C/32T',clock:'3.2–6.0GHz', cb23:40500, socket:'LGA1700', gen:'Raptor Lake R'},
+    {name:'Core Ultra 5 245K',    tier:'performance',mult:2.10, tdp:125, cores:'14C/14T',clock:'4.2–5.2GHz', cb23:24500, socket:'LGA1851', gen:'Arrow Lake'},
+    {name:'Core Ultra 7 265K',    tier:'enthusiast',mult:2.35, tdp:125, cores:'20C/20T',clock:'3.9–5.5GHz', cb23:33500, socket:'LGA1851', gen:'Arrow Lake'},
+    {name:'Core Ultra 9 285K',    tier:'flagship',  mult:2.58, tdp:250, cores:'24C/24T',clock:'3.7–5.7GHz', cb23:42000, socket:'LGA1851', gen:'Arrow Lake'},
+  ]
+};
 
-      const STORAGE_TYPES = [
-        { name: "HDD 7200RPM", mult: 0.7, tdp: 6 },
-        { name: "SATA SSD", mult: 1.0, tdp: 3 },
-        { name: "NVMe SSD", mult: 1.3, tdp: 5 },
-        { name: "NVMe Gen4", mult: 1.5, tdp: 7 },
-        { name: "NVMe Gen5", mult: 1.8, tdp: 10 }
-      ];
+const GPUS = {
+  NVIDIA: [
+    {name:'GTX 1050 Ti',        tier:'entry',     mult:0.55, tdp:75,  vram:4,  ts:3100,  rt:false},
+    {name:'GTX 1060 6GB',       tier:'entry',     mult:0.78, tdp:120, vram:6,  ts:4200,  rt:false},
+    {name:'GTX 1660 Super',     tier:'mainstream',mult:1.15, tdp:125, vram:6,  ts:6300,  rt:false},
+    {name:'RTX 2060',           tier:'mainstream',mult:1.30, tdp:160, vram:6,  ts:7600,  rt:true},
+    {name:'RTX 3060 12GB',      tier:'mainstream',mult:1.62, tdp:170, vram:12, ts:8700,  rt:true},
+    {name:'RTX 3060 Ti',        tier:'performance',mult:1.95, tdp:200, vram:8,  ts:11200, rt:true},
+    {name:'RTX 3070',           tier:'performance',mult:2.10, tdp:220, vram:8,  ts:12700, rt:true},
+    {name:'RTX 3080 10GB',      tier:'enthusiast',mult:2.65, tdp:320, vram:10, ts:17600, rt:true},
+    {name:'RTX 3080 Ti',        tier:'enthusiast',mult:2.95, tdp:350, vram:12, ts:19500, rt:true},
+    {name:'RTX 3090',           tier:'flagship',  mult:3.05, tdp:350, vram:24, ts:20000, rt:true},
+    {name:'RTX 4060',           tier:'mainstream',mult:1.88, tdp:115, vram:8,  ts:10800, rt:true},
+    {name:'RTX 4060 Ti',        tier:'performance',mult:2.20, tdp:160, vram:8,  ts:13500, rt:true},
+    {name:'RTX 4070',           tier:'performance',mult:2.85, tdp:200, vram:12, ts:17800, rt:true},
+    {name:'RTX 4070 Super',     tier:'enthusiast',mult:3.15, tdp:220, vram:12, ts:19800, rt:true},
+    {name:'RTX 4070 Ti',        tier:'enthusiast',mult:3.25, tdp:285, vram:12, ts:20500, rt:true},
+    {name:'RTX 4070 Ti Super',  tier:'enthusiast',mult:3.45, tdp:285, vram:16, ts:22000, rt:true},
+    {name:'RTX 4080',           tier:'flagship',  mult:3.90, tdp:320, vram:16, ts:25500, rt:true},
+    {name:'RTX 4080 Super',     tier:'flagship',  mult:4.10, tdp:320, vram:16, ts:26800, rt:true},
+    {name:'RTX 4090',           tier:'flagship',  mult:4.65, tdp:450, vram:24, ts:30500, rt:true},
+    {name:'RTX 5070',           tier:'performance',mult:3.55, tdp:250, vram:12, ts:23000, rt:true},
+    {name:'RTX 5070 Ti',        tier:'enthusiast',mult:4.00, tdp:300, vram:16, ts:26000, rt:true},
+    {name:'RTX 5080',           tier:'flagship',  mult:4.35, tdp:360, vram:16, ts:28500, rt:true},
+    {name:'RTX 5090',           tier:'flagship',  mult:5.60, tdp:575, vram:32, ts:36500, rt:true},
+  ],
+  AMD: [
+    {name:'RX 570 4GB',         tier:'entry',     mult:0.75, tdp:150, vram:4,  ts:3800,  rt:false},
+    {name:'RX 580 8GB',         tier:'entry',     mult:0.95, tdp:185, vram:8,  ts:4400,  rt:false},
+    {name:'RX 5500 XT 8GB',     tier:'entry',     mult:1.15, tdp:130, vram:8,  ts:5100,  rt:false},
+    {name:'RX 5600 XT',         tier:'mainstream',mult:1.45, tdp:150, vram:6,  ts:6800,  rt:false},
+    {name:'RX 5700 XT',         tier:'mainstream',mult:1.85, tdp:225, vram:8,  ts:8900,  rt:false},
+    {name:'RX 6600',            tier:'mainstream',mult:1.75, tdp:132, vram:8,  ts:8300,  rt:true},
+    {name:'RX 6600 XT',         tier:'mainstream',mult:1.95, tdp:160, vram:8,  ts:9800,  rt:true},
+    {name:'RX 6700 XT',         tier:'performance',mult:2.35, tdp:230, vram:12, ts:12300, rt:true},
+    {name:'RX 6750 XT',         tier:'performance',mult:2.55, tdp:250, vram:12, ts:13600, rt:true},
+    {name:'RX 6800',            tier:'enthusiast',mult:2.80, tdp:250, vram:16, ts:15900, rt:true},
+    {name:'RX 6800 XT',         tier:'enthusiast',mult:3.05, tdp:300, vram:16, ts:17600, rt:true},
+    {name:'RX 6900 XT',         tier:'flagship',  mult:3.30, tdp:300, vram:16, ts:18900, rt:true},
+    {name:'RX 6950 XT',         tier:'flagship',  mult:3.55, tdp:335, vram:16, ts:20200, rt:true},
+    {name:'RX 7600',            tier:'mainstream',mult:2.00, tdp:165, vram:8,  ts:10800, rt:true},
+    {name:'RX 7700 XT',         tier:'performance',mult:2.65, tdp:245, vram:12, ts:15300, rt:true},
+    {name:'RX 7800 XT',         tier:'enthusiast',mult:3.20, tdp:263, vram:16, ts:18600, rt:true},
+    {name:'RX 7900 GRE',        tier:'enthusiast',mult:3.55, tdp:260, vram:16, ts:21300, rt:true},
+    {name:'RX 7900 XT',         tier:'flagship',  mult:3.95, tdp:315, vram:20, ts:23800, rt:true},
+    {name:'RX 7900 XTX',        tier:'flagship',  mult:4.20, tdp:355, vram:24, ts:25700, rt:true},
+    {name:'RX 9070',            tier:'performance',mult:3.90, tdp:220, vram:16, ts:24600, rt:true},
+    {name:'RX 9070 XT',         tier:'flagship',  mult:4.55, tdp:300, vram:16, ts:28100, rt:true},
+  ],
+  Intel: [
+    {name:'Arc A380',           tier:'entry',     mult:0.85, tdp:75,  vram:6,  ts:4200,  rt:true},
+    {name:'Arc A580',           tier:'mainstream',mult:1.50, tdp:185, vram:8,  ts:8400,  rt:true},
+    {name:'Arc A750',           tier:'mainstream',mult:1.75, tdp:225, vram:8,  ts:9900,  rt:true},
+    {name:'Arc A770 16GB',      tier:'performance',mult:2.05, tdp:225, vram:16, ts:11500, rt:true},
+    {name:'Arc B580',           tier:'performance',mult:2.35, tdp:190, vram:12, ts:13400, rt:true},
+    {name:'Arc B770',           tier:'enthusiast',mult:3.10, tdp:280, vram:16, ts:17500, rt:true},
+  ]
+};
 
-      // Games database (more games!)
-      const GAME_DB = [
-        { name: "Cyberpunk 2077", baseFps: 42, cpuWeight: 0.25, gpuWeight: 0.65, ramWeight: 0.10, settings: "High" },
-        { name: "GTA V", baseFps: 98, cpuWeight: 0.35, gpuWeight: 0.55, ramWeight: 0.10, settings: "Very High" },
-        { name: "Minecraft", baseFps: 142, cpuWeight: 0.50, gpuWeight: 0.40, ramWeight: 0.10, settings: "High" },
-        { name: "Forza Horizon 5", baseFps: 78, cpuWeight: 0.25, gpuWeight: 0.65, ramWeight: 0.10, settings: "High" },
-        { name: "Roblox", baseFps: 188, cpuWeight: 0.55, gpuWeight: 0.35, ramWeight: 0.10, settings: "High" },
-        { name: "Valorant", baseFps: 210, cpuWeight: 0.60, gpuWeight: 0.30, ramWeight: 0.10, settings: "High" },
-        { name: "Fortnite", baseFps: 112, cpuWeight: 0.40, gpuWeight: 0.50, ramWeight: 0.10, settings: "High" },
-        { name: "Call of Duty: Warzone", baseFps: 76, cpuWeight: 0.30, gpuWeight: 0.60, ramWeight: 0.10, settings: "Medium" },
-        { name: "Elden Ring", baseFps: 58, cpuWeight: 0.25, gpuWeight: 0.65, ramWeight: 0.10, settings: "High" },
-        { name: "Red Dead Redemption 2", baseFps: 64, cpuWeight: 0.25, gpuWeight: 0.65, ramWeight: 0.10, settings: "High" },
-        { name: "Apex Legends", baseFps: 124, cpuWeight: 0.40, gpuWeight: 0.50, ramWeight: 0.10, settings: "High" },
-        { name: "Rocket League", baseFps: 196, cpuWeight: 0.45, gpuWeight: 0.45, ramWeight: 0.10, settings: "High" },
-        { name: "The Witcher 3", baseFps: 72, cpuWeight: 0.25, gpuWeight: 0.65, ramWeight: 0.10, settings: "High" },
-        { name: "CS:GO / CS2", baseFps: 240, cpuWeight: 0.50, gpuWeight: 0.40, ramWeight: 0.10, settings: "High" },
-        { name: "Dota 2", baseFps: 180, cpuWeight: 0.50, gpuWeight: 0.40, ramWeight: 0.10, settings: "High" },
-        { name: "League of Legends", baseFps: 200, cpuWeight: 0.55, gpuWeight: 0.35, ramWeight: 0.10, settings: "High" },
-        { name: "Overwatch 2", baseFps: 150, cpuWeight: 0.40, gpuWeight: 0.50, ramWeight: 0.10, settings: "High" },
-        { name: "PUBG", baseFps: 88, cpuWeight: 0.35, gpuWeight: 0.55, ramWeight: 0.10, settings: "High" },
-        { name: "Rainbow Six Siege", baseFps: 180, cpuWeight: 0.45, gpuWeight: 0.45, ramWeight: 0.10, settings: "High" },
-        { name: "Starfield", baseFps: 48, cpuWeight: 0.30, gpuWeight: 0.60, ramWeight: 0.10, settings: "Medium" },
-      ];
+const RAMS = [
+  {name:'8GB DDR4 2400',   mult:0.80, tdp:10, capacity:8,  type:'DDR4'},
+  {name:'8GB DDR4 3200',   mult:0.88, tdp:10, capacity:8,  type:'DDR4'},
+  {name:'16GB DDR4 3200',  mult:1.00, tdp:15, capacity:16, type:'DDR4'},
+  {name:'16GB DDR4 3600',  mult:1.05, tdp:15, capacity:16, type:'DDR4'},
+  {name:'32GB DDR4 3200',  mult:1.10, tdp:18, capacity:32, type:'DDR4'},
+  {name:'32GB DDR5 5600',  mult:1.22, tdp:22, capacity:32, type:'DDR5'},
+  {name:'32GB DDR5 6000',  mult:1.28, tdp:22, capacity:32, type:'DDR5'},
+  {name:'64GB DDR5 6000',  mult:1.35, tdp:28, capacity:64, type:'DDR5'},
+  {name:'64GB DDR5 6400',  mult:1.40, tdp:28, capacity:64, type:'DDR5'},
+  {name:'128GB DDR5 5600', mult:1.45, tdp:38, capacity:128,type:'DDR5'},
+];
 
-      // ============================================================
-      // 2. COOKIE HELPERS
-      // ============================================================
-      function setCookie(name, value, days = 365) {
-        const d = new Date();
-        d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
-        document.cookie = name + "=" + encodeURIComponent(JSON.stringify(value)) + ";expires=" + d.toUTCString() + ";path=/;SameSite=Lax";
-      }
+const STORAGE_TYPES = [
+  {name:'HDD 7200RPM',    mult:0.65, tdp:6,  speed:150},
+  {name:'SATA SSD',       mult:1.00, tdp:3,  speed:550},
+  {name:'NVMe Gen3',      mult:1.20, tdp:5,  speed:3500},
+  {name:'NVMe Gen4',      mult:1.40, tdp:7,  speed:7000},
+  {name:'NVMe Gen5',      mult:1.60, tdp:10, speed:12000},
+];
 
-      function getCookie(name) {
-        const nameEQ = name + "=";
-        const ca = document.cookie.split(';');
-        for (let i = 0; i < ca.length; i++) {
-          let c = ca[i];
-          while (c.charAt(0) === ' ') c = c.substring(1);
-          if (c.indexOf(nameEQ) === 0) {
-            try { return JSON.parse(decodeURIComponent(c.substring(nameEQ.length))); } catch(e) { return null; }
-          }
-        }
-        return null;
-      }
+const CAPACITIES = ['256GB','500GB','1TB','2TB','4TB','8TB'];
 
-      // ============================================================
-      // 3. STATE & DOM REFERENCES
-      // ============================================================
-      let currentBuild = {
-        cpu: "Ryzen 5 2600",
-        gpu: "RTX 3060 12GB",
-        ram: "16GB DDR4",
-        storages: [{ type: "NVMe SSD", capacity: "1TB" }]
-      };
+/* Game DB — 40+ titles, weight-balanced. baseFps = FPS on reference build. */
+const GAMES = [
+  {name:'Cyberpunk 2077',      genre:'RPG',      base:42,  cw:0.22, gw:0.68, rw:0.10, preset:'High', rt:true},
+  {name:'Cyberpunk 2077 RT',   genre:'RPG',      base:22,  cw:0.20, gw:0.72, rw:0.08, preset:'High + RT', rt:true},
+  {name:'GTA V',               genre:'Open World',base:98, cw:0.35, gw:0.55, rw:0.10, preset:'Very High', rt:false},
+  {name:'GTA VI (est.)',       genre:'Open World',base:48, cw:0.28, gw:0.62, rw:0.10, preset:'High', rt:true},
+  {name:'Minecraft (vanilla)', genre:'Sandbox',  base:142, cw:0.50, gw:0.40, rw:0.10, preset:'High', rt:false},
+  {name:'Minecraft RTX',       genre:'Sandbox',  base:58,  cw:0.30, gw:0.62, rw:0.08, preset:'RTX', rt:true},
+  {name:'Forza Horizon 5',     genre:'Racing',   base:78,  cw:0.25, gw:0.65, rw:0.10, preset:'High', rt:true},
+  {name:'Roblox',              genre:'Sandbox',  base:188, cw:0.55, gw:0.35, rw:0.10, preset:'High', rt:false},
+  {name:'Valorant',            genre:'FPS',      base:210, cw:0.60, gw:0.30, rw:0.10, preset:'High', rt:false},
+  {name:'Fortnite',            genre:'Battle Royale', base:112, cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:true},
+  {name:'Fortnite (RT)',       genre:'Battle Royale', base:62, cw:0.30, gw:0.62, rw:0.08, preset:'High + RT', rt:true},
+  {name:'Call of Duty: Warzone',genre:'Battle Royale', base:76, cw:0.30, gw:0.60, rw:0.10, preset:'Medium', rt:false},
+  {name:'Call of Duty: MW3',   genre:'FPS',      base:92,  cw:0.30, gw:0.60, rw:0.10, preset:'High', rt:true},
+  {name:'Elden Ring',          genre:'Action RPG',base:58, cw:0.25, gw:0.65, rw:0.10, preset:'High', rt:false},
+  {name:'Red Dead Redemption 2',genre:'Open World',base:64, cw:0.25, gw:0.65, rw:0.10, preset:'High', rt:false},
+  {name:'Apex Legends',        genre:'Battle Royale', base:124, cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:false},
+  {name:'Rocket League',       genre:'Sports',   base:196, cw:0.45, gw:0.45, rw:0.10, preset:'High', rt:false},
+  {name:'The Witcher 3',       genre:'Action RPG',base:72, cw:0.25, gw:0.65, rw:0.10, preset:'High', rt:false},
+  {name:'The Witcher 3 (RT)',  genre:'Action RPG',base:38, cw:0.22, gw:0.70, rw:0.08, preset:'High + RT', rt:true},
+  {name:'CS2',                 genre:'FPS',      base:240, cw:0.50, gw:0.40, rw:0.10, preset:'High', rt:false},
+  {name:'Dota 2',              genre:'MOBA',     base:180, cw:0.50, gw:0.40, rw:0.10, preset:'High', rt:false},
+  {name:'League of Legends',   genre:'MOBA',     base:200, cw:0.55, gw:0.35, rw:0.10, preset:'High', rt:false},
+  {name:'Overwatch 2',         genre:'FPS',      base:150, cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:false},
+  {name:'PUBG',                genre:'Battle Royale', base:88, cw:0.35, gw:0.55, rw:0.10, preset:'High', rt:false},
+  {name:'Rainbow Six Siege',   genre:'FPS',      base:180, cw:0.45, gw:0.45, rw:0.10, preset:'High', rt:false},
+  {name:'Starfield',           genre:'RPG',      base:48,  cw:0.30, gw:0.60, rw:0.10, preset:'Medium', rt:false},
+  {name:'Baldur\'s Gate 3',    genre:'RPG',      base:82,  cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:false},
+  {name:'Hogwarts Legacy',     genre:'Action RPG',base:58, cw:0.30, gw:0.60, rw:0.10, preset:'High', rt:true},
+  {name:'Diablo IV',           genre:'ARPG',     base:118, cw:0.35, gw:0.55, rw:0.10, preset:'High', rt:true},
+  {name:'Escape from Tarkov',  genre:'FPS',      base:78,  cw:0.45, gw:0.45, rw:0.10, preset:'High', rt:false},
+  {name:'Hunt: Showdown',      genre:'FPS',      base:96,  cw:0.35, gw:0.55, rw:0.10, preset:'High', rt:true},
+  {name:'F1 24',               genre:'Racing',   base:104, cw:0.28, gw:0.62, rw:0.10, preset:'High', rt:true},
+  {name:'Resident Evil 4',     genre:'Survival', base:88,  cw:0.28, gw:0.62, rw:0.10, preset:'High', rt:true},
+  {name:'God of War',          genre:'Action',   base:76,  cw:0.28, gw:0.62, rw:0.10, preset:'High', rt:false},
+  {name:'Horizon Zero Dawn',   genre:'Action RPG',base:68, cw:0.25, gw:0.65, rw:0.10, preset:'High', rt:false},
+  {name:'Death Stranding',     genre:'Adventure',base:98,  cw:0.30, gw:0.60, rw:0.10, preset:'High', rt:false},
+  {name:'Microsoft Flight Sim',genre:'Sim',      base:52,  cw:0.55, gw:0.35, rw:0.10, preset:'High', rt:false},
+  {name:'Cities: Skylines II', genre:'Sim',      base:38,  cw:0.60, gw:0.30, rw:0.10, preset:'Medium', rt:false},
+  {name:'Total War: Warhammer III',genre:'Strategy', base:74, cw:0.55, gw:0.35, rw:0.10, preset:'High', rt:false},
+  {name:'Civilization VI',     genre:'Strategy', base:112, cw:0.60, gw:0.30, rw:0.10, preset:'High', rt:false},
+  {name:'Stellaris',           genre:'Strategy', base:96,  cw:0.65, gw:0.25, rw:0.10, preset:'High', rt:false},
+  {name:'Rust',                genre:'Survival', base:88,  cw:0.35, gw:0.55, rw:0.10, preset:'High', rt:false},
+  {name:'Destiny 2',           genre:'FPS',      base:132, cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:false},
+  {name:'Warframe',            genre:'Action',   base:158, cw:0.45, gw:0.45, rw:0.10, preset:'High', rt:false},
+  {name:'Monster Hunter: World',genre:'Action RPG',base:82, cw:0.30, gw:0.60, rw:0.10, preset:'High', rt:false},
+  {name:'Palworld',            genre:'Survival', base:92,  cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:false},
+  {name:'Helldivers 2',        genre:'Co-op',    base:78,  cw:0.35, gw:0.55, rw:0.10, preset:'High', rt:false},
+  {name:'Deep Rock Galactic',  genre:'Co-op',    base:138, cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:false},
+];
 
-      // Load from cookie
-      const savedBuild = getCookie('pcBuildAdvanced');
-      if (savedBuild) currentBuild = { ...currentBuild, ...savedBuild };
+/* ----------------------------------------------------------------
+   COOKIE ENGINE
+   ---------------------------------------------------------------- */
+const CK = {
+  set(name, value, days=365){
+    const d = new Date();
+    d.setTime(d.getTime() + days*864e5);
+    document.cookie = name+'='+encodeURIComponent(JSON.stringify(value))+';expires='+d.toUTCString()+';path=/;SameSite=Lax';
+  },
+  get(name){
+    const m = document.cookie.match('(^|;)\\s*'+name+'\\s*=\\s*([^;]+)');
+    if(!m) return null;
+    try{ return JSON.parse(decodeURIComponent(m[2])); }catch(e){ return null; }
+  },
+  del(name){ document.cookie = name+'=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/'; },
+  clearAll(){
+    document.cookie.split(';').forEach(c=>{
+      const name = c.split('=')[0].trim();
+      if(name) document.cookie = name+'=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/';
+    });
+  }
+};
 
-      const settings = getCookie('pcSettingsAdvanced') || {
-        theme: 'dark', accent: '#3b82f6',
-        gradient1: '#3b82f6', gradient2: '#a78bfa',
-        defaultRes: '1080p', defaultFps: '144'
-      };
+/* ----------------------------------------------------------------
+   STATE
+   ---------------------------------------------------------------- */
+let state = {
+  build: {
+    cpuBrand:'AMD', cpu:'Ryzen 5 2600',
+    gpuBrand:'NVIDIA', gpu:'RTX 3060 12GB',
+    ram:'16GB DDR4 3200',
+    ramSpeed:'3200',
+    storages:[{type:'NVMe Gen4', capacity:'1TB'}],
+    psuWatt:'750', psuEff:'80+ Gold',
+    coolerType:'AIO 240mm'
+  },
+  settings: {
+    theme:'dark',
+    accent:'#3b82f6',
+    grad1:'#3b82f6',
+    grad2:'#a78bfa',
+    defaultRes:'1080p',
+    defaultFps:'144',
+    defaultQuality:'High'
+  },
+  savedBuilds: [],
+  analysis: null
+};
 
-      // DOM elements
-      const body = document.getElementById('appBody');
-      const cpuBrand = document.getElementById('cpuBrand');
-      const cpuSelect = document.getElementById('cpuSelect');
-      const gpuBrand = document.getElementById('gpuBrand');
-      const gpuSelect = document.getElementById('gpuSelect');
-      const ramSelect = document.getElementById('ramSelect');
-      const storageContainer = document.getElementById('storageContainer');
-      const addStorageBtn = document.getElementById('addStorageBtn');
-      const analyzeBtn = document.getElementById('analyzeBtn');
-      const buildStatus = document.getElementById('buildStatus');
-      const scoreContent = document.getElementById('scoreContent');
-      const bottleneckContent = document.getElementById('bottleneckContent');
-      const gameContent = document.getElementById('gameContent');
-      const upgradeContent = document.getElementById('upgradeContent');
+/* Load state from cookies */
+const savedBuild = CK.get('pcp_build');
+const savedSettings = CK.get('pcp_settings');
+const savedBuildsList = CK.get('pcp_builds');
+if(savedBuild) state.build = {...state.build, ...savedBuild};
+if(savedSettings) state.settings = {...state.settings, ...savedSettings};
+if(savedBuildsList) state.savedBuilds = savedBuildsList;
 
-      // ============================================================
-      // 4. THEME & SETTINGS
-      // ============================================================
-      function applyTheme() {
-        body.classList.remove('light', 'custom');
-        if (settings.theme === 'light') {
-          body.classList.add('light');
-          // Reset variables to light defaults
-          document.documentElement.style.setProperty('--bg', '#f1f5f9');
-          document.documentElement.style.setProperty('--bg-gradient', 'radial-gradient(circle at 20% 20%, rgba(59,130,246,0.05) 0%, transparent 50%)');
-          document.documentElement.style.setProperty('--card', '#ffffff');
-          document.documentElement.style.setProperty('--card-soft', '#f8fafc');
-          document.documentElement.style.setProperty('--border', '#cbd5e1');
-          document.documentElement.style.setProperty('--text', '#0f172a');
-          document.documentElement.style.setProperty('--text-dim', '#475569');
-        } else if (settings.theme === 'custom') {
-          body.classList.add('custom');
-          // Apply full custom gradient to body background
-          document.documentElement.style.setProperty('--bg', '#0b0d15');
-          document.documentElement.style.setProperty('--bg-gradient', 
-            `radial-gradient(circle at 20% 20%, ${settings.gradient1}20 0%, transparent 50%),
-             radial-gradient(circle at 90% 70%, ${settings.gradient2}20 0%, transparent 50%)`);
-          document.documentElement.style.setProperty('--card', '#151a26');
-          document.documentElement.style.setProperty('--card-soft', '#1f2633');
-          document.documentElement.style.setProperty('--border', '#2c3444');
-          document.documentElement.style.setProperty('--text', '#eef2f9');
-          document.documentElement.style.setProperty('--text-dim', '#9aa7bc');
-        } else {
-          // dark
-          document.documentElement.style.setProperty('--bg', '#0b0d15');
-          document.documentElement.style.setProperty('--bg-gradient', 
-            'radial-gradient(circle at 20% 20%, rgba(59,130,246,0.08) 0%, transparent 50%), radial-gradient(circle at 90% 70%, rgba(168,85,247,0.06) 0%, transparent 50%)');
-          document.documentElement.style.setProperty('--card', '#151a26');
-          document.documentElement.style.setProperty('--card-soft', '#1f2633');
-          document.documentElement.style.setProperty('--border', '#2c3444');
-          document.documentElement.style.setProperty('--text', '#eef2f9');
-          document.documentElement.style.setProperty('--text-dim', '#9aa7bc');
-        }
-        if (settings.accent) {
-          document.documentElement.style.setProperty('--primary', settings.accent);
-          document.documentElement.style.setProperty('--primary-glow', settings.accent + 'cc');
-        }
-        // Update theme toggle icon
-        const toggle = document.getElementById('themeToggle');
-        toggle.innerHTML = settings.theme === 'dark' ? '<i class="fas fa-moon"></i> Dark' : 
-                          settings.theme === 'light' ? '<i class="fas fa-sun"></i> Light' : 
-                          '<i class="fas fa-palette"></i> Custom';
-      }
+/* ----------------------------------------------------------------
+   HELPERS
+   ---------------------------------------------------------------- */
+const $ = (sel, root=document)=>root.querySelector(sel);
+const $$ = (sel, root=document)=>Array.from(root.querySelectorAll(sel));
+const fmt = n => n.toLocaleString();
+const clamp = (n,min,max)=>Math.min(max,Math.max(min,n));
 
-      applyTheme();
+function getCpuData(name){
+  for(const brand in CPUS){ const f = CPUS[brand].find(c=>c.name===name); if(f) return f; }
+  return CPUS.AMD[1];
+}
+function getGpuData(name){
+  for(const brand in GPUS){ const f = GPUS[brand].find(g=>g.name===name); if(f) return f; }
+  return GPUS.NVIDIA[4];
+}
+function getRamData(name){ return RAMS.find(r=>r.name===name) || RAMS[2]; }
 
-      // ============================================================
-      // 5. BUILD UI HELPERS
-      // ============================================================
-      function populateCpuModels() {
-        const brand = cpuBrand.value;
-        const models = CPUS[brand] || CPUS.AMD;
-        cpuSelect.innerHTML = models.map(m => `<option value="${m.name}">${m.name} (${m.cores}, ${m.base}-${m.boost}GHz)</option>`).join('');
-        // Try to select saved
-        if (currentBuild.cpu && models.some(m => m.name === currentBuild.cpu)) {
-          cpuSelect.value = currentBuild.cpu;
-        } else {
-          cpuSelect.value = models[0].name;
-          currentBuild.cpu = models[0].name;
-        }
-      }
+function toast(msg, icon='fa-info-circle'){
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = `<i class="fas ${icon}"></i> ${msg}`;
+  $('#toasts').appendChild(t);
+  setTimeout(()=>{ t.style.animation='slideIn .3s reverse'; setTimeout(()=>t.remove(),300); }, 3000);
+}
 
-      function populateGpuModels() {
-        const brand = gpuBrand.value;
-        const models = GPUS[brand] || GPUS.NVIDIA;
-        gpuSelect.innerHTML = models.map(m => `<option value="${m.name}">${m.name} (${m.vram}GB, ${m.tdp}W)</option>`).join('');
-        if (currentBuild.gpu && models.some(m => m.name === currentBuild.gpu)) {
-          gpuSelect.value = currentBuild.gpu;
-        } else {
-          gpuSelect.value = models[0].name;
-          currentBuild.gpu = models[0].name;
-        }
-      }
+/* ----------------------------------------------------------------
+   THEME ENGINE
+   ---------------------------------------------------------------- */
+function applyTheme(){
+  const s = state.settings;
+  document.body.classList.remove('theme-light');
+  const root = document.documentElement.style;
 
-      function renderStorages() {
-        storageContainer.innerHTML = '';
-        currentBuild.storages.forEach((s, idx) => {
-          const div = document.createElement('div');
-          div.className = 'storage-item';
-          div.innerHTML = `
-            <select class="storage-type" data-index="${idx}">
-              ${STORAGE_TYPES.map(t => `<option value="${t.name}" ${t.name === s.type ? 'selected' : ''}>${t.name}</option>`).join('')}
-            </select>
-            <select class="storage-capacity" data-index="${idx}">
-              ${['256GB','512GB','1TB','2TB','4TB','8TB'].map(c => `<option value="${c}" ${c === s.capacity ? 'selected' : ''}>${c}</option>`).join('')}
-            </select>
-            ${currentBuild.storages.length > 1 ? `<span class="remove-storage" data-index="${idx}"><i class="fas fa-trash"></i></span>` : ''}
-          `;
-          storageContainer.appendChild(div);
-        });
-        // Attach events
-        document.querySelectorAll('.storage-type').forEach(sel => {
-          sel.addEventListener('change', (e) => {
-            const idx = e.target.dataset.index;
-            currentBuild.storages[idx].type = e.target.value;
-          });
-        });
-        document.querySelectorAll('.storage-capacity').forEach(sel => {
-          sel.addEventListener('change', (e) => {
-            const idx = e.target.dataset.index;
-            currentBuild.storages[idx].capacity = e.target.value;
-          });
-        });
-        document.querySelectorAll('.remove-storage').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            const idx = parseInt(e.target.closest('.remove-storage').dataset.index);
-            currentBuild.storages.splice(idx, 1);
-            renderStorages();
-          });
-        });
-      }
+  if(s.theme === 'light'){
+    document.body.classList.add('theme-light');
+  } else if(s.theme === 'custom'){
+    root.setProperty('--bg-grad-1', hexToRgba(s.grad1, 0.18));
+    root.setProperty('--bg-grad-2', hexToRgba(s.grad2, 0.16));
+    root.setProperty('--primary', s.grad1);
+    root.setProperty('--primary-2', s.grad2);
+    root.setProperty('--primary-glow', hexToRgba(s.grad1, 0.4));
+    root.setProperty('--accent', s.grad2);
+  } else {
+    root.setProperty('--bg-grad-1', 'rgba(59,130,246,.10)');
+    root.setProperty('--bg-grad-2', 'rgba(168,85,247,.08)');
+  }
 
-      addStorageBtn.addEventListener('click', () => {
-        if (currentBuild.storages.length >= 4) return alert('Maximum 4 drives');
-        currentBuild.storages.push({ type: 'NVMe SSD', capacity: '1TB' });
-        renderStorages();
-      });
+  if(s.accent){
+    root.setProperty('--primary', s.accent);
+    root.setProperty('--primary-glow', hexToRgba(s.accent, 0.4));
+  }
 
-      // Brand change listeners
-      cpuBrand.addEventListener('change', () => { populateCpuModels(); });
-      gpuBrand.addEventListener('change', () => { populateGpuModels(); });
+  const icon = s.theme==='dark' ? 'fa-moon' : s.theme==='light' ? 'fa-sun' : 'fa-palette';
+  const qt = $('#quickTheme');
+  if(qt) qt.innerHTML = `<i class="fas ${icon}"></i>`;
 
-      // Initialize selects
-      populateCpuModels();
-      populateGpuModels();
-      ramSelect.value = currentBuild.ram;
-      renderStorages();
+  // Sync settings UI
+  $$('#themeSwatches .swatch').forEach(el=>el.classList.toggle('active', el.dataset.theme===s.theme));
+  const ap = $('#accentPicker'); if(ap) ap.value = s.accent;
+  const g1 = $('#grad1'); if(g1) g1.value = s.grad1;
+  const g2 = $('#grad2'); if(g2) g2.value = s.grad2;
+  const dr = $('#defaultRes'); if(dr) dr.value = s.defaultRes;
+  const df = $('#defaultFps'); if(df) df.value = s.defaultFps;
+  const dq = $('#defaultQuality'); if(dq) dq.value = s.defaultQuality;
+}
+function hexToRgba(hex, a){
+  const c = hex.replace('#','');
+  const r = parseInt(c.substring(0,2),16);
+  const g = parseInt(c.substring(2,4),16);
+  const b = parseInt(c.substring(4,6),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
 
-      // ============================================================
-      // 6. CORE ANALYSIS
-      // ============================================================
-      function analyze() {
-        // Read selections
-        currentBuild.cpu = cpuSelect.value;
-        currentBuild.gpu = gpuSelect.value;
-        currentBuild.ram = ramSelect.value;
-        // storages already in currentBuild
-        setCookie('pcBuildAdvanced', currentBuild);
-        buildStatus.textContent = `${currentBuild.cpu} + ${currentBuild.gpu}`;
+/* ----------------------------------------------------------------
+   ROUTER
+   ---------------------------------------------------------------- */
+function navigate(page){
+  $$('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.page===page));
+  $$('.page').forEach(p=>p.classList.toggle('active', p.id === 'page-'+page));
+  $('#pages').scrollTop = 0;
+  if(page==='games') renderGamesPage();
+  if(page==='benchmarks') renderBenchmarksPage();
+  if(page==='builds') renderSavedBuilds();
+  if(page==='upgrade') renderUpgradePage();
+  if(page==='compare') populateCompareSelects();
+}
+$$('.nav-item').forEach(item=>item.addEventListener('click', ()=>navigate(item.dataset.page)));
 
-        // Get component data
-        let cpuData, gpuData;
-        for (let brand in CPUS) {
-          const found = CPUS[brand].find(c => c.name === currentBuild.cpu);
-          if (found) { cpuData = found; break; }
-        }
-        for (let brand in GPUS) {
-          const found = GPUS[brand].find(g => g.name === currentBuild.gpu);
-          if (found) { gpuData = found; break; }
-        }
-        if (!cpuData) cpuData = CPUS.AMD[0];
-        if (!gpuData) gpuData = GPUS.NVIDIA[0];
+/* ----------------------------------------------------------------
+   BUILD UI
+   ---------------------------------------------------------------- */
+function populateCpuSelect(){
+  const brand = $('#cpuBrand').value;
+  const list = CPUS[brand] || CPUS.AMD;
+  const sel = $('#cpuSelect');
+  sel.innerHTML = list.map(c=>`<option value="${c.name}">${c.name} — ${c.cores} · ${c.clock}</option>`).join('');
+  if(list.some(c=>c.name===state.build.cpu)) sel.value = state.build.cpu;
+  else { sel.value = list[0].name; state.build.cpu = list[0].name; state.build.cpuBrand = brand; }
+}
+function populateGpuSelect(){
+  const brand = $('#gpuBrand').value;
+  const list = GPUS[brand] || GPUS.NVIDIA;
+  const sel = $('#gpuSelect');
+  sel.innerHTML = list.map(g=>`<option value="${g.name}">${g.name} — ${g.vram}GB · ${g.tdp}W</option>`).join('');
+  if(list.some(g=>g.name===state.build.gpu)) sel.value = state.build.gpu;
+  else { sel.value = list[0].name; state.build.gpu = list[0].name; state.build.gpuBrand = brand; }
+}
+function populateRamSelect(){
+  const sel = $('#ramSelect');
+  sel.innerHTML = RAMS.map(r=>`<option value="${r.name}">${r.name} — ${r.capacity}GB ${r.type}</option>`).join('');
+  if(RAMS.some(r=>r.name===state.build.ram)) sel.value = state.build.ram;
+  else sel.value = RAMS[2].name;
+}
+function renderStorage(){
+  const container = $('#storageContainer');
+  const list = state.build.storages;
+  $('#storageCount').textContent = `${list.length}/4 drives`;
+  container.innerHTML = '';
+  list.forEach((s, i)=>{
+    const row = document.createElement('div');
+    row.className = 'storage-row';
+    row.innerHTML = `
+      <select class="stg-type" data-i="${i}">
+        ${STORAGE_TYPES.map(t=>`<option value="${t.name}" ${t.name===s.type?'selected':''}>${t.name}</option>`).join('')}
+      </select>
+      <select class="stg-cap" data-i="${i}">
+        ${CAPACITIES.map(c=>`<option value="${c}" ${c===s.capacity?'selected':''}>${c}</option>`).join('')}
+      </select>
+      <span class="text-muted" style="text-align:right;font-size:.75rem;">Drive ${i+1}</span>
+      ${list.length>1?`<span class="remove" data-i="${i}"><i class="fas fa-trash"></i></span>`:''}
+    `;
+    container.appendChild(row);
+  });
+  $$('.stg-type').forEach(el=>el.addEventListener('change', e=>{
+    state.build.storages[+e.target.dataset.i].type = e.target.value;
+  }));
+  $$('.stg-cap').forEach(el=>el.addEventListener('change', e=>{
+    state.build.storages[+e.target.dataset.i].capacity = e.target.value;
+  }));
+  $$('.remove').forEach(el=>el.addEventListener('click', e=>{
+    state.build.storages.splice(+e.currentTarget.dataset.i,1);
+    renderStorage();
+  }));
+}
+$('#addStorage').addEventListener('click', ()=>{
+  if(state.build.storages.length>=4) return toast('Maximum 4 drives','fa-circle-exclamation');
+  state.build.storages.push({type:'NVMe Gen4', capacity:'1TB'});
+  renderStorage();
+});
 
-        const ramData = RAMS[currentBuild.ram] || RAMS["16GB DDR4"];
+/* Input listeners */
+$('#cpuBrand').addEventListener('change', ()=>{ state.build.cpuBrand = $('#cpuBrand').value; populateCpuSelect(); });
+$('#gpuBrand').addEventListener('change', ()=>{ state.build.gpuBrand = $('#gpuBrand').value; populateGpuSelect(); });
+$('#cpuSelect').addEventListener('change', ()=>{ state.build.cpu = $('#cpuSelect').value; });
+$('#gpuSelect').addEventListener('change', ()=>{ state.build.gpu = $('#gpuSelect').value; });
+$('#ramSelect').addEventListener('change', ()=>{ state.build.ram = $('#ramSelect').value; });
+$('#ramSpeed').addEventListener('change', ()=>{ state.build.ramSpeed = $('#ramSpeed').value; });
+$('#psuWatt').addEventListener('change', ()=>{ state.build.psuWatt = $('#psuWatt').value; });
+$('#psuEff').addEventListener('change', ()=>{ state.build.psuEff = $('#psuEff').value; });
+$('#coolerType').addEventListener('change', ()=>{ state.build.coolerType = $('#coolerType').value; });
 
-        // Calculate scores
-        const cpuScore = Math.min(100, Math.round(cpuData.mult * 45));
-        const gpuScore = Math.min(100, Math.round(gpuData.mult * 35));
-        const ramScore = Math.min(100, Math.round(ramData.mult * 70));
-        const totalScore = Math.round((cpuScore * 0.3 + gpuScore * 0.5 + ramScore * 0.2));
+/* ----------------------------------------------------------------
+   ANALYSIS ENGINE
+   ---------------------------------------------------------------- */
+function analyze(){
+  // Pull from UI
+  state.build.cpu = $('#cpuSelect').value;
+  state.build.gpu = $('#gpuSelect').value;
+  state.build.ram = $('#ramSelect').value;
+  state.build.ramSpeed = $('#ramSpeed').value;
+  state.build.psuWatt = $('#psuWatt').value;
+  state.build.psuEff = $('#psuEff').value;
+  state.build.coolerType = $('#coolerType').value;
 
-        const best = cpuScore > gpuScore ? (cpuScore > ramScore ? 'CPU' : 'RAM') : (gpuScore > ramScore ? 'GPU' : 'RAM');
-        const worst = cpuScore < gpuScore ? (cpuScore < ramScore ? 'CPU' : 'RAM') : (gpuScore < ramScore ? 'GPU' : 'RAM');
+  const cpu = getCpuData(state.build.cpu);
+  const gpu = getGpuData(state.build.gpu);
+  const ram = getRamData(state.build.ram);
 
-        // Score card
-        const ratingText = totalScore >= 85 ? "Excellent" : totalScore >= 70 ? "Very Good" : totalScore >= 50 ? "Good" : "Needs upgrade";
-        scoreContent.innerHTML = `
-          <div class="score-header">
-            <span class="score-number">${totalScore}</span>
-            <span class="score-sub">/ 100</span>
-          </div>
-          <p style="margin-bottom:1.2rem; color:var(--text-dim);">${ratingText}</p>
-          <div class="meter">
-            <div class="meter-row"><span class="meter-label">Gaming</span><div class="meter-bar-bg"><div class="meter-bar-fill" style="width:${gpuScore}%"></div></div><span class="meter-value">${gpuScore}</span></div>
-            <div class="meter-row"><span class="meter-label">CPU</span><div class="meter-bar-bg"><div class="meter-bar-fill" style="width:${cpuScore}%"></div></div><span class="meter-value">${cpuScore}</span></div>
-            <div class="meter-row"><span class="meter-label">RAM</span><div class="meter-bar-bg"><div class="meter-bar-fill" style="width:${ramScore}%"></div></div><span class="meter-value">${ramScore}</span></div>
-          </div>
-          <p style="margin-top:1.2rem; font-size:0.9rem;">Your <strong>${best}</strong> is strongest. <strong>${worst}</strong> is the biggest limitation.</p>
-        `;
+  // Scores (0-100)
+  const cpuScore = clamp(Math.round(cpu.mult * 42), 5, 100);
+  const gpuScore = clamp(Math.round(gpu.mult * 30), 5, 100);
+  const ramScore = clamp(Math.round(ram.mult * 78), 5, 100);
+  const storageScore = (()=>{
+    if(state.build.storages.some(s=>s.type.includes('NVMe Gen5'))) return 100;
+    if(state.build.storages.some(s=>s.type.includes('NVMe Gen4'))) return 92;
+    if(state.build.storages.some(s=>s.type.includes('NVMe'))) return 80;
+    if(state.build.storages.some(s=>s.type.includes('SATA'))) return 65;
+    return 40;
+  })();
 
-        // Bottleneck
-        const bottlenecks = [];
-        if (cpuData.mult < 0.9) bottlenecks.push({ icon: 'fa-microchip', label: 'CPU', pct: 45, desc: 'CPU limiting in CPU-heavy games.' });
-        if (gpuData.mult < 0.9) bottlenecks.push({ icon: 'fa-display', label: 'GPU', pct: 65, desc: 'GPU limiting in most GPU-heavy games.' });
-        if (ramData.mult < 0.9) bottlenecks.push({ icon: 'fa-memory', label: 'RAM', pct: 30, desc: 'More memory may help newer games.' });
+  const totalScore = Math.round(cpuScore*0.28 + gpuScore*0.42 + ramScore*0.18 + storageScore*0.12);
 
-        if (bottlenecks.length === 0) {
-          bottleneckContent.innerHTML = `<p>✅ No major bottlenecks detected. Your system is well balanced.</p>`;
-        } else {
-          bottleneckContent.innerHTML = bottlenecks.map(b => `
-            <div class="bottleneck-row">
-              <div class="bn-icon"><i class="fas ${b.icon}"></i></div>
-              <div style="flex:1;">
-                <div class="flex-between"><strong>${b.label}</strong> <span>${b.pct}% of games</span></div>
-                <div class="text-small">${b.desc}</div>
-              </div>
-              <button class="btn btn-ghost btn-sm why-btn" data-component="${b.label}">Why?</button>
-            </div>
-          `).join('');
-          document.querySelectorAll('.why-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-              alert(`Your ${e.target.dataset.component} is a limiting factor. Consider upgrading or adjusting settings.`);
-            });
-          });
-        }
+  // Power estimate
+  const power = cpu.tdp + gpu.tdp + ram.tdp
+              + state.build.storages.reduce((sum,s)=>sum + (STORAGE_TYPES.find(t=>t.name===s.type)?.tdp || 5), 0)
+              + 75; // mobo, fans, misc
+  const psuWatt = +state.build.psuWatt;
+  const psuHeadroom = psuWatt - power;
 
-        // Games
-        let gameHtml = '<div class="game-grid">';
-        GAME_DB.slice(0, 12).forEach(game => {
-          const estimated = Math.round(game.baseFps * Math.pow(cpuData.mult, game.cpuWeight) * Math.pow(gpuData.mult, game.gpuWeight) * Math.pow(ramData.mult, game.ramWeight));
-          const tagClass = estimated >= 100 ? 'tag-green' : estimated >= 50 ? 'tag-yellow' : 'tag-red';
-          const quality = estimated >= 100 ? 'Excellent' : estimated >= 50 ? 'Playable' : 'Lower settings';
-          gameHtml += `
-            <div class="game-card">
-              <div class="game-title">${game.name} <span class="fps-badge">~${estimated}</span></div>
-              <div class="flex-between">
-                <span class="tag ${tagClass}">${quality}</span>
-                <span class="text-small">${game.settings}</span>
-              </div>
-              <div class="text-small" style="margin-top:0.3rem;">Confidence: ${estimated > 120 ? 'High' : estimated > 60 ? 'Medium' : 'Low'}</div>
-            </div>
-          `;
-        });
-        gameHtml += '</div>';
-        gameContent.innerHTML = gameHtml;
+  // Bottleneck detection
+  const cw = cpu.mult, gw = gpu.mult, rw = ram.mult;
+  const bottlenecks = [];
+  const idealCpuForGpu = gw * 1.05;
+  const idealGpuForCpu = cw * 0.95;
 
-        // Upgrade path (improved)
-        const currentGpu = currentBuild.gpu;
-        let upgradeValue = 'RX 7600', upgradeHigh = 'RTX 4070', upgradeEnthusiast = 'RTX 5080';
-        if (currentGpu.includes('580')) { upgradeValue = 'RX 7600'; upgradeHigh = 'RTX 4070'; upgradeEnthusiast = 'RTX 5080'; }
-        else if (currentGpu.includes('3060')) { upgradeValue = 'RX 7600'; upgradeHigh = 'RTX 4070'; upgradeEnthusiast = 'RTX 5080'; }
-        else if (currentGpu.includes('4070')) { upgradeValue = 'RTX 4070'; upgradeHigh = 'RTX 5080'; upgradeEnthusiast = 'RTX 5090'; }
-        else if (currentGpu.includes('7600')) { upgradeValue = 'RTX 4070'; upgradeHigh = 'RTX 5080'; upgradeEnthusiast = 'RTX 5090'; }
-        else if (currentGpu.includes('5080')) { upgradeValue = 'RTX 5080'; upgradeHigh = 'RTX 5090'; upgradeEnthusiast = 'RTX 5090'; }
-        else if (currentGpu.includes('5090')) { upgradeValue = 'RTX 5090'; upgradeHigh = 'RTX 5090'; upgradeEnthusiast = 'RTX 5090'; }
-        else { upgradeValue = 'RTX 4070'; upgradeHigh = 'RTX 5080'; upgradeEnthusiast = 'RTX 5090'; }
+  if(cw < idealCpuForGpu * 0.75) bottlenecks.push({
+    component:'CPU', icon:'cpu', severity: cw/idealCpuForGpu < 0.6 ? 'high':'medium',
+    pct: Math.round((1 - cw/idealCpuForGpu)*100), desc:`Your CPU (${cpu.name}) is holding back your GPU (${gpu.name}). Consider a CPU upgrade.`
+  });
+  if(gw < idealGpuForCpu * 0.75) bottlenecks.push({
+    component:'GPU', icon:'gpu', severity: gw/idealGpuForCpu < 0.6 ? 'high':'medium',
+    pct: Math.round((1 - gw/idealGpuForCpu)*100), desc:`Your GPU (${gpu.name}) is the main limiter in most games.`
+  });
+  if(rw < 0.95) bottlenecks.push({
+    component:'RAM', icon:'ram', severity: rw < 0.85 ? 'high':'medium',
+    pct: Math.round((1 - rw)*100), desc:`${ram.capacity}GB is limited for modern titles. 16GB+ recommended.`
+  });
 
-        upgradeContent.innerHTML = `
-          <div class="upgrade-path">
-            <div class="upgrade-step"><i class="fas fa-circle" style="font-size:8px; color:var(--primary);"></i> Current: ${currentGpu}</div>
-            <i class="fas fa-arrow-right upgrade-arrow"></i>
-            <div class="upgrade-step">Best value: ${upgradeValue}</div>
-            <i class="fas fa-arrow-right upgrade-arrow"></i>
-            <div class="upgrade-step">High-end: ${upgradeHigh}</div>
-            <i class="fas fa-arrow-right upgrade-arrow"></i>
-            <div class="upgrade-step">Enthusiast: ${upgradeEnthusiast}</div>
-          </div>
-          <table class="upgrade-table">
-            <thead><tr><th>Upgrade</th><th>FPS gain</th><th>Cost</th><th>Value</th></tr></thead>
-            <tbody>
-              <tr><td>Option A (${upgradeValue})</td><td>+42%</td><td>$</td><td class="stars">★★★★★</td></tr>
-              <tr><td>Option B (${upgradeHigh})</td><td>+86%</td><td>$$</td><td class="stars">★★★★</td></tr>
-              <tr><td>Option C (${upgradeEnthusiast})</td><td>+145%</td><td>$$$$</td><td class="stars">★★★</td></tr>
-            </tbody>
-          </table>
-          <p class="text-small" style="margin-top:1rem;">Best upgrade per dollar: <strong>GPU</strong></p>
-        `;
-      }
+  // Game FPS
+  const gameResults = GAMES.map(g=>{
+    const fps = g.base * Math.pow(cw, g.cw) * Math.pow(gw, g.gw) * Math.pow(rw, g.rw);
+    // Adjust for storage bonus (small)
+    const stgBonus = 1 + (storageScore - 75) / 1000;
+    const finalFps = Math.round(fps * stgBonus);
+    // Confidence interval
+    const ci = finalFps > 100 ? 0.06 : finalFps > 60 ? 0.09 : 0.12;
+    const low = Math.round(finalFps * (1-ci));
+    const high = Math.round(finalFps * (1+ci));
+    let quality, qclass;
+    if(finalFps >= 144){ quality='Excellent'; qclass='q-excellent'; }
+    else if(finalFps >= 100){ quality='Great'; qclass='q-great'; }
+    else if(finalFps >= 60){ quality='Good'; qclass='q-good'; }
+    else if(finalFps >= 30){ quality='Playable'; qclass='q-playable'; }
+    else { quality='Poor'; qclass='q-poor'; }
+    return {...g, fps:finalFps, low, high, quality, qclass, confidence: ci<0.08?'High':ci<0.11?'Medium':'Low'};
+  });
 
-      analyzeBtn.addEventListener('click', analyze);
+  state.analysis = {
+    cpu, gpu, ram, cpuScore, gpuScore, ramScore, storageScore, totalScore,
+    power, psuWatt, psuHeadroom,
+    bottlenecks, gameResults
+  };
 
-      // Auto-analyze if saved build exists
-      if (savedBuild) {
-        // Set UI values
-        cpuBrand.value = currentBuild.cpu.includes('Ryzen') ? 'AMD' : 'Intel';
-        populateCpuModels();
-        cpuSelect.value = currentBuild.cpu;
-        gpuBrand.value = currentBuild.gpu.includes('RTX') ? 'NVIDIA' : currentBuild.gpu.includes('RX') ? 'AMD' : 'Intel';
-        populateGpuModels();
-        gpuSelect.value = currentBuild.gpu;
-        ramSelect.value = currentBuild.ram;
-        renderStorages();
-        analyze();
-      }
+  // Persist
+  CK.set('pcp_build', state.build);
 
-      // ============================================================
-      // 7. SETTINGS MODAL
-      // ============================================================
-      const settingsModal = document.getElementById('settingsModal');
-      const settingsBtn = document.getElementById('settingsBtn');
-      const closeSettings = document.getElementById('closeSettings');
-      const themeColors = document.querySelectorAll('.color-dot');
-      const accentColorPicker = document.getElementById('accentColorPicker');
-      const gradientColor1 = document.getElementById('gradientColor1');
-      const gradientColor2 = document.getElementById('gradientColor2');
-      const defaultRes = document.getElementById('defaultRes');
-      const defaultFps = document.getElementById('defaultFps');
-      const resetSettings = document.getElementById('resetSettings');
-      const saveSettings = document.getElementById('saveSettings');
+  // Render everything
+  renderHome();
+  renderBuildHealth();
+  renderBenchmarksPage();
+  if($('#page-upgrade').classList.contains('active')) renderUpgradePage();
+  if($('#page-compare').classList.contains('active')) runCompare();
+  toast('Analysis complete — '+totalScore+'/100','fa-bolt');
+}
+$('#analyzeBtn').addEventListener('click', analyze);
+$('#resetBuildBtn').addEventListener('click', ()=>{
+  confirmDialog('Reset your build?', ()=>{
+    state.build = {
+      cpuBrand:'AMD', cpu:'Ryzen 5 2600',
+      gpuBrand:'NVIDIA', gpu:'RTX 3060 12GB',
+      ram:'16GB DDR4 3200', ramSpeed:'3200',
+      storages:[{type:'NVMe Gen4', capacity:'1TB'}],
+      psuWatt:'750', psuEff:'80+ Gold', coolerType:'AIO 240mm'
+    };
+    syncBuildUI();
+    toast('Build reset','fa-rotate-left');
+  });
+});
 
-      // Set current settings in modal
-      accentColorPicker.value = settings.accent || '#3b82f6';
-      gradientColor1.value = settings.gradient1 || '#3b82f6';
-      gradientColor2.value = settings.gradient2 || '#a78bfa';
-      defaultRes.value = settings.defaultRes || '1080p';
-      defaultFps.value = settings.defaultFps || '144';
+function syncBuildUI(){
+  $('#cpuBrand').value = state.build.cpuBrand;
+  populateCpuSelect();
+  $('#cpuSelect').value = state.build.cpu;
+  $('#gpuBrand').value = state.build.gpuBrand;
+  populateGpuSelect();
+  $('#gpuSelect').value = state.build.gpu;
+  populateRamSelect();
+  $('#ramSelect').value = state.build.ram;
+  $('#ramSpeed').value = state.build.ramSpeed;
+  $('#psuWatt').value = state.build.psuWatt;
+  $('#psuEff').value = state.build.psuEff;
+  $('#coolerType').value = state.build.coolerType;
+  renderStorage();
+}
 
-      settingsBtn.addEventListener('click', () => settingsModal.classList.add('active'));
-      closeSettings.addEventListener('click', () => settingsModal.classList.remove('active'));
-      settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) settingsModal.classList.remove('active'); });
+/* ----------------------------------------------------------------
+   RENDER: HOME
+   ---------------------------------------------------------------- */
+function renderHome(){
+  const a = state.analysis;
+  if(!a){
+    $('#heroCpu').textContent = state.build.cpu;
+    $('#heroGpu').textContent = state.build.gpu;
+    $('#heroRam').textContent = state.build.ram;
+    return;
+  }
+  // Hero chips
+  $('#heroCpu').textContent = a.cpu.name;
+  $('#heroGpu').textContent = a.gpu.name;
+  $('#heroRam').textContent = a.ram.name;
 
-      themeColors.forEach(dot => {
-        dot.addEventListener('click', () => {
-          themeColors.forEach(d => d.classList.remove('active'));
-          dot.classList.add('active');
-        });
-        if (dot.dataset.theme === settings.theme) dot.classList.add('active');
-      });
+  // Build specs
+  $('#buildSpecs').innerHTML = `
+    <div class="spec-row"><div class="spec-icon"><i class="fas fa-microchip"></i></div><div class="spec-info"><div class="label">CPU</div><div class="value">${a.cpu.name} · ${a.cpu.cores}</div></div></div>
+    <div class="spec-row"><div class="spec-icon"><i class="fas fa-display"></i></div><div class="spec-info"><div class="label">GPU</div><div class="value">${a.gpu.name} · ${a.gpu.vram}GB</div></div></div>
+    <div class="spec-row"><div class="spec-icon"><i class="fas fa-memory"></i></div><div class="spec-info"><div class="label">RAM</div><div class="value">${a.ram.name}</div></div></div>
+    <div class="spec-row"><div class="spec-icon"><i class="fas fa-hard-drive"></i></div><div class="spec-info"><div class="label">Storage</div><div class="value">${state.build.storages.map(s=>s.capacity+' '+s.type.split(' ')[0]).join(' · ')}</div></div></div>
+  `;
 
-      saveSettings.addEventListener('click', () => {
-        const newSettings = {
-          theme: document.querySelector('.color-dot.active')?.dataset.theme || 'dark',
-          accent: accentColorPicker.value,
-          gradient1: gradientColor1.value,
-          gradient2: gradientColor2.value,
-          defaultRes: defaultRes.value,
-          defaultFps: defaultFps.value,
-        };
-        setCookie('pcSettingsAdvanced', newSettings);
-        Object.assign(settings, newSettings);
-        applyTheme();
-        settingsModal.classList.remove('active');
-      });
+  // Score ring
+  const pct = a.totalScore/100;
+  const circ = 2*Math.PI*54;
+  $('#scoreRing').setAttribute('stroke-dashoffset', String(circ * (1-pct)));
+  $('#scoreNum').textContent = a.totalScore;
+  $('#scoreLabel').textContent =
+    a.totalScore>=85?'Excellent':a.totalScore>=70?'Very Good':a.totalScore>=50?'Good':'Needs upgrade';
+  $('#scoreHint').textContent = 'Based on your full configuration.';
 
-      resetSettings.addEventListener('click', () => {
-        if (confirm('Reset all settings to default?')) {
-          const defaults = { theme: 'dark', accent: '#3b82f6', gradient1: '#3b82f6', gradient2: '#a78bfa', defaultRes: '1080p', defaultFps: '144' };
-          setCookie('pcSettingsAdvanced', defaults);
-          Object.assign(settings, defaults);
-          applyTheme();
-          location.reload();
-        }
-      });
+  // Quick stats
+  $('#statCpuScore').textContent = a.cpuScore;
+  $('#statCpuName').textContent = a.cpu.name;
+  $('#statGpuScore').textContent = a.gpuScore;
+  $('#statGpuName').textContent = a.gpu.name;
+  $('#statRamScore').textContent = a.ramScore;
+  $('#statRamName').textContent = a.ram.name;
+  $('#statPower').textContent = a.power + ' W';
 
-      // Theme toggle quick button
-      document.getElementById('themeToggle').addEventListener('click', () => {
-        const current = settings.theme || 'dark';
-        const newTheme = current === 'dark' ? 'light' : current === 'light' ? 'custom' : 'dark';
-        settings.theme = newTheme;
-        setCookie('pcSettingsAdvanced', settings);
-        applyTheme();
-      });
+  // Bottleneck list
+  if(a.bottlenecks.length === 0){
+    $('#bnList').innerHTML = `<div class="empty" style="padding:1rem;"><i class="fas fa-circle-check" style="color:var(--success);"></i><p>No significant bottlenecks detected.</p></div>`;
+    $('#bnSummary').textContent = 'Balanced';
+  } else {
+    $('#bnList').innerHTML = a.bottlenecks.map(b=>`
+      <div class="bn-item">
+        <div class="bn-icon ${b.icon}"><i class="fas fa-${b.component==='CPU'?'microchip':b.component==='GPU'?'display':'memory'}"></i></div>
+        <div class="bn-body">
+          <div class="bn-head"><strong>${b.component} Limited</strong><span>${b.pct}% impact</span></div>
+          <div class="bn-desc">${b.desc}</div>
+        </div>
+        <button class="btn btn-sm btn-ghost" onclick="explainBn('${b.component}')"><i class="fas fa-circle-question"></i> Why?</button>
+      </div>`).join('');
+    $('#bnSummary').textContent = a.bottlenecks.length + ' issue' + (a.bottlenecks.length>1?'s':'');
+  }
 
-      // ============================================================
-      // 8. MISC: update UI after brand change
-      // ============================================================
-      // (already handled by listeners)
+  // Meters
+  $('#meterGroup').innerHTML = `
+    <div class="meter"><div class="meter-label"><i class="fas fa-microchip"></i> CPU</div><div class="meter-track"><div class="meter-fill ${a.cpuScore<50?'warn':a.cpuScore>=80?'good':''}" style="width:${a.cpuScore}%"></div></div><div class="meter-value">${a.cpuScore}</div></div>
+    <div class="meter"><div class="meter-label"><i class="fas fa-display"></i> GPU</div><div class="meter-track"><div class="meter-fill ${a.gpuScore<50?'warn':a.gpuScore>=80?'good':''}" style="width:${a.gpuScore}%"></div></div><div class="meter-value">${a.gpuScore}</div></div>
+    <div class="meter"><div class="meter-label"><i class="fas fa-memory"></i> RAM</div><div class="meter-track"><div class="meter-fill ${a.ramScore<50?'warn':a.ramScore>=80?'good':''}" style="width:${a.ramScore}%"></div></div><div class="meter-value">${a.ramScore}</div></div>
+    <div class="meter"><div class="meter-label"><i class="fas fa-hard-drive"></i> Storage</div><div class="meter-track"><div class="meter-fill ${a.storageScore<50?'warn':a.storageScore>=80?'good':''}" style="width:${a.storageScore}%"></div></div><div class="meter-value">${a.storageScore}</div></div>
+  `;
 
-      console.log('PC Playground Advanced ready.');
-    })();
-  </script>
+  // Home game preview
+  const top8 = [...a.gameResults].sort((x,y)=>y.fps-x.fps).slice(0,8);
+  $('#homeGames').innerHTML = top8.map(g=>gameCardHtml(g)).join('');
+  $$('#homeGames .game-card').forEach((el,i)=>el.addEventListener('click',()=>openGameModal(top8[i])));
+
+  // Home upgrade preview
+  $('#homeUpgrade').innerHTML = upgradeTeaserHtml(a);
+}
+
+function gameCardHtml(g){
+  return `
+    <div class="game-card">
+      <div class="game-top">
+        <div>
+          <div class="game-name">${g.name}</div>
+          <div class="game-genre">${g.genre}</div>
+        </div>
+        <div class="game-fps">
+          <div class="val">${g.fps}</div>
+          <div class="unit">FPS</div>
+        </div>
+      </div>
+      <div class="game-meta">
+        <span class="quality-tag ${g.qclass}">${g.quality}</span>
+        <span>${g.preset}</span>
+      </div>
+    </div>`;
+}
+
+function explainBn(component){
+  const a = state.analysis;
+  const msgs = {
+    CPU: `Your ${a.cpu.name} has ${a.cpu.cores} cores. In CPU-heavy titles, it can't feed your ${a.gpu.name} fast enough. Try 1440p or higher to reduce CPU load, or upgrade the CPU.`,
+    GPU: `Your ${a.gpu.name} is the primary limiter. Reducing settings or upgrading the GPU is the biggest single win.`,
+    RAM: `${a.ram.capacity}GB of ${a.ram.type} is limiting. Modern games increasingly need 16GB+, and CPU-heavy sims want 32GB.`
+  };
+  toast(msgs[component], 'fa-circle-question');
+}
+
+/* ----------------------------------------------------------------
+   RENDER: GAMES PAGE
+   ---------------------------------------------------------------- */
+function renderGamesPage(){
+  const a = state.analysis;
+  if(!a){
+    $('#gamesList').innerHTML = `<div class="empty"><i class="fas fa-gamepad"></i><p>Configure your PC first.</p></div>`;
+    return;
+  }
+  $('#gamesCountBadge').textContent = a.gameResults.length;
+
+  const filter = $('#gameFilterQuality').value;
+  const sort = $('#gameSort').value;
+  let list = [...a.gameResults];
+  if(filter==='excellent') list = list.filter(g=>g.fps>=144);
+  else if(filter==='playable') list = list.filter(g=>g.fps>=30);
+  if(sort==='fps-desc') list.sort((x,y)=>y.fps-x.fps);
+  else if(sort==='fps-asc') list.sort((x,y)=>x.fps-y.fps);
+  else list.sort((x,y)=>x.name.localeCompare(y.name));
+
+  $('#gamesList').innerHTML = list.map(g=>gameCardHtml(g)).join('');
+  $$('#gamesList .game-card').forEach((el,i)=>el.addEventListener('click',()=>openGameModal(list[i])));
+}
+$('#gameFilterQuality').addEventListener('change', renderGamesPage);
+$('#gameSort').addEventListener('change', renderGamesPage);
+
+/* ----------------------------------------------------------------
+   GAME MODAL
+   ---------------------------------------------------------------- */
+function openGameModal(g){
+  $('#modalGameName').textContent = g.name;
+  $('#modalGameSub').textContent = `${g.genre} · ${g.preset}`;
+  const resolutions = [
+    {label:'1080p', mult:1.00},
+    {label:'1440p', mult:0.68},
+    {label:'4K',    mult:0.42},
+  ];
+  const presets = [
+    {label:'Low',    mult:1.35},
+    {label:'Medium', mult:1.10},
+    {label:'High',   mult:1.00},
+    {label:'Ultra',  mult:0.78},
+  ];
+  const rows = resolutions.map(r=>{
+    const fps = Math.round(g.fps * r.mult);
+    const q = fps>=144?'Excellent':fps>=100?'Great':fps>=60?'Good':fps>=30?'Playable':'Poor';
+    return `<tr><td>${r.label} ${g.preset.split(' ')[0]}</td><td><strong>${fps} FPS</strong></td><td class="text-muted">${q}</td></tr>`;
+  }).join('');
+  const presetRows = presets.map(p=>{
+    const fps = Math.round(g.fps * p.mult);
+    return `<tr><td>1080p ${p.label}</td><td><strong>${fps} FPS</strong></td><td class="text-muted">${g.confidence} confidence</td></tr>`;
+  }).join('');
+  const a = state.analysis;
+  $('#modalGameBody').innerHTML = `
+    <div class="grid grid-2 mb-2">
+      <div class="card-soft" style="background:var(--surface-2);padding:1rem;border-radius:var(--radius-sm);">
+        <div class="text-muted" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700;">Estimated FPS</div>
+        <div style="font-size:2rem;font-weight:800;letter-spacing:-.03em;">${g.low}–${g.high}</div>
+        <div class="text-muted" style="font-size:.78rem;">Confidence: <strong>${g.confidence}</strong></div>
+      </div>
+      <div class="card-soft" style="background:var(--surface-2);padding:1rem;border-radius:var(--radius-sm);">
+        <div class="text-muted" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700;">Component Load</div>
+        <div class="mt-1" style="font-size:.85rem;">GPU: <strong>${Math.min(99,Math.round(g.gw*100*(a.gpuScore/70)))}%</strong></div>
+        <div style="font-size:.85rem;">CPU: <strong>${Math.min(99,Math.round(g.cw*100*(a.cpuScore/70)))}%</strong></div>
+        <div style="font-size:.85rem;">VRAM: <strong>${(g.gw*a.gpu.vram*0.9).toFixed(1)} GB</strong></div>
+      </div>
+    </div>
+    <h4 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin:.75rem 0 .5rem;">By Resolution</h4>
+    <table class="data"><thead><tr><th>Resolution</th><th>FPS</th><th>Quality</th></tr></thead><tbody>${rows}</tbody></table>
+    <h4 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin:1rem 0 .5rem;">By Preset (1080p)</h4>
+    <table class="data"><thead><tr><th>Preset</th><th>FPS</th><th>Confidence</th></tr></thead><tbody>${presetRows}</tbody></table>
+    <h4 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin:1rem 0 .5rem;">Recommended Settings</h4>
+    <ul style="list-style:none;font-size:.85rem;line-height:1.8;">
+      <li>Texture Quality → <strong>${g.fps>=80?'High':'Medium'}</strong></li>
+      <li>Shadows → <strong>${g.fps>=100?'High':g.fps>=60?'Medium':'Low'}</strong></li>
+      <li>Ray Tracing → <strong>${g.rt && g.fps>=120?'On':g.rt && g.fps>=90?'Selective':'Off'}</strong></li>
+      <li>Upscaling → <strong>${g.fps<50?'DLSS/FSR Performance':g.fps<80?'Quality':'Off'}</strong></li>
+    </ul>
+  `;
+  $('#gameModal').classList.add('show');
+}
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+$$('.modal-backdrop').forEach(m=>m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('show'); }));
+
+/* ----------------------------------------------------------------
+   RENDER: BUILD HEALTH
+   ---------------------------------------------------------------- */
+function renderBuildHealth(){
+  const a = state.analysis;
+  if(!a){ return; }
+  const checks = [];
+  checks.push({ok:true, label:'CPU socket supported', desc:`${a.cpu.name} (${a.cpu.socket})`});
+  checks.push({ok:true, label:'GPU PCIe compatible', desc:`${a.gpu.name} — PCIe 4.0 x16`});
+  const ramType = a.ram.type;
+  const cpuGen = a.cpu.gen || '';
+  if(cpuGen.includes('Zen 5') || cpuGen.includes('Arrow')){
+    checks.push({ok:ramType==='DDR5', label:'RAM matches CPU platform', desc:`${a.cpu.name} prefers DDR5, you have ${ramType}`});
+  } else {
+    checks.push({ok:ramType==='DDR4' || cpuGen.includes('Zen 4') || cpuGen.includes('Alder') || cpuGen.includes('Raptor'), label:'RAM matches CPU platform', desc:`${a.ram.name}`});
+  }
+  const psuOK = a.psuHeadroom > 100;
+  checks.push({ok:psuOK, label:'PSU headroom', desc:`${a.psuWatt}W PSU · ${a.power}W est. draw · ${a.psuHeadroom}W headroom`});
+  checks.push({ok:true, label:'Storage present', desc:`${state.build.storages.length} drive(s)`});
+  const coolerOK = !(a.cpu.tdp > 120 && state.build.coolerType === 'Stock cooler');
+  checks.push({ok:coolerOK, label:'Cooling adequate', desc:`${state.build.coolerType} for ${a.cpu.tdp}W TDP CPU`});
+  const passed = checks.filter(c=>c.ok).length;
+  $('#healthList').innerHTML = `
+    <div class="flex-between mb-2"><strong>${passed}/${checks.length} checks passed</strong></div>
+    ${checks.map(c=>`
+      <div class="spec-row" style="border-color:${c.ok?'var(--border)':'color-mix(in srgb,var(--warn) 40%,transparent)'};">
+        <div class="spec-icon" style="background:${c.ok?'color-mix(in srgb,var(--success) 15%,transparent)':'color-mix(in srgb,var(--warn) 15%,transparent)'};color:${c.ok?'var(--success)':'var(--warn)'};">
+          <i class="fas fa-${c.ok?'check':'triangle-exclamation'}"></i>
+        </div>
+        <div class="spec-info"><div class="value">${c.label}</div><div class="label" style="text-transform:none;letter-spacing:0;font-size:.72rem;">${c.desc}</div></div>
+      </div>`).join('')}
+  `;
+}
+
+/* ----------------------------------------------------------------
+   RENDER: UPGRADE PAGE
+   ---------------------------------------------------------------- */
+function renderUpgradePage(){
+  const a = state.analysis;
+  if(!a){ $('#fullUpgrade').innerHTML = `<div class="empty"><i class="fas fa-route"></i><p>Analyze your PC first.</p></div>`; return; }
+  $('#fullUpgrade').innerHTML = upgradeTeaserHtml(a, true);
+  const priorities = [];
+  if(a.cpuScore < a.gpuScore - 15) priorities.push({icon:'microchip', label:'CPU upgrade', impact:'High', detail:`Your ${a.cpu.name} is limiting your GPU.`});
+  if(a.gpuScore < 70) priorities.push({icon:'display', label:'GPU upgrade', impact:'High', detail:`Your ${a.gpu.name} is the primary bottleneck in most games.`});
+  if(a.ramScore < 70) priorities.push({icon:'memory', label:'RAM upgrade', impact:'Medium', detail:`${a.ram.capacity}GB is limited for modern titles.`});
+  if(a.storageScore < 70) priorities.push({icon:'hard-drive', label:'Storage upgrade', impact:'Medium', detail:'Upgrading to NVMe will improve loading times.'});
+  if(a.psuHeadroom < 100) priorities.push({icon:'plug', label:'PSU upgrade', impact:'High', detail:'PSU headroom is under 100W. Consider a higher-wattage unit.'});
+  if(priorities.length===0) priorities.push({icon:'circle-check', label:'System is balanced', impact:'—', detail:'No urgent upgrades needed.'});
+  $('#priorityList').innerHTML = priorities.map(p=>`
+    <div class="bn-item">
+      <div class="bn-icon" style="background:color-mix(in srgb,var(--primary) 15%,transparent);color:var(--primary);"><i class="fas fa-${p.icon}"></i></div>
+      <div class="bn-body">
+        <div class="bn-head"><strong>${p.label}</strong><span>${p.impact} impact</span></div>
+        <div class="bn-desc">${p.detail}</div>
+      </div>
+    </div>`).join('');
+}
+function upgradeTeaserHtml(a, full=false){
+  // Determine upgrade suggestions based on current GPU tier
+  const gpuTier = a.gpu.tier;
+  const paths = {
+    'entry':       {value:'RX 7600', high:'RTX 4070', enthusiast:'RTX 5080'},
+    'mainstream':  {value:'RX 7700 XT', high:'RTX 4070 Super', enthusiast:'RTX 5080'},
+    'performance': {value:'RX 7800 XT', high:'RTX 4080', enthusiast:'RTX 5090'},
+    'enthusiast':  {value:'RTX 4080', high:'RTX 5090', enthusiast:'RTX 5090'},
+    'flagship':    {value:'RTX 5090', high:'RTX 5090', enthusiast:'RTX 5090'}
+  };
+  const p = paths[gpuTier] || paths.mainstream;
+  return `
+    <div class="upgrade-path">
+      <div class="up-step current"><i class="fas fa-circle" style="font-size:6px;"></i> Current: ${a.gpu.name}</div>
+      <i class="fas fa-arrow-right up-arrow"></i>
+      <div class="up-step best"><i class="fas fa-star" style="font-size:9px;"></i> Best value: ${p.value}</div>
+      <i class="fas fa-arrow-right up-arrow"></i>
+      <div class="up-step">High-end: ${p.high}</div>
+      <i class="fas fa-arrow-right up-arrow"></i>
+      <div class="up-step">Enthusiast: ${p.enthusiast}</div>
+    </div>
+    <table class="data">
+      <thead><tr><th>Upgrade</th><th>Est. FPS gain</th><th>Cost</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>${p.value}</td><td>+42%</td><td>$</td><td class="stars">★★★★★</td></tr>
+        <tr><td>${p.high}</td><td>+86%</td><td>$$</td><td class="stars">★★★★</td></tr>
+        <tr><td>${p.enthusiast}</td><td>+145%</td><td>$$$$</td><td class="stars">★★★</td></tr>
+      </tbody>
+    </table>
+    ${full?`<p class="text-muted mt-2">Best upgrade per dollar: <strong>GPU — ${p.value} class</strong></p>`:''}
+  `;
+}
+
+/* ----------------------------------------------------------------
+   RENDER: BENCHMARKS PAGE
+   ---------------------------------------------------------------- */
+function renderBenchmarksPage(){
+  const a = state.analysis;
+  if(!a){ return; }
+  // CPU benchmark
+  const cpuRank = allCpus().sort((x,y)=>y.cb23-x.cb23).findIndex(c=>c.name===a.cpu.name)+1;
+  const cpuTotal = allCpus().length;
+  $('#cpuBench').innerHTML = `
+    <div class="flex-between mb-2">
+      <div><div style="font-size:1.5rem;font-weight:800;">${fmt(a.cpu.cb23)}</div><div class="text-muted">Cinebench R23 Multi</div></div>
+      <div class="pill pill-blue">Rank #${cpuRank} of ${cpuTotal}</div>
+    </div>
+    <div class="meter mb-2"><div class="meter-label">Relative</div><div class="meter-track"><div class="meter-fill good" style="width:${Math.min(100,a.cpu.cb23/420*100)}%"></div></div><div class="meter-value">${Math.round(a.cpu.cb23/420*100)}</div></div>
+    <div class="grid grid-2">
+      <div class="card-soft" style="background:var(--surface-2);padding:.75rem;border-radius:var(--radius-sm);"><div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">Cores</div><strong>${a.cpu.cores}</strong></div>
+      <div class="card-soft" style="background:var(--surface-2);padding:.75rem;border-radius:var(--radius-sm);"><div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">Clock</div><strong>${a.cpu.clock}</strong></div>
+      <div class="card-soft" style="background:var(--surface-2);padding:.75rem;border-radius:var(--radius-sm);"><div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">TDP</div><strong>${a.cpu.tdp}W</strong></div>
+      <div class="card-soft" style="background:var(--surface-2);padding:.75rem;border-radius:var(--radius-sm);"><div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">Socket</div><strong>${a.cpu.socket}</strong></div>
+    </div>`;
+
+  // GPU benchmark
+  const gpuRank = allGpus().sort((x,y)=>y.ts-x.ts).findIndex(g=>g.name===a.gpu.name)+1;
+  const gpuTotal = allGpus().length;
+  $('#gpuBench').innerHTML = `
+    <div class="flex-between mb-2">
+      <div><div style="font-size:1.5rem;font-weight:800;">${fmt(a.gpu.ts)}</div><div class="text-muted">3DMark Time Spy Graphics</div></div>
+      <div class="pill pill-blue">Rank #${gpuRank} of ${gpuTotal}</div>
+    </div>
+    <div class="meter mb-2"><div class="meter-label">Relative</div><div class="meter-track"><div class="meter-fill good" style="width:${Math.min(100,a.gpu.ts/365)}%"></div></div><div class="meter-value">${Math.round(a.gpu.ts/365)}</div></div>
+    <div class="grid grid-2">
+      <div class="card-soft" style="background:var(--surface-2);padding:.75rem;border-radius:var(--radius-sm);"><div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">VRAM</div><strong>${a.gpu.vram} GB</strong></div>
+      <div class="card-soft" style="background:var(--surface-2);padding:.75rem;border-radius:var(--radius-sm);"><div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">TDP</div><strong>${a.gpu.tdp} W</strong></div>
+      <div class="card-soft" style="background:var(--surface-2);padding:.75rem;border-radius:var(--radius-sm);"><div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">Ray Tracing</div><strong>${a.gpu.rt?'Yes':'No'}</strong></div>
+      <div class="card-soft" style="background:var(--surface-2);padding:.75rem;border-radius:var(--radius-sm);"><div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">Tier</div><strong style="text-transform:capitalize;">${a.gpu.tier}</strong></div>
+    </div>`;
+
+  // Database preview
+  const topCpus = allCpus().sort((x,y)=>y.cb23-x.cb23).slice(0,5);
+  const topGpus = allGpus().sort((x,y)=>y.ts-x.ts).slice(0,5);
+  $('#benchDb').innerHTML = `
+    <div class="grid grid-2">
+      <div><h4 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:.5rem;">Top CPUs</h4>
+      <table class="data"><thead><tr><th>CPU</th><th>CB23</th></tr></thead><tbody>${topCpus.map(c=>`<tr><td>${c.name}</td><td>${fmt(c.cb23)}</td></tr>`).join('')}</tbody></table></div>
+      <div><h4 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:.5rem;">Top GPUs</h4>
+      <table class="data"><thead><tr><th>GPU</th><th>Time Spy</th></tr></thead><tbody>${topGpus.map(g=>`<tr><td>${g.name}</td><td>${fmt(g.ts)}</td></tr>`).join('')}</tbody></table></div>
+    </div>`;
+}
+function allCpus(){ return [...CPUS.AMD, ...CPUS.Intel]; }
+function allGpus(){ return [...GPUS.NVIDIA, ...GPUS.AMD, ...GPUS.Intel]; }
+
+/* ----------------------------------------------------------------
+   COMPARE
+   ---------------------------------------------------------------- */
+function populateCompareSelects(){
+  const cpuOpts = allCpus().map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
+  const gpuOpts = allGpus().map(g=>`<option value="${g.name}">${g.name}</option>`).join('');
+  const ramOpts = RAMS.map(r=>`<option value="${r.name}">${r.name}</option>`).join('');
+  ['cmpACpu','cmpBCpu'].forEach(id=>{ const el=$('#'+id); if(el && !el.innerHTML) el.innerHTML = cpuOpts; });
+  ['cmpAGpu','cmpBGpu'].forEach(id=>{ const el=$('#'+id); if(el && !el.innerHTML) el.innerHTML = gpuOpts; });
+  ['cmpARam','cmpBRam'].forEach(id=>{ const el=$('#'+id); if(el && !el.innerHTML) el.innerHTML = ramOpts; });
+  // Preset defaults
+  if($('#cmpACpu').value==='' ) $('#cmpACpu').value = state.build.cpu;
+  if($('#cmpAGpu').value==='' ) $('#cmpAGpu').value = state.build.gpu;
+  if($('#cmpARam').value==='' ) $('#cmpARam').value = state.build.ram;
+  if($('#cmpBCpu').value==='' ) $('#cmpBCpu').value = 'Ryzen 7 7800X3D';
+  if($('#cmpBGpu').value==='' ) $('#cmpBGpu').value = 'RTX 5080';
+  if($('#cmpBRam').value==='' ) $('#cmpBRam').value = '32GB DDR5 6000';
+}
+function evalBuild(cpuName, gpuName, ramName){
+  const cpu = getCpuData(cpuName), gpu = getGpuData(gpuName), ram = getRamData(ramName);
+  const cpuScore = clamp(Math.round(cpu.mult*42),5,100);
+  const gpuScore = clamp(Math.round(gpu.mult*30),5,100);
+  const ramScore = clamp(Math.round(ram.mult*78),5,100);
+  const total = Math.round(cpuScore*0.35 + gpuScore*0.5 + ramScore*0.15);
+  return {cpu, gpu, ram, cpuScore, gpuScore, ramScore, total};
+}
+function runCompare(){
+  const A = evalBuild($('#cmpACpu').value, $('#cmpAGpu').value, $('#cmpARam').value);
+  const B = evalBuild($('#cmpBCpu').value, $('#cmpBGpu').value, $('#cmpBRam').value);
+  const gpuDelta = ((B.gpuScore - A.gpuScore) / A.gpuScore * 100);
+  const cpuDelta = ((B.cpuScore - A.cpuScore) / A.cpuScore * 100);
+  const ramDelta = ((B.ramScore - A.ramScore) / A.ramScore * 100);
+  const winner = B.total > A.total ? 'B' : 'A';
+  const diff = Math.abs(B.total - A.total);
+
+  $('#compareResult').innerHTML = `
+    <div class="grid grid-2 mb-3">
+      <div class="card-soft" style="background:var(--surface-2);padding:1.25rem;border-radius:var(--radius-sm);">
+        <div class="card-title mb-2"><i class="fas fa-desktop"></i> Build A</div>
+        <div class="text-muted" style="font-size:.8rem;">${A.cpu.name}</div>
+        <div class="text-muted" style="font-size:.8rem;">${A.gpu.name}</div>
+        <div class="text-muted mb-2" style="font-size:.8rem;">${A.ram.name}</div>
+        <div style="font-size:2.2rem;font-weight:800;letter-spacing:-.03em;">${A.total}<span style="font-size:1rem;color:var(--text-3);">/100</span></div>
+        ${winner==='A'?'<span class="pill pill-green">Winner</span>':''}
+      </div>
+      <div class="card-soft" style="background:var(--surface-2);padding:1.25rem;border-radius:var(--radius-sm);">
+        <div class="card-title mb-2"><i class="fas fa-desktop"></i> Build B</div>
+        <div class="text-muted" style="font-size:.8rem;">${B.cpu.name}</div>
+        <div class="text-muted" style="font-size:.8rem;">${B.gpu.name}</div>
+        <div class="text-muted mb-2" style="font-size:.8rem;">${B.ram.name}</div>
+        <div style="font-size:2.2rem;font-weight:800;letter-spacing:-.03em;">${B.total}<span style="font-size:1rem;color:var(--text-3);">/100</span></div>
+        ${winner==='B'?'<span class="pill pill-green">Winner</span>':''}
+      </div>
+    </div>
+    <table class="data">
+      <thead><tr><th>Metric</th><th>Build A</th><th>Build B</th><th>Δ</th></tr></thead>
+      <tbody>
+        <tr><td>CPU Score</td><td>${A.cpuScore}</td><td>${B.cpuScore}</td><td class="${cpuDelta>=0?'':'text-muted'}" style="color:${cpuDelta>=0?'var(--success)':'var(--danger)'};">${cpuDelta>=0?'+':''}${cpuDelta.toFixed(0)}%</td></tr>
+        <tr><td>GPU Score</td><td>${A.gpuScore}</td><td>${B.gpuScore}</td><td style="color:${gpuDelta>=0?'var(--success)':'var(--danger)'};">${gpuDelta>=0?'+':''}${gpuDelta.toFixed(0)}%</td></tr>
+        <tr><td>RAM Score</td><td>${A.ramScore}</td><td>${B.ramScore}</td><td style="color:${ramDelta>=0?'var(--success)':'var(--danger)'};">${ramDelta>=0?'+':''}${ramDelta.toFixed(0)}%</td></tr>
+      </tbody>
+    </table>
+    <div class="mt-3" style="padding:1rem;background:color-mix(in srgb,var(--primary) 8%,transparent);border-radius:var(--radius-sm);border-left:3px solid var(--primary);">
+      <strong>🏆 Recommended: Build ${winner}</strong>
+      <p class="text-muted mt-1" style="font-size:.85rem;">Build ${winner} scores ${Math.max(A.total,B.total)} vs ${Math.min(A.total,B.total)} (${diff} point difference). ${winner==='B'?'Build B is significantly faster.':'Build A is the better performer.'}</p>
+    </div>
+  `;
+}
+$('#runCompare').addEventListener('click', runCompare);
+
+/* ----------------------------------------------------------------
+   ADVISOR
+   ---------------------------------------------------------------- */
+$$('#advisorGoals button').forEach(btn=>btn.addEventListener('click', ()=>{
+  const goal = btn.dataset.goal;
+  const a = state.analysis;
+  if(!a){ toast('Analyze your PC first','fa-triangle-exclamation'); return; }
+  let html = '';
+  if(goal==='fps'){
+    html = `<div class="card-title mb-2"><i class="fas fa-gamepad"></i> Max FPS Recommendation</div>
+    <p class="text-muted mb-2">Your ${a.gpu.name} is producing good frames. For maximum FPS:</p>
+    <ul style="list-style:none;line-height:2;font-size:.9rem;">
+      <li>• Set graphics to <strong>Low/Medium</strong> in competitive titles.</li>
+      <li>• Enable <strong>${a.gpu.rt?'DLSS/FSR Performance':'FSR'}</strong> if supported.</li>
+      <li>• Disable ray tracing.</li>
+      <li>• Consider a <strong>CPU upgrade</strong> if you play at 1080p — your ${a.cpu.name} will cap frames first.</li>
+    </ul>`;
+  } else if(goal==='graphics'){
+    html = `<div class="card-title mb-2"><i class="fas fa-palette"></i> Better Graphics Recommendation</div>
+    <p class="text-muted mb-2">For high/ultra settings with ray tracing:</p>
+    <ul style="list-style:none;line-height:2;font-size:.9rem;">
+      <li>• Target <strong>${a.gpu.tier==='flagship'?'4K':'1440p'}</strong> for the best balance.</li>
+      <li>• Enable <strong>${a.gpu.rt?'DLSS/FSR Quality':'FSR Quality'}</strong>.</li>
+      <li>• <strong>${a.gpu.rt?'Your GPU supports ray tracing.':'Your GPU does not support hardware ray tracing.'}</strong></li>
+      ${a.gpuScore<70?'<li>• A GPU upgrade would unlock Ultra + RT.</li>':''}
+    </ul>`;
+  } else if(goal==='value'){
+    html = `<div class="card-title mb-2"><i class="fas fa-dollar-sign"></i> Best Value Recommendation</div>
+    <p class="text-muted mb-2">Best FPS-per-dollar moves for your build:</p>
+    <ul style="list-style:none;line-height:2;font-size:.9rem;">
+      <li>• <strong>GPU:</strong> RX 7600 or RTX 4060 — biggest jump per dollar.</li>
+      <li>• <strong>SSD:</strong> NVMe Gen4 1TB — cheap, noticeable improvement.</li>
+      ${a.ram.capacity<32?'<li>• <strong>RAM:</strong> 32GB kit — future-proofs modern games.</li>':''}
+    </ul>`;
+  } else if(goal==='fix'){
+    if(a.bottlenecks.length===0){ html = `<div class="card-title mb-2"><i class="fas fa-circle-check" style="color:var(--success);"></i> No Bottlenecks</div><p class="text-muted">Your system is well balanced. No fixes required.</p>`; }
+    else {
+      html = `<div class="card-title mb-2"><i class="fas fa-wrench"></i> Fixing Your Bottleneck${a.bottlenecks.length>1?'s':''}</div>`;
+      html += a.bottlenecks.map(b=>`<div class="bn-item mb-2"><div class="bn-icon ${b.icon}"><i class="fas fa-${b.component==='CPU'?'microchip':b.component==='GPU'?'display':'memory'}"></i></div><div class="bn-body"><div class="bn-head"><strong>${b.component}</strong></div><div class="bn-desc">${b.desc}</div></div></div>`).join('');
+    }
+  } else if(goal==='upgrade'){
+    html = `<div class="card-title mb-2"><i class="fas fa-arrow-up"></i> Upgrade Plan</div>
+    <p class="text-muted mb-2">Recommended progression from your current build:</p>
+    ${upgradeTeaserHtml(a)}`;
+  } else if(goal==='144'){
+    const hits = a.gameResults.filter(g=>g.fps>=144).length;
+    const misses = a.gameResults.filter(g=>g.fps<144).slice(0,5);
+    html = `<div class="card-title mb-2"><i class="fas fa-gauge-high"></i> Reaching 144 FPS</div>
+    <p class="text-muted mb-2">You hit 144+ FPS in <strong>${hits} of ${a.gameResults.length}</strong> titles.</p>
+    ${misses.length?'<p class="text-muted mb-1">Games that fall short:</p>':'<p class="text-muted">You hit 144 FPS in every game tested. Excellent!</p>'}
+    ${misses.map(g=>`<div class="bn-item mb-1"><div class="bn-icon gpu"><i class="fas fa-gamepad"></i></div><div class="bn-body"><div class="bn-head"><strong>${g.name}</strong><span>${g.fps} FPS</span></div></div></div>`).join('')}`;
+  }
+  $('#advisorResult').innerHTML = html;
+}));
+
+/* ----------------------------------------------------------------
+   SAVED BUILDS
+   ---------------------------------------------------------------- */
+$('#saveBuildBtn').addEventListener('click', ()=>{
+  const name = prompt('Name your build:', state.build.cpu.split(' ')[0] + ' + ' + state.build.gpu.split(' ').slice(0,2).join(' '));
+  if(!name) return;
+  const entry = {id:Date.now(), name, build:JSON.parse(JSON.stringify(state.build)), date:new Date().toISOString()};
+  state.savedBuilds.push(entry);
+  CK.set('pcp_builds', state.savedBuilds);
+  renderSavedBuilds();
+  toast('Build saved','fa-save');
+});
+function renderSavedBuilds(){
+  if(state.savedBuilds.length===0){
+    $('#savedBuilds').innerHTML = `<div class="empty"><i class="fas fa-cubes"></i><p>No saved builds yet. Configure your PC and click "Save current build".</p></div>`;
+    return;
+  }
+  $('#savedBuilds').innerHTML = `<div class="grid grid-2">${state.savedBuilds.map(b=>`
+    <div class="card">
+      <div class="flex-between mb-1">
+        <div class="card-title">${b.name}</div>
+        <span class="pill pill-gray">${new Date(b.date).toLocaleDateString()}</span>
+      </div>
+      <div class="text-muted" style="font-size:.82rem;">${b.build.cpu}</div>
+      <div class="text-muted" style="font-size:.82rem;">${b.build.gpu}</div>
+      <div class="text-muted mb-2" style="font-size:.82rem;">${b.build.ram}</div>
+      <div class="flex">
+        <button class="btn btn-sm" onclick="loadBuild(${b.id})"><i class="fas fa-folder-open"></i> Load</button>
+        <button class="btn btn-sm" onclick="dupBuild(${b.id})"><i class="fas fa-copy"></i> Duplicate</button>
+        <button class="btn btn-sm btn-danger" onclick="delBuild(${b.id})"><i class="fas fa-trash"></i> Delete</button>
+      </div>
+    </div>`).join('')}</div>`;
+}
+function loadBuild(id){
+  const b = state.savedBuilds.find(x=>x.id===id);
+  if(!b) return;
+  state.build = JSON.parse(JSON.stringify(b.build));
+  CK.set('pcp_build', state.build);
+  syncBuildUI();
+  analyze();
+  navigate('home');
+  toast('Loaded "'+b.name+'"','fa-folder-open');
+}
+function dupBuild(id){
+  const b = state.savedBuilds.find(x=>x.id===id);
+  if(!b) return;
+  state.savedBuilds.push({...b, id:Date.now(), name:b.name+' (copy)', date:new Date().toISOString()});
+  CK.set('pcp_builds', state.savedBuilds);
+  renderSavedBuilds();
+}
+function delBuild(id){
+  confirmDialog('Delete this build?', ()=>{
+    state.savedBuilds = state.savedBuilds.filter(x=>x.id!==id);
+    CK.set('pcp_builds', state.savedBuilds);
+    renderSavedBuilds();
+    toast('Build deleted','fa-trash');
+  });
+}
+
+/* ----------------------------------------------------------------
+   SETTINGS
+   ---------------------------------------------------------------- */
+$$('#themeSwatches .swatch').forEach(el=>el.addEventListener('click', ()=>{
+  state.settings.theme = el.dataset.theme;
+  CK.set('pcp_settings', state.settings);
+  applyTheme();
+}));
+$('#accentPicker').addEventListener('input', e=>{
+  state.settings.accent = e.target.value;
+  CK.set('pcp_settings', state.settings);
+  applyTheme();
+});
+$('#grad1').addEventListener('input', e=>{ state.settings.grad1 = e.target.value; CK.set('pcp_settings', state.settings); applyTheme(); });
+$('#grad2').addEventListener('input', e=>{ state.settings.grad2 = e.target.value; CK.set('pcp_settings', state.settings); applyTheme(); });
+$('#defaultRes').addEventListener('change', e=>{ state.settings.defaultRes = e.target.value; CK.set('pcp_settings', state.settings); });
+$('#defaultFps').addEventListener('change', e=>{ state.settings.defaultFps = e.target.value; CK.set('pcp_settings', state.settings); });
+$('#defaultQuality').addEventListener('change', e=>{ state.settings.defaultQuality = e.target.value; CK.set('pcp_settings', state.settings); });
+
+$('#quickTheme').addEventListener('click', ()=>{
+  const order = ['dark','light','custom'];
+  const next = order[(order.indexOf(state.settings.theme)+1)%order.length];
+  state.settings.theme = next;
+  CK.set('pcp_settings', state.settings);
+  applyTheme();
+});
+$('#quickSettings').addEventListener('click', ()=>navigate('settings'));
+
+/* Export/Import */
+$('#exportBtn').addEventListener('click', ()=>{
+  const payload = {version:3, build:state.build, settings:state.settings, builds:state.savedBuilds, exported:new Date().toISOString()};
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'pcplayground-build.pcp';
+  a.click();
+  toast('Build exported','fa-download');
+});
+$('#importBtn').addEventListener('click', ()=>$('#importFile').click());
+$('#importFile').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    try{
+      const data = JSON.parse(ev.target.result);
+      if(data.build) { state.build = data.build; CK.set('pcp_build', state.build); }
+      if(data.settings) { state.settings = {...state.settings, ...data.settings}; CK.set('pcp_settings', state.settings); }
+      if(data.builds) { state.savedBuilds = data.builds; CK.set('pcp_builds', state.savedBuilds); }
+      syncBuildUI(); applyTheme(); analyze(); renderSavedBuilds();
+      toast('Build imported','fa-upload');
+    }catch(err){ toast('Invalid file','fa-triangle-exclamation'); }
+  };
+  reader.readAsText(file);
+});
+$('#resetPrefs').addEventListener('click', ()=>{
+  confirmDialog('Reset preferences?', ()=>{
+    state.settings = {theme:'dark', accent:'#3b82f6', grad1:'#3b82f6', grad2:'#a78bfa', defaultRes:'1080p', defaultFps:'144', defaultQuality:'High'};
+    CK.set('pcp_settings', state.settings);
+    applyTheme();
+    toast('Preferences reset','fa-rotate-left');
+  });
+});
+$('#clearAll').addEventListener('click', ()=>{
+  confirmDialog('Clear ALL data (builds + settings)? This cannot be undone.', ()=>{
+    CK.clearAll();
+    location.reload();
+  });
+});
+
+/* Confirm dialog */
+let confirmCb = null;
+function confirmDialog(msg, cb){
+  $('#confirmText').textContent = msg;
+  confirmCb = cb;
+  $('#confirmModal').classList.add('show');
+}
+$('#confirmCancel').addEventListener('click', ()=>{ $('#confirmModal').classList.remove('show'); confirmCb=null; });
+$('#confirmOk').addEventListener('click', ()=>{ $('#confirmModal').classList.remove('show'); if(confirmCb) confirmCb(); confirmCb=null; });
+
+/* ----------------------------------------------------------------
+   GLOBAL SEARCH
+   ---------------------------------------------------------------- */
+$('#globalSearch').addEventListener('input', e=>{
+  const q = e.target.value.trim().toLowerCase();
+  if(!q){ return; }
+  // Simple behavior: if matches a page, hint at it. If matches a game, navigate to games.
+  const game = GAMES.find(g=>g.name.toLowerCase().includes(q));
+  if(game){ toast('Try "Games" page to see: '+game.name, 'fa-gamepad'); }
+});
+
+/* ----------------------------------------------------------------
+   MOBILE MENU
+   ---------------------------------------------------------------- */
+function checkMobile(){
+  const isMobile = window.innerWidth <= 760;
+  $('#menuBtn').style.display = isMobile ? 'grid' : 'none';
+}
+window.addEventListener('resize', checkMobile);
+checkMobile();
+$('#menuBtn').addEventListener('click', ()=>$('#sidebar').classList.toggle('open'));
+
+/* ----------------------------------------------------------------
+   BOOT
+   ---------------------------------------------------------------- */
+(function boot(){
+  // Sync UI from state
+  $('#cpuBrand').value = state.build.cpuBrand;
+  populateCpuSelect();
+  $('#cpuSelect').value = state.build.cpu;
+  $('#gpuBrand').value = state.build.gpuBrand;
+  populateGpuSelect();
+  $('#gpuSelect').value = state.build.gpu;
+  populateRamSelect();
+  $('#ramSelect').value = state.build.ram;
+  $('#ramSpeed').value = state.build.ramSpeed;
+  $('#psuWatt').value = state.build.psuWatt;
+  $('#psuEff').value = state.build.psuEff;
+  $('#coolerType').value = state.build.coolerType;
+  renderStorage();
+  applyTheme();
+  populateCompareSelects();
+  renderSavedBuilds();
+
+  // Auto-analyze if we have a saved build
+  if(savedBuild){ analyze(); }
+  else {
+    // Render initial empty state
+    $('#heroCpu').textContent = state.build.cpu;
+    $('#heroGpu').textContent = state.build.gpu;
+    $('#heroRam').textContent = state.build.ram;
+    $('#gamesCountBadge').textContent = GAMES.length;
+  }
+  console.log('%cPC Playground v3.0','font-size:16px;font-weight:800;color:#3b82f6');
+  console.log('Loaded:', allCpus().length, 'CPUs,', allGpus().length, 'GPUs,', GAMES.length, 'games');
+})();
+</script>
 </body>
 </html>
