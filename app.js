@@ -1285,13 +1285,6 @@ $$('#advisorGoals button').forEach(btn=>btn.addEventListener('click', ()=>{
     html = `<div class="card-title mb-2"><i class="fas fa-arrow-up"></i> Upgrade Plan</div>
     <p class="text-muted mb-2">Recommended progression from your current build:</p>
     ${upgradeTeaserHtml(a)}`;
-  } else if(goal==='144'){
-    const hits = a.gameResults.filter(g=>g.fps>=144).length;
-    const misses = a.gameResults.filter(g=>g.fps<144).slice(0,5);
-    html = `<div class="card-title mb-2"><i class="fas fa-gauge-high"></i> Reaching 144 FPS</div>
-    <p class="text-muted mb-2">You hit 144+ FPS in <strong>${hits} of ${a.gameResults.length}</strong> titles.</p>
-    ${misses.length?'<p class="text-muted mb-1">Games that fall short:</p>':'<p class="text-muted">You hit 144 FPS in every game tested. Excellent!</p>'}
-    ${misses.map(g=>`<div class="bn-item mb-1"><div class="bn-icon gpu"><i class="fas fa-gamepad"></i></div><div class="bn-body"><div class="bn-head"><strong>${g.name}</strong><span>${g.fps} FPS</span></div></div></div>`).join('')}`;
   } else if(goal==='target'){
     // Build a game <option> list sorted alphabetically
     const sorted = [...a.gameResults].sort((x,y)=>x.name.localeCompare(y.name));
