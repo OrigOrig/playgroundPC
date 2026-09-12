@@ -2426,36 +2426,41 @@ function renderBuildAPC(){
 
   // Default selections if empty
   if($('#bapcCase') && !$('#bapcCase').value) $('#bapcCase').value = '0';
+  bapc.case = CASES[+($('#bapcCase')?.value || 0)] || CASES[0];
+
   if($('#bapcCpu') && !$('#bapcCpu').value){
     const defCpu = allCpus().find(c=>c.name==='Ryzen 5 7600X') || allCpus()[0];
     $('#bapcCpu').value = defCpu.name;
-    bapc.cpu = defCpu;
   }
+  bapc.cpu = findCpu($('#bapcCpu')?.value) || null;
+
   if($('#bapcGpu') && !$('#bapcGpu').value){
     const defGpu = allGpus().find(g=>g.name==='RTX 4070') || allGpus()[0];
     $('#bapcGpu').value = defGpu.name;
-    bapc.gpu = defGpu;
   }
+  bapc.gpu = findGpu($('#bapcGpu')?.value) || null;
+
   if($('#bapcRam') && !$('#bapcRam').value){
     const defRam = RAM_EXTENDED.find(r=>r.capacity===16 && r.type==='DDR5') || RAM_EXTENDED[0];
     $('#bapcRam').value = ramLabel(defRam);
-    bapc.ram = defRam;
   }
-  if($('#bapcCooler') && !$('#bapcCooler').value){
-    $('#bapcCooler').value = '13'; // AIO 240mm
-    bapc.cooler = COOLERS[13];
-  }
-  if($('#bapcPsu') && !$('#bapcPsu').value){
-    $('#bapcPsu').value = '12';    // 750W Gold
-    bapc.psu = PSUS[12];
-  }
-  if($('#bapcStorage') && !$('#bapcStorage').value){
-    $('#bapcStorage').value = '9'; // NVMe Gen4
-    bapc.storage = STORAGE_EXTENDED[9];
-  }
+  bapc.ram = findRamByLabel($('#bapcRam')?.value) || null;
+
+  if($('#bapcCooler') && !$('#bapcCooler').value) $('#bapcCooler').value = '13';
+  bapc.cooler = COOLERS[+($('#bapcCooler')?.value || 0)] || COOLERS[0];
+
+  if($('#bapcPsu') && !$('#bapcPsu').value) $('#bapcPsu').value = '12';
+  bapc.psu = PSUS[+($('#bapcPsu')?.value || 0)] || PSUS[0];
+
+  if($('#bapcStorage') && !$('#bapcStorage').value) $('#bapcStorage').value = '9';
+  bapc.storage = STORAGE_EXTENDED[+($('#bapcStorage')?.value || 0)] || STORAGE_EXTENDED[0];
+
+  if($('#bapcStorageQty') && !$('#bapcStorageQty').value) $('#bapcStorageQty').value = '1';
+  bapc.storageQty = +($('#bapcStorageQty')?.value || 1);
 
   renderBapcWarnings();
   renderBapcCostTable();
+  renderBapcScene();
 }
 
 /* ---------- Wire up <select> change handlers (once) ---------- */
@@ -2529,6 +2534,190 @@ function setBapcStorageQty(n){
   renderBapcCostTable();
   renderBapcWarnings();
 }
+
+/* ================================================================
+   BUILD A PC — VISUAL CASE BUILDER (Paste 5b-2)
+   Renders the case SVG, drops in component icons, wires up
+   drag-to-rotate and compatibility glow.
+   ================================================================ */
+
+/* ---------- viewport transform state ---------- */
+bapc.view = {
+  rotY: -14,      // yaw in degrees
+  rotX: 8,        // pitch in degrees
+  dragging: false,
+  startX: 0,
+  startY: 0,
+  startRotY: -14,
+  startRotX: 8
+};
+
+/* ---------- main scene renderer ---------- */
+function renderBapcScene(){
+  const svg = $('#bapcSvg');
+  if(!svg) return;
+
+  const cse  = bapc.case;
+  const cpu  = bapc.cpu;
+  const gpu  = bapc.gpu;
+  const ram  = bapc.ram;
+  const cool = bapc.cooler;
+  const psu  = bapc.psu;
+  const stg  = bapc.storage;
+
+  /* --- figure out glow colors per slot from compatibility --- */
+  const compat = runBapcCompatibility();
+  const glow = {
+    gpu:     '#22c55e',
+    cooler:  '#22c55e',
+    psu:     '#22c55e',
+    storage: '#22c55e',
+    ram:     '#22c55e',
+    cpu:     '#22c55e'
+  };
+  compat.issues.forEach(i=>{
+    if(i.text.toLowerCase().includes('gpu'))     glow.gpu = '#ef4444';
+    if(i.text.toLowerCase().includes('cooler'))  glow.cooler = '#ef4444';
+    if(i.text.toLowerCase().includes('psu'))     glow.psu = '#ef4444';
+    if(i.text.toLowerCase().includes('drive'))   glow.storage = '#ef4444';
+    if(i.text.toLowerCase().includes('ddr'))     glow.ram = '#ef4444';
+  });
+  compat.notes.filter(n=>n.level==='warn').forEach(n=>{
+    if(n.text.toLowerCase().includes('gpu')     && glow.gpu!=='#ef4444')     glow.gpu = '#f59e0b';
+    if(n.text.toLowerCase().includes('cooler')  && glow.cooler!=='#ef4444')  glow.cooler = '#f59e0b';
+    if(n.text.toLowerCase().includes('psu')     && glow.psu!=='#ef4444')     glow.psu = '#f59e0b';
+    if(n.text.toLowerCase().includes('drive')   && glow.storage!=='#ef4444') glow.storage = '#f59e0b';
+    if(n.text.toLowerCase().includes('memory')  && glow.ram!=='#ef4444')     glow.ram = '#f59e0b';
+  });
+
+  /* --- case outline scales with case size --- */
+  const formScale = { ITX:0.72, mATX:0.86, ATX:1.0, 'E-ATX':1.12 }[cse.form] || 1.0;
+  const caseW = 300 * formScale;
+  const caseH = 400 * formScale;
+  const caseX = 400 - caseW/2;
+  const caseY = 250 - caseH/2;
+
+  /* --- build the scene markup --- */
+  const gridLines = (()=>{
+    let g = '';
+    for(let x = 40; x < 800; x += 40){
+      g += `<line x1="${x}" y1="0" x2="${x}" y2="500" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>`;
+    }
+    for(let y = 20; y < 500; y += 40){
+      g += `<line x1="0" y1="${y}" x2="800" y2="${y}" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>`;
+    }
+    return g;
+  })();
+
+  /* icon scale — the icon functions render at 100×100, we scale to 60–90px */
+  const iconSlot = (iconFn, x, y, size, glowColor, label) => {
+    const half = size/2;
+    const scale = size/100;
+    return `
+      <g transform="translate(${x - half} ${y - half}) scale(${scale})" style="filter:drop-shadow(0 0 8px ${glowColor});">
+        <circle cx="50" cy="50" r="46" fill="${glowColor}" opacity="0.14"/>
+        <circle cx="50" cy="50" r="46" fill="none" stroke="${glowColor}" stroke-width="1.5" opacity="0.7"/>
+        ${iconFn()}
+      </g>
+      ${label ? `<text x="${x}" y="${y + half + 16}" text-anchor="middle"
+        font-family="Inter,sans-serif" font-size="10" font-weight="700"
+        fill="rgba(255,255,255,0.55)" letter-spacing="1">${label}</text>` : ''}
+    `;
+  };
+
+  const scene = `
+    <g id="bapc-scene-root">
+      ${gridLines}
+      <ellipse cx="400" cy="${caseY + caseH + 20}" rx="${caseW*0.55}" ry="14" fill="rgba(0,0,0,0.5)"/>
+      <g transform="translate(${caseX} ${caseY})">
+        <rect x="0" y="0" width="${caseW}" height="${caseH}" rx="14"
+              fill="rgba(20,24,34,0.55)" stroke="rgba(255,255,255,0.18)" stroke-width="2"/>
+        <rect x="8" y="8" width="${caseW-16}" height="${caseH-16}" rx="10"
+              fill="rgba(0,0,0,0.28)" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <g transform="translate(${caseW-26} ${caseH/2})">
+          <rect x="0" y="-40" width="18" height="80" rx="4" fill="rgba(0,0,0,0.35)"/>
+          <circle cx="9" cy="-24" r="5" fill="${glow.cooler}" opacity="0.5"/>
+          <circle cx="9" cy="0"   r="5" fill="${glow.cooler}" opacity="0.5"/>
+          <circle cx="9" cy="24"  r="5" fill="${glow.cooler}" opacity="0.5"/>
+        </g>
+      </g>
+      ${cpu ? iconSlot(iconCpu, 400, caseY + caseH*0.22, 86*formScale, glow.cpu, 'CPU') : ''}
+      ${gpu ? iconSlot(iconGpu, 400, caseY + caseH*0.52, 120*formScale, glow.gpu, 'GPU') : ''}
+      ${ram ? iconSlot(iconRam, 400 + caseW*0.34, caseY + caseH*0.22, 56*formScale, glow.ram, 'RAM') : ''}
+      ${cool ? iconSlot(iconCooler, 400 - caseW*0.32, caseY + caseH*0.2, 64*formScale, glow.cooler, 'COOL') : ''}
+      ${psu ? iconSlot(iconPsu, 400, caseY + caseH*0.82, 92*formScale, glow.psu, 'PSU') : ''}
+      ${stg ? iconSlot(iconStorage, 400 - caseW*0.32, caseY + caseH*0.74, 60*formScale, glow.storage, 'SSD') : ''}
+    </g>
+  `;
+
+  /* preserveAspectRatio xMidYMid meet; the outer wrapper already handles rotation via CSS */
+  svg.setAttribute('viewBox', '0 0 800 500');
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  svg.innerHTML = scene;
+
+  /* apply rotation transform via the parent wrapper so it stays smooth */
+  svg.style.transformOrigin = '400px 250px';
+  svg.style.transform = `perspective(1200px) rotateX(${bapc.view.rotX}deg) rotateY(${bapc.view.rotY}deg)`;
+}
+
+/* ---------- drag-to-rotate ---------- */
+(function wireBapcRotation(){
+  const viewport = $('#bapcViewport');
+  if(!viewport) return;
+
+  let pointerId = null;
+
+  viewport.addEventListener('pointerdown', (e)=>{
+    /* ignore if user is on a select / button inside the viewport */
+    if(e.target.closest('button, select, input, a')) return;
+    pointerId = e.pointerId;
+    viewport.setPointerCapture(pointerId);
+    bapc.view.dragging = true;
+    bapc.view.startX = e.clientX;
+    bapc.view.startY = e.clientY;
+    bapc.view.startRotY = bapc.view.rotY;
+    bapc.view.startRotX = bapc.view.rotX;
+  });
+
+  viewport.addEventListener('pointermove', (e)=>{
+    if(!bapc.view.dragging || e.pointerId !== pointerId) return;
+    const dx = e.clientX - bapc.view.startX;
+    const dy = e.clientY - bapc.view.startY;
+    bapc.view.rotY = clamp(bapc.view.startRotY + dx * 0.4, -60, 60);
+    bapc.view.rotX = clamp(bapc.view.startRotX - dy * 0.2, -20, 30);
+    const svg = $('#bapcSvg');
+    if(svg){
+      svg.style.transform = `perspective(1200px) rotateX(${bapc.view.rotX}deg) rotateY(${bapc.view.rotY}deg)`;
+    }
+  });
+
+  viewport.addEventListener('pointerup', (e)=>{
+    if(e.pointerId !== pointerId) return;
+    bapc.view.dragging = false;
+    pointerId = null;
+  });
+
+  viewport.addEventListener('pointercancel', ()=>{
+    bapc.view.dragging = false;
+    pointerId = null;
+  });
+})();
+
+/* ---------- re-render scene whenever a bapc field changes ---------- */
+document.addEventListener('change', (e)=>{
+  if(!e.target || !e.target.id) return;
+  if(!e.target.id.startsWith('bapc')) return;
+  renderBapcScene();
+});
+
+/* ---------- re-render scene on window resize (keeps crisp) ---------- */
+let bapcResizeT = null;
+window.addEventListener('resize', ()=>{
+  clearTimeout(bapcResizeT);
+  bapcResizeT = setTimeout(()=>{
+    if($('#page-buildapc')?.classList.contains('active')) renderBapcScene();
+  }, 120);
+});
 
 /* ----------------------------------------------------------------
    BOOT
