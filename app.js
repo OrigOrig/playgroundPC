@@ -2777,7 +2777,7 @@ function renderBapcScene(){
   // Auto-frame the camera based on case size
   const dims = caseDims(bapc.case);
   if(dims){
-    b3d._state.camera.dist = Math.max(dims.w, dims.h, dims.d) * 2.6;
+    b3d._state.camera.dist = Math.max(dims.w, dims.h, dims.d) * 7.5;
   }
 }
 
