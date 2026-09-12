@@ -2273,7 +2273,7 @@ function populateBapcSelects(){
   if($cool && !$cool.innerHTML){
     $cool.innerHTML = `<option value="" disabled selected>—</option>` +
       COOLERS.map((c,i)=>
-        `<option value="${i}">${c.name} · up to ${c.maxTdp}W TDP</option>`
+        `<option value="${i}">${c.name} · up to ${c.maxTdp}W · $${c.price}</option>`
       ).join('');
   }
 
