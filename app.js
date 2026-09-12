@@ -3224,9 +3224,10 @@ const b3d = (function(){
         const p = M.apply(mat, [v[0], v[1], v[2], 1]);
         if(p[3] <= 0.0001) return null;   // behind camera
         const inv = 1 / p[3];
+        const scale = state.H * 0.5;
         return {
-          x: cx + (p[0] * inv) * cx,
-          y: cy - (p[1] * inv) * cy,
+          x: cx + (p[0] * inv) * scale,
+          y: cy - (p[1] * inv) * scale,
           z: p[2] * inv
         };
       });
