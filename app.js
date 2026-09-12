@@ -3080,14 +3080,28 @@ function buildCaseGroup(caseData){
   addBox(railT, railT, d, M.frame, -halfW + railT/2, -halfH + railT/2, 0);
   addBox(railT, railT, d, M.frame,  halfW - railT/2, -halfH + railT/2, 0);
 
-  /* ---- 2. SIDE PANELS ---- */
-  // left side (+X) — may be glass
-  if(style.side === 'glass'){
-    addBox(0.02, h - 0.1, d - 0.1, M.glass(style.glassTint, style.glassOpacity), halfW - 0.01, 0, 0, 'side-glass');
-  } else {
-    addBox(0.05, h - 0.1, d - 0.1, M.panel, halfW - 0.03, 0, 0, 'side-left');
-  }
-  // right side (-X) — always solid (mobo tray)
+   /* ---- 2. SIDE PANELS ----
+     The +X side (the one facing the default camera) is always glass
+     or fully transparent so the user can see inside. The -X side
+     stays solid because it holds the motherboard tray. */
+  addBox(0.02, h - 0.1, d - 0.1,
+    new THREE.MeshPhysicalMaterial({
+      color: 0x88aaff,
+      metalness: 0,
+      roughness: 0.05,
+      transmission: 1.0,     // fully see-through
+      transparent: true,
+      opacity: 0.18,
+      thickness: 0.02,
+      ior: 1.4
+    }),
+    halfW - 0.01, 0, 0, 'side-glass');
+
+  // make sure glass renders last
+  const glassPanel = group.children[group.children.length - 1];
+  glassPanel.renderOrder = 10;
+
+  // right side (-X) — solid (mobo tray backing)
   addBox(0.05, h - 0.1, d - 0.1, M.panel, -halfW + 0.03, 0, 0, 'side-right');
 
   /* ---- 3. FRONT PANEL ---- */
