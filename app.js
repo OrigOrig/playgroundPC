@@ -2992,52 +2992,6 @@ const bScene = (function(){
    and style. Called by renderBapcScene on every change.
    ================================================================ */
 
-/* ---------- Case dimensions per form factor ---------- */
-function caseDims(form){
-  switch(form){
-    case 'ITX':   return { w: 1.4, h: 2.4, d: 2.2 };
-    case 'mATX':  return { w: 1.7, h: 3.2, d: 3.0 };
-    case 'ATX':   return { w: 1.9, h: 3.8, d: 3.6 };
-    case 'E-ATX': return { w: 2.1, h: 4.4, d: 4.0 };
-    default:      return { w: 1.9, h: 3.8, d: 3.6 };
-  }
-}
-
-/* ---------- Style profile per case.style ---------- */
-function styleProfile(style){
-  switch(style){
-    case 'sff':      return { front:'mesh',  side:'mesh',  shroud:false, glassTint:0x88aaff, glassOpacity:0.08 };
-    case 'matx':     return { front:'mesh',  side:'solid', shroud:false, glassTint:0x88aaff, glassOpacity:0.08 };
-    case 'atx':      return { front:'mesh',  side:'solid', shroud:true,  glassTint:0x88aaff, glassOpacity:0.08 };
-    case 'full':     return { front:'mesh',  side:'glass', shroud:true,  glassTint:0x88bbff, glassOpacity:0.12 };
-    case 'showcase': return { front:'glass', side:'glass', shroud:false, glassTint:0xbb99ff, glassOpacity:0.14 };
-    default:         return { front:'mesh',  side:'solid', shroud:true,  glassTint:0x88aaff, glassOpacity:0.08 };
-  }
-}
-
-/* ---------- Material palette ---------- */
-function caseMaterials(){
-  return {
-    frame:   new THREE.MeshStandardMaterial({ color: 0x2a3142, metalness: 0.65, roughness: 0.45 }),
-    panel:   new THREE.MeshStandardMaterial({ color: 0x1a1f2c, metalness: 0.55, roughness: 0.55 }),
-    panelTop:new THREE.MeshStandardMaterial({ color: 0x232a3a, metalness: 0.55, roughness: 0.55 }),
-    panelBot:new THREE.MeshStandardMaterial({ color: 0x10141c, metalness: 0.4,  roughness: 0.75 }),
-    mesh:    new THREE.MeshStandardMaterial({ color: 0x141821, metalness: 0.5,  roughness: 0.65 }),
-    grille:  new THREE.MeshStandardMaterial({ color: 0x3a4255, metalness: 0.7,  roughness: 0.35 }),
-    shroud:  new THREE.MeshStandardMaterial({ color: 0x181d28, metalness: 0.6,  roughness: 0.5  }),
-    foot:    new THREE.MeshStandardMaterial({ color: 0x0a0d14, metalness: 0.3,  roughness: 0.9  }),
-    glass:   (tint, op) => new THREE.MeshPhysicalMaterial({
-      color: tint,
-      metalness: 0,
-      roughness: 0.05,
-      transmission: 0.9,
-      transparent: true,
-      opacity: op,
-      thickness: 0.05
-    })
-  };
-}
-
 /* ---------- Build the case as a group of meshes ---------- */
 /* ================================================================
    B-3  —  CASE + COMPONENTS (Three.js)
@@ -3053,40 +3007,6 @@ function caseMaterials(){
      +Z = front of case
      -Z = rear of case (I/O panel)
    ================================================================ */
-
-function buildCaseGroup(caseData){
-  const group = new THREE.Group();
-  if(!caseData) return group;
-
-  const dims  = caseDims(caseData.form);
-  const style = styleProfile(caseData.style);
-  const M     = caseMaterials();
-
-  const w = dims.w, h = dims.h, d = dims.d;
-  const halfW = w/2, halfH = h/2, halfD = d/2;
-
-  /* helper */
-  function addBox(w, h, d, mat, x, y, z, name){
-    const geo = new THREE.BoxGeometry(w, h, d);
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(x, y, z);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    if(name) mesh.name = name;
-    group.add(mesh);
-    return mesh;
-  }
-  function addCylinder(radius, height, mat, x, y, z, rotX, name){
-    const geo = new THREE.CylinderGeometry(radius, radius, height, 24);
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(x, y, z);
-    if(rotX) mesh.rotation.x = rotX;
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    if(name) mesh.name = name;
-    group.add(mesh);
-    return mesh;
-  }
 
   /* ============================================================
      PART 1 — CASE CHASSIS (unchanged from B-2)
@@ -3406,23 +3326,469 @@ function buildCaseGroup(caseData){
   return group;
 }
 
-/* ---------- renderBapcScene — replaced for B-2 ---------- */
+/* ================================================================
+   B-3 FINAL  —  THREE.JS CASE + COMPONENTS
+   ----------------------------------------------------------------
+   Sized on paper. Case is the reference object.
+   Interior coordinates:
+     +X = glass side (visible)
+     -X = mobo tray side
+     +Y = up
+     +Z = front of case
+     -Z = rear (I/O)
+   ================================================================ */
+
+/* ---------- Case dimensions per form factor ---------- */
+function caseDims(form){
+  switch(form){
+    case 'ITX':   return { w: 1.6, h: 2.6, d: 2.4 };
+    case 'mATX':  return { w: 1.8, h: 3.2, d: 3.0 };
+    case 'ATX':   return { w: 2.0, h: 3.8, d: 3.4 };
+    case 'E-ATX': return { w: 2.2, h: 4.4, d: 3.8 };
+    default:      return { w: 2.0, h: 3.8, d: 3.4 };
+  }
+}
+
+/* ---------- Style profile ---------- */
+function styleProfile(style){
+  switch(style){
+    case 'sff':      return { front:'mesh',  side:'glass', shroud:false };
+    case 'matx':     return { front:'mesh',  side:'glass', shroud:false };
+    case 'atx':      return { front:'mesh',  side:'glass', shroud:true  };
+    case 'full':     return { front:'mesh',  side:'glass', shroud:true  };
+    case 'showcase': return { front:'glass', side:'glass', shroud:false };
+    default:         return { front:'mesh',  side:'glass', shroud:true  };
+  }
+}
+
+/* ---------- Materials — tuned for visibility ---------- */
+function caseMaterials(){
+  return {
+    frame:   new THREE.MeshStandardMaterial({ color: 0x1a1e28, metalness: 0.7, roughness: 0.4  }),
+    panel:   new THREE.MeshStandardMaterial({ color: 0x22273a, metalness: 0.6, roughness: 0.55 }),
+    panelTop:new THREE.MeshStandardMaterial({ color: 0x2a3145, metalness: 0.6, roughness: 0.5  }),
+    panelBot:new THREE.MeshStandardMaterial({ color: 0x141821, metalness: 0.5, roughness: 0.7  }),
+    mesh:    new THREE.MeshStandardMaterial({ color: 0x181c26, metalness: 0.6, roughness: 0.6  }),
+    grille:  new THREE.MeshStandardMaterial({ color: 0x5a6478, metalness: 0.85, roughness: 0.25 }),
+    shroud:  new THREE.MeshStandardMaterial({ color: 0x1c2130, metalness: 0.65, roughness: 0.5  }),
+    foot:    new THREE.MeshStandardMaterial({ color: 0x0a0d14, metalness: 0.3, roughness: 0.9  }),
+    glass:   new THREE.MeshPhysicalMaterial({
+      color: 0xaaccff, metalness: 0, roughness: 0.05,
+      transmission: 0.98, transparent: true, opacity: 0.12,
+      thickness: 0.02, ior: 1.5, clearcoat: 1
+    }),
+    /* component materials */
+    pcb:     new THREE.MeshStandardMaterial({ color: 0x1a2a1e, metalness: 0.2, roughness: 0.85 }),
+    pcbDark: new THREE.MeshStandardMaterial({ color: 0x0e1420, metalness: 0.2, roughness: 0.9  }),
+    heatsink:new THREE.MeshStandardMaterial({ color: 0x8a94a8, metalness: 0.9, roughness: 0.25 }),
+    chip:    new THREE.MeshStandardMaterial({ color: 0xd4d8de, metalness: 0.95, roughness: 0.12 }),
+    gold:    new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.95, roughness: 0.2  }),
+    slot:    new THREE.MeshStandardMaterial({ color: 0x1e2836, metalness: 0.7, roughness: 0.35 }),
+    gpuShroud:new THREE.MeshStandardMaterial({ color: 0x1c2028, metalness: 0.75, roughness: 0.3 }),
+    fanRing: new THREE.MeshStandardMaterial({ color: 0x3a4255, metalness: 0.8, roughness: 0.3  }),
+    fanBlade:new THREE.MeshStandardMaterial({ color: 0x0a0d14, metalness: 0.3, roughness: 0.85 }),
+    ramBody: new THREE.MeshStandardMaterial({ color: 0xb8bfcc, metalness: 0.85, roughness: 0.25 }),
+    ramPCB:  new THREE.MeshStandardMaterial({ color: 0x0e1420, metalness: 0.3, roughness: 0.8  }),
+    psuBody: new THREE.MeshStandardMaterial({ color: 0x23282f, metalness: 0.55, roughness: 0.55 }),
+    drive:   new THREE.MeshStandardMaterial({ color: 0x2a3038, metalness: 0.7, roughness: 0.4  }),
+    accentNVIDIA: new THREE.MeshStandardMaterial({ color: 0x76b900, emissive: 0x76b900, emissiveIntensity: 0.35 }),
+    accentAMD:    new THREE.MeshStandardMaterial({ color: 0xed1c24, emissive: 0xed1c24, emissiveIntensity: 0.35 }),
+    accentIntel:  new THREE.MeshStandardMaterial({ color: 0x00a3e0, emissive: 0x00a3e0, emissiveIntensity: 0.35 })
+  };
+}
+
+/* ---------- Build the full scene ---------- */
+function buildCaseGroup(caseData){
+  const group = new THREE.Group();
+  if(!caseData) return group;
+
+  const dims  = caseDims(caseData.form);
+  const style = styleProfile(caseData.style);
+  const M     = caseMaterials();
+
+  const w = dims.w, h = dims.h, d = dims.d;
+  const halfW = w/2, halfH = h/2, halfD = d/2;
+
+  function addBox(bw, bh, bd, mat, x, y, z, name){
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bd), mat);
+    mesh.position.set(x, y, z);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    if(name) mesh.name = name;
+    group.add(mesh);
+    return mesh;
+  }
+  function addCyl(radius, height, mat, x, y, z, rotAxis, name){
+    const mesh = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, height, 32), mat);
+    mesh.position.set(x, y, z);
+    if(rotAxis === 'x') mesh.rotation.x = Math.PI/2;
+    if(rotAxis === 'z') mesh.rotation.z = Math.PI/2;
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    if(name) mesh.name = name;
+    group.add(mesh);
+    return mesh;
+  }
+  function addTorus(radius, tube, mat, x, y, z, rotAxis, name){
+    const mesh = new THREE.Mesh(new THREE.TorusGeometry(radius, tube, 10, 32), mat);
+    mesh.position.set(x, y, z);
+    if(rotAxis === 'y') mesh.rotation.y = Math.PI/2;
+    if(rotAxis === 'x') mesh.rotation.x = Math.PI/2;
+    mesh.castShadow = true;
+    if(name) mesh.name = name;
+    group.add(mesh);
+    return mesh;
+  }
+
+  /* ============================================================
+     1. CASE FRAME — 12 rails
+     ============================================================ */
+  const rt = 0.05;
+  addBox(rt, h, rt, M.frame, -halfW + rt/2, 0, -halfD + rt/2);
+  addBox(rt, h, rt, M.frame,  halfW - rt/2, 0, -halfD + rt/2);
+  addBox(rt, h, rt, M.frame, -halfW + rt/2, 0,  halfD - rt/2);
+  addBox(rt, h, rt, M.frame,  halfW - rt/2, 0,  halfD - rt/2);
+  addBox(w, rt, rt, M.frame, 0,  halfH - rt/2, -halfD + rt/2);
+  addBox(w, rt, rt, M.frame, 0, -halfH + rt/2, -halfD + rt/2);
+  addBox(w, rt, rt, M.frame, 0,  halfH - rt/2,  halfD - rt/2);
+  addBox(w, rt, rt, M.frame, 0, -halfH + rt/2,  halfD - rt/2);
+  addBox(rt, rt, d, M.frame, -halfW + rt/2,  halfH - rt/2, 0);
+  addBox(rt, rt, d, M.frame,  halfW - rt/2,  halfH - rt/2, 0);
+  addBox(rt, rt, d, M.frame, -halfW + rt/2, -halfH + rt/2, 0);
+  addBox(rt, rt, d, M.frame,  halfW - rt/2, -halfH + rt/2, 0);
+
+  /* ============================================================
+     2. GLASS SIDE PANEL (+X)
+     ============================================================ */
+  const glass = new THREE.Mesh(
+    new THREE.BoxGeometry(0.015, h - 0.12, d - 0.12),
+    M.glass
+  );
+  glass.position.set(halfW - 0.01, 0, 0);
+  glass.renderOrder = 10;
+  group.add(glass);
+
+  /* ============================================================
+     3. SOLID OPPOSITE PANEL (-X) — mobo tray
+     ============================================================ */
+  addBox(0.04, h - 0.12, d - 0.12, M.panel, -halfW + 0.02, 0, 0, 'side-solid');
+
+  /* ============================================================
+     4. FRONT PANEL
+     ============================================================ */
+  if(style.front === 'mesh'){
+    addBox(w - 0.1, h - 0.1, 0.04, M.mesh, 0, 0, halfD - 0.02, 'front-back');
+    const barCount = Math.max(8, Math.round(h / 0.2));
+    const barSpacing = (h - 0.3) / barCount;
+    for(let i = 0; i < barCount; i++){
+      const y = -halfH + 0.2 + i * barSpacing + barSpacing/2;
+      addBox(w - 0.35, 0.025, 0.03, M.grille, 0, y, halfD + 0.005, 'grille-' + i);
+    }
+  } else {
+    addBox(w - 0.08, h - 0.08, 0.02, M.glass, 0, 0, halfD - 0.01, 'front-glass');
+  }
+
+  /* ============================================================
+     5. REAR PANEL with I/O cutout
+     ============================================================ */
+  const ioW = w * 0.32;
+  const ioH = h * 0.09;
+  const ioY = halfH - h * 0.11;
+  addBox(w - 0.08, (h/2) - (ioY + ioH/2), 0.035, M.panel,
+         0, (ioY + ioH/2) + ((h/2) - (ioY + ioH/2))/2, -halfD + 0.018);
+  addBox(w - 0.08, (ioY - ioH/2) + (h/2), 0.035, M.panel,
+         0, -(h/2) + ((ioY - ioH/2) + (h/2))/2, -halfD + 0.018);
+  addBox((w/2) - ioW/2, ioH, 0.035, M.panel, -(w/2) + ((w/2) - ioW/2)/2, ioY, -halfD + 0.018);
+  addBox((w/2) - ioW/2, ioH, 0.035, M.panel,  (w/2) - ((w/2) - ioW/2)/2, ioY, -halfD + 0.018);
+
+  /* ============================================================
+     6. TOP + BOTTOM
+     ============================================================ */
+  addBox(w - 0.08, 0.04, d - 0.08, M.panelTop, 0, halfH - 0.02, 0, 'top');
+  addBox(w - 0.08, 0.04, d - 0.08, M.panelBot, 0, -halfH + 0.02, 0, 'bottom');
+
+  /* ============================================================
+     7. FEET
+     ============================================================ */
+  const footY = -halfH - 0.05;
+  addBox(0.14, 0.1, 0.14, M.foot, -halfW + 0.18, footY, -halfD + 0.18);
+  addBox(0.14, 0.1, 0.14, M.foot,  halfW - 0.18, footY, -halfD + 0.18);
+  addBox(0.14, 0.1, 0.14, M.foot, -halfW + 0.18, footY,  halfD - 0.18);
+  addBox(0.14, 0.1, 0.14, M.foot,  halfW - 0.18, footY,  halfD - 0.18);
+
+  /* ============================================================
+     INTERIOR LAYOUT — computed coordinates
+     ============================================================ */
+
+  const shroudH = style.shroud ? h * 0.22 : 0;
+  const interiorFloorY = -halfH + shroudH + 0.05;   // mobo bottom
+  const interiorTopY   = halfH - 0.15;              // mobo top region
+  const moboTrayX      = -halfW + 0.09;             // PCB back face
+
+  /* ============================================================
+     8. PSU SHROUD (if style says so)
+     ============================================================ */
+  if(style.shroud){
+    const shroudW = w - 0.15;
+    const shroudD = d - 0.2;
+    addBox(shroudW, shroudH, shroudD, M.shroud, 0, -halfH + shroudH/2 + 0.05, 0.05, 'shroud');
+  }
+
+  /* ============================================================
+     9. MOTHERBOARD
+     Mobo is a flat PCB standing vertically. Its face is visible
+     from +X. Width (thickness) = 0.04, height along Y, depth along Z.
+     ============================================================ */
+  const mobo = bapc.mobo;
+  const moboForm = mobo ? mobo.form : 'ATX';
+  const moboSizes = {
+    ITX:     { h: 0.9,  d: 0.9  },
+    mATX:    { h: 1.3,  d: 1.3  },
+    ATX:     { h: 1.7,  d: 1.5  },
+    'E-ATX': { h: 2.0,  d: 1.6  }
+  };
+  const ms = moboSizes[moboForm] || moboSizes.ATX;
+  const moboH = ms.h, moboD = ms.d;
+
+  // Center the mobo vertically in the interior
+  const moboCenterY = (interiorFloorY + interiorTopY) / 2 + 0.15;
+  const moboCenterZ = -d * 0.08;   // slightly toward rear
+
+  // PCB
+  addBox(0.04, moboH, moboD, M.pcb, moboTrayX, moboCenterY, moboCenterZ, 'mobo-pcb');
+
+  // Right edge of the mobo (where we place components relative to)
+  const moboFaceX = moboTrayX + 0.04;       // +X face of the PCB
+
+  // VRM heatsinks along the top edge of the mobo
+  addBox(0.06, 0.14, moboD * 0.7, M.heatsink, moboFaceX + 0.03, moboCenterY + moboH/2 - 0.09, moboCenterZ);
+
+  // I/O shroud (rear-top corner)
+  addBox(0.08, 0.22, moboD * 0.35, M.heatsink, moboFaceX + 0.04, moboCenterY + moboH/2 - 0.14, moboCenterZ - moboD/2 + moboD*0.18);
+
+  // Chipset heatsink (lower area)
+  const chipX = moboFaceX + 0.03;
+  const chipY = moboCenterY - moboH/2 + 0.25;
+  const chipZ = moboCenterZ + moboD/4;
+  addBox(0.05, 0.2, 0.2, M.heatsink, chipX, chipY, chipZ, 'chipset');
+
+  // M.2 heatsink slot (below GPU area)
+  addBox(0.03, 0.05, moboD * 0.35, M.heatsink, moboFaceX + 0.02, moboCenterY - 0.1, moboCenterZ + moboD/4);
+
+  // 24-pin connector (front edge)
+  addBox(0.06, 0.28, 0.06, M.slot, moboFaceX + 0.03, moboCenterY + moboH/2 - 0.35, moboCenterZ + moboD/2 - 0.06);
+
+  /* ============================================================
+     10. CPU SOCKET + CPU
+     Socket is on the upper-left area of the mobo face.
+     ============================================================ */
+  const socketSize = Math.min(moboH, moboD) * 0.28;
+  const socketY = moboCenterY + moboH/2 - 0.45;
+  const socketZ = moboCenterZ - moboD/4;
+
+  // Socket (dark base)
+  addBox(0.05, socketSize, socketSize, M.slot, moboFaceX + 0.025, socketY, socketZ, 'cpu-socket');
+
+  // CPU IHS (silver, slightly smaller)
+  addBox(0.06, socketSize * 0.85, socketSize * 0.85, M.chip, moboFaceX + 0.03, socketY, socketZ, 'cpu-ihs');
+
+  // Orientation triangle (orange marker on one corner)
+  const triMat = new THREE.MeshStandardMaterial({ color: 0xf97316, emissive: 0xf97316, emissiveIntensity: 0.4 });
+  addBox(0.062, 0.025, 0.025, triMat, moboFaceX + 0.031, socketY + socketSize*0.32, socketZ - socketSize*0.32);
+
+  /* ============================================================
+     11. RAM — sticks in slots to the +Z side of the socket
+     ============================================================ */
+  const ram = bapc.ram;
+  const ramSlots = mobo ? mobo.ramSlots : 4;
+  const cap = ram ? ram.capacity : 16;
+  const stickCount = cap <= 8 ? 1 : cap <= 32 ? 2 : 4;
+
+  const ramStickH = moboH * 0.35;
+  const ramStickW = 0.03;       // thickness along X
+  const ramStickD = 0.05;       // thickness along Z
+  const ramSpacing = socketSize + 0.12;
+  const ramBaseY = socketY - socketSize/2 + ramStickH/2;
+  const ramBaseZ = socketZ + socketSize/2 + 0.12;
+  const ramFaceX = moboFaceX + 0.02;
+
+  for(let i = 0; i < ramSlots; i++){
+    const z = ramBaseZ + i * ramSpacing;
+    // Slot
+    addBox(0.04, 0.06, ramStickD, M.slot, ramFaceX + 0.02, ramBaseY - ramStickH/2 + 0.03, z, 'dimm-' + i);
+    if(i < stickCount){
+      // Heatspreader (silver)
+      addBox(ramStickW, ramStickH, ramStickD, M.ramBody, ramFaceX + 0.03, ramBaseY, z, 'ram-' + i);
+      // Gold contacts (bottom sliver)
+      addBox(ramStickW + 0.005, 0.03, ramStickD - 0.005, M.gold, ramFaceX + 0.03, ramBaseY - ramStickH/2 + 0.02, z);
+    }
+  }
+
+  /* ============================================================
+     12. PCIe slots + GPU
+     ============================================================ */
+  // Two PCIe slots on the mobo face, below the CPU area
+  const pcieY1 = moboCenterY - moboH/2 + 0.55;
+  const pcieY2 = pcieY1 - 0.2;
+  addBox(0.05, 0.05, moboD * 0.75, M.slot, moboFaceX + 0.025, pcieY1, moboCenterZ - 0.05, 'pcie1');
+  addBox(0.05, 0.05, moboD * 0.55, M.slot, moboFaceX + 0.025, pcieY2, moboCenterZ - 0.05, 'pcie2');
+
+  // GPU card in the top PCIe slot
+  const gpu = bapc.gpu;
+  if(gpu){
+    const tier = gpu.tier;
+    const gpuLength = tier === 'flagship' ? 1.35 : tier === 'enthusiast' ? 1.15 : tier === 'performance' ? 1.0 : 0.85;
+    const gpuHeight = gpu.vram >= 16 ? 0.28 : 0.24;
+    const gpuThickness = tier === 'flagship' ? 0.18 : 0.14;
+    const fanCount = gpu.tdp > 250 ? 3 : 2;
+
+    // GPU extends toward +X from the PCIe slot
+    const gpuX = moboFaceX + 0.15 + gpuLength/2;
+    const gpuY = pcieY1 + gpuHeight/2 - 0.03;
+    const gpuZ = moboCenterZ - 0.05;
+
+    // Shroud
+    addBox(gpuLength, gpuHeight, gpuThickness, M.gpuShroud, gpuX, gpuY, gpuZ, 'gpu-shroud');
+
+    // Brand accent stripe (runs along the bottom of the shroud)
+    const accent = gpu.name.includes('RTX') || gpu.name.includes('GTX') ? M.accentNVIDIA
+                 : gpu.name.includes('RX') || gpu.name.includes('Radeon') ? M.accentAMD
+                 : gpu.name.includes('Arc') ? M.accentIntel
+                 : M.accentNVIDIA;
+    addBox(gpuLength, 0.02, gpuThickness + 0.005, accent, gpuX, gpuY - gpuHeight/2 + 0.03, gpuZ);
+
+    // Fans on the +X face (facing the glass)
+    const fanRadius = gpuHeight * 0.35;
+    const fanSpacing = gpuLength / (fanCount + 1);
+    for(let f = 0; f < fanCount; f++){
+      const fx = gpuX - gpuLength/2 + fanSpacing * (f + 1);
+      // Ring (torus facing +X)
+      addTorus(fanRadius, 0.012, M.fanRing, fx, gpuY, gpuZ + gpuThickness/2 + 0.005, 'y');
+      // Hub
+      addCyl(fanRadius * 0.18, gpuThickness + 0.02, M.fanBlade, fx, gpuY, gpuZ + gpuThickness/2 + 0.01, 'x');
+    }
+
+    // Metal PCIe bracket at the rear (-Z end of the card)
+    addBox(0.08, gpuHeight + 0.05, 0.04, M.heatsink, moboFaceX + 0.1, gpuY, gpuZ - gpuLength/2 - 0.02);
+
+    // 12VHPWR connector on top
+    addBox(0.14, 0.06, 0.1, M.fanBlade, gpuX + gpuLength * 0.15, gpuY + gpuHeight/2 + 0.03, gpuZ);
+  }
+
+  /* ============================================================
+     13. CPU COOLER
+     ============================================================ */
+  const cooler = bapc.cooler;
+  if(cooler){
+    const cStyle = cooler.style || 'air-single';
+    const cX = moboFaceX + 0.03;
+    const cY = socketY;
+    const cZ = socketZ;
+
+    if(cStyle === 'stock'){
+      // Small block + tiny fan on top of the CPU
+      addBox(0.12, 0.16, socketSize + 0.05, M.heatsink, cX + 0.06, cY, cZ, 'cooler-stock');
+      addCyl(0.07, 0.06, M.fanBlade, cX + 0.13, cY, cZ, 'z');
+    } else if(cStyle === 'air-low'){
+      addBox(0.15, 0.28, socketSize + 0.06, M.heatsink, cX + 0.075, cY, cZ, 'cooler-low');
+    } else if(cStyle === 'air-single'){
+      // Tower fin stack + side fan
+      addBox(0.16, 0.55, socketSize + 0.1, M.heatsink, cX + 0.08, cY, cZ, 'cooler-single');
+      addCyl(0.12, 0.05, M.fanBlade, cX + 0.18, cY, cZ, 'z');
+    } else if(cStyle === 'air-dual'){
+      // Two fin stacks side by side (along Z), fan between
+      addBox(0.16, 0.6, socketSize * 0.7, M.heatsink, cX + 0.08, cY, cZ - socketSize*0.4, 'cooler-dual-a');
+      addBox(0.16, 0.6, socketSize * 0.7, M.heatsink, cX + 0.08, cY, cZ + socketSize*0.4, 'cooler-dual-b');
+      addCyl(0.1, 0.05, M.fanBlade, cX + 0.18, cY, cZ, 'z');
+    } else if(cStyle === 'aio'){
+      // Pump block on CPU
+      addBox(0.16, 0.22, socketSize + 0.04, M.fanBlade, cX + 0.08, cY, cZ, 'aio-pump');
+      // Radiator mounted at top of case
+      const radMat = M.heatsink;
+      addBox(d * 0.75, 0.06, 0.3, radMat, 0, halfH - 0.12, moboCenterZ + 0.15, 'aio-rad');
+      // Radiator fans
+      for(let i = 0; i < 2; i++){
+        addCyl(0.14, 0.05, M.fanBlade, -0.3 + i * 0.6, halfH - 0.2, moboCenterZ + 0.15, 'z');
+      }
+    } else if(cStyle === 'custom'){
+      addBox(0.18, 0.26, socketSize + 0.06, M.fanBlade, cX + 0.09, cY, cZ, 'custom-block');
+    }
+  }
+
+  /* ============================================================
+     14. PSU
+     ============================================================ */
+  const psu = bapc.psu;
+  if(psu){
+    const psuLen = psu.wattage >= 1200 ? 0.85 : psu.wattage >= 850 ? 0.75 : psu.wattage >= 650 ? 0.65 : 0.55;
+    const psuHeight = 0.32;
+    const psuWidth = 0.6;
+    const psuY = -halfH + psuHeight/2 + (style.shroud ? 0.02 : 0.08);
+    const psuZ = -halfD + psuLen/2 + 0.15;
+
+    addBox(psuWidth, psuHeight, psuLen, M.psuBody, 0, psuY, psuZ, 'psu');
+
+    // Fan grille on top of the PSU
+    addTorus(0.13, 0.01, M.fanRing, 0, psuY + psuHeight/2 + 0.005, psuZ, 'x');
+  }
+
+  /* ============================================================
+     15. STORAGE
+     ============================================================ */
+  const storage = bapc.storage;
+  const storageQty = bapc.storageQty || 1;
+  if(storage){
+    const isM2 = (storage.family || '').includes('NVMe') || (storage.family || '').includes('M2');
+    if(isM2){
+      // M.2 stick on the mobo, tucked below the GPU
+      addBox(0.025, 0.04, moboD * 0.4, M.pcbDark, moboFaceX + 0.02, pcieY2 - 0.1, moboCenterZ + moboD/4, 'm2-stick');
+    } else {
+      // 2.5" drives on the case floor (front of the case, out of shroud for visibility)
+      const floorY = -halfH + 0.1;
+      for(let i = 0; i < Math.min(storageQty, 4); i++){
+        const dx = -halfW + 0.4 + i * 0.55;
+        addBox(0.12, 0.06, 0.5, M.drive, dx, floorY, halfD - 0.4, 'drive-' + i);
+      }
+    }
+  }
+
+  return group;
+}
+
+/* ---------- renderBapcScene ---------- */
 function renderBapcScene(){
   const vp = $('#bapcViewport');
   if(!vp) return;
 
   bScene.init(vp);
+
+  // Boost the lighting once after init
+  if(!bScene._lightBoosted){
+    const sc = bScene.scene;
+    if(sc){
+      sc.traverse(o=>{
+        if(o.isLight) o.intensity *= 1.35;
+      });
+      bScene._lightBoosted = true;
+    }
+  }
+
   bScene.clearScene();
 
-  // If bapc.case hasn't been set yet (page just opened), use the first case
-  const currentCase = (typeof bapc !== 'undefined' && bapc.case) ? bapc.case : (typeof CASES !== 'undefined' ? CASES[0] : null);
+  const currentCase = (typeof bapc !== 'undefined' && bapc.case)
+    ? bapc.case
+    : (typeof CASES !== 'undefined' ? CASES[0] : null);
   if(!currentCase) return;
 
   const caseGroup = buildCaseGroup(currentCase);
+
+  // Rotate the whole scene so the glass side faces the camera by default
+  caseGroup.rotation.y = Math.PI / 2;
+
   bScene.addObject(caseGroup);
 
-  // Auto-frame camera based on case size
+  // Frame the camera so the case fills ~60% of the viewport
   const dims = caseDims(currentCase.form);
   const maxDim = Math.max(dims.w, dims.h, dims.d);
-  bScene.setRadius(maxDim * 2.4);
+  bScene.setRadius(maxDim * 1.9);
 }
