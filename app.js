@@ -3040,7 +3040,7 @@ const b3d = (function(){
     camera: {
       rotY: -30 * Math.PI/180,
       rotX: 20 * Math.PI/180,
-      dist: 8,         // camera distance from origin (for zoom)
+      dist: 20,         // camera distance from origin (for zoom)
       fov: 45
     },
     drag: {
