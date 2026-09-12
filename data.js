@@ -581,3 +581,153 @@ const GPU_PRICES = {
   'Arc A380':           120,  'Arc A580':           180,  'Arc A750':           220,
   'Arc A770 16GB':      280,  'Arc B580':           250,  'Arc B770':           400,
 };
+
+const MOTHERBOARDS = [
+  /* --- A320 (ultra budget) --- */
+  { name:'ASRock A320M-HDV R4.0',           brand:'ASRock',    socket:'AM4',   chipset:'A320',
+    form:'mATX', ramType:'DDR4', ramSlots:2, maxRam:32,  maxRamSpeed:3200,
+    pcieGen:3.0, m2Slots:1, sataPorts:4, wifi:false, usbC:false, vrmTier:'basic',     price:60  },
+
+  /* --- B450 (budget, still common) --- */
+  { name:'MSI B450 Tomahawk Max',           brand:'MSI',       socket:'AM4',   chipset:'B450',
+    form:'ATX',  ramType:'DDR4', ramSlots:4, maxRam:128, maxRamSpeed:3466,
+    pcieGen:3.0, m2Slots:2, sataPorts:6, wifi:false, usbC:false, vrmTier:'good',      price:90  },
+  { name:'Gigabyte B450 Aorus Elite',       brand:'Gigabyte',  socket:'AM4',   chipset:'B450',
+    form:'ATX',  ramType:'DDR4', ramSlots:4, maxRam:128, maxRamSpeed:3600,
+    pcieGen:3.0, m2Slots:2, sataPorts:6, wifi:false, usbC:false, vrmTier:'good',      price:100 },
+
+  /* --- B550 (modern AM4 sweet spot) --- */
+  { name:'ASUS ROG Strix B550-F Gaming',    brand:'ASUS',      socket:'AM4',   chipset:'B550',
+    form:'ATX',  ramType:'DDR4', ramSlots:4, maxRam:128, maxRamSpeed:4400,
+    pcieGen:4.0, m2Slots:2, sataPorts:6, wifi:false, usbC:true,  vrmTier:'great',     price:160 },
+  { name:'MSI MAG B550 Tomahawk',           brand:'MSI',       socket:'AM4',   chipset:'B550',
+    form:'ATX',  ramType:'DDR4', ramSlots:4, maxRam:128, maxRamSpeed:4400,
+    pcieGen:4.0, m2Slots:2, sataPorts:6, wifi:false, usbC:true,  vrmTier:'great',     price:170 },
+  { name:'Gigabyte B550 Aorus Pro AC',      brand:'Gigabyte',  socket:'AM4',   chipset:'B550',
+    form:'ATX',  ramType:'DDR4', ramSlots:4, maxRam:128, maxRamSpeed:4400,
+    pcieGen:4.0, m2Slots:2, sataPorts:6, wifi:true,  usbC:true,  vrmTier:'great',     price:180 },
+  { name:'ASRock B550M Pro4',               brand:'ASRock',    socket:'AM4',   chipset:'B550',
+    form:'mATX', ramType:'DDR4', ramSlots:4, maxRam:128, maxRamSpeed:4400,
+    pcieGen:4.0, m2Slots:2, sataPorts:6, wifi:false, usbC:true,  vrmTier:'good',      price:110 },
+
+  /* --- X570 (enthusiast AM4) --- */
+  { name:'ASUS ROG Crosshair VIII Hero',    brand:'ASUS',      socket:'AM4',   chipset:'X570',
+    form:'ATX',  ramType:'DDR4', ramSlots:4, maxRam:128, maxRamSpeed:4800,
+    pcieGen:4.0, m2Slots:3, sataPorts:8, wifi:true,  usbC:true,  vrmTier:'excellent', price:360 },
+
+  /* =========================================================
+     AM5  (Ryzen 7000 / 8000 / 9000)  —  DDR5 only
+     ========================================================= */
+
+  /* --- A620 (budget AM5) --- */
+  { name:'ASRock A620M-HDV/M.2+',           brand:'ASRock',    socket:'AM5',   chipset:'A620',
+    form:'mATX', ramType:'DDR5', ramSlots:2, maxRam:64,  maxRamSpeed:6400,
+    pcieGen:4.0, m2Slots:1, sataPorts:4, wifi:false, usbC:false, vrmTier:'basic',     price:100 },
+
+  /* --- B650 (mainstream AM5) --- */
+  { name:'ASUS TUF Gaming B650-Plus WiFi',  brand:'ASUS',      socket:'AM5',   chipset:'B650',
+    form:'ATX',  ramType:'DDR5', ramSlots:4, maxRam:128, maxRamSpeed:6400,
+    pcieGen:4.0, m2Slots:3, sataPorts:4, wifi:true,  usbC:true,  vrmTier:'great',     price:190 },
+  { name:'MSI MAG B650 Tomahawk WiFi',      brand:'MSI',       socket:'AM5',   chipset:'B650',
+    form:'ATX',  ramType:'DDR5', ramSlots:4, maxRam:128, maxRamSpeed:6600,
+    pcieGen:4.0, m2Slots:3, sataPorts:6, wifi:true,  usbC:true,  vrmTier:'great',     price:210 },
+  { name:'Gigabyte B650 Aorus Elite AX',    brand:'Gigabyte',  socket:'AM5',   chipset:'B650',
+    form:'ATX',  ramType:'DDR5', ramSlots:4, maxRam:128, maxRamSpeed:6600,
+    pcieGen:4.0, m2Slots:3, sataPorts:4, wifi:true,  usbC:true,  vrmTier:'great',     price:200 },
+  { name:'ASRock B650M PG Riptide',         brand:'ASRock',    socket:'AM5',   chipset:'B650',
+    form:'mATX', ramType:'DDR5', ramSlots:4, maxRam:128, maxRamSpeed:6400,
+    pcieGen:4.0, m2Slots:2, sataPorts:4, wifi:false, usbC:true,  vrmTier:'good',      price:160 },
+
+  /* --- B650E (PCIe 5.0 value) --- */
+  { name:'ASUS ROG Strix B650E-F Gaming',   brand:'ASUS',      socket:'AM5',   chipset:'B650E',
+    form:'ATX',  ramType:'DDR5', ramSlots:4, maxRam:128, maxRamSpeed:6400,
+    pcieGen:5.0, m2Slots:3, sataPorts:4, wifi:true,  usbC:true,  vrmTier:'excellent', price:260 },
+
+  /* --- X670E (flagship AM5) --- */
+  { name:'ASUS ROG Crosshair X670E Hero',   brand:'ASUS',      socket:'AM5',   chipset:'X670E',
+    form:'ATX',  ramType:'DDR5', ramSlots:4, maxRam:128, maxRamSpeed:6400,
+    pcieGen:5.0, m2Slots:4, sataPorts:6, wifi:true,  usbC:true,  vrmTier:'excellent', price:620 },
+  { name:'MSI MEG X670E ACE',               brand:'MSI',       socket:'AM5',   chipset:'X670E',
+    form:'E-ATX',ramType:'DDR5', ramSlots:4, maxRam:192, maxRamSpeed:7800,
+    pcieGen:5.0, m2Slots:4, sataPorts:6, wifi:true,  usbC:true,  vrmTier:'excellent', price:700 },
+  { name:'Gigabyte X670E Aorus Master',     brand:'Gigabyte',  socket:'AM5',   chipset:'X670E',
+    form:'E-ATX',ramType:'DDR5', ramSlots:4, maxRam:128, maxRamSpeed:8000,
+    pcieGen:5.0, m2Slots:4, sataPorts:6, wifi:true,  usbC:true,  vrmTier:'excellent', price:480 },
+
+  /* --- H610 (budget) --- */
+  { name:'ASUS Prime H610M-E D4',           brand:'ASUS',      socket:'LGA1700', chipset:'H610',
+    form:'mATX', ramType:'DDR4', ramSlots:2, maxRam:64,  maxRamSpeed:3200,
+    pcieGen:4.0, m2Slots:1, sataPorts:4, wifi:false, usbC:false, vrmTier:'basic',     price:110 },
+
+  /* --- B660 (DDR4 and DDR5 variants) --- */
+  { name:'MSI PRO B660M-A DDR4',            brand:'MSI',       socket:'LGA1700', chipset:'B660',
+    form:'mATX', ramType:'DDR4', ramSlots:4, maxRam:128, maxRamSpeed:4000,
+    pcieGen:4.0, m2Slots:2, sataPorts:4, wifi:false, usbC:false, vrmTier:'good',      price:140 },
+  { name:'ASUS TUF Gaming B660-Plus WiFi D4',brand:'ASUS',     socket:'LGA1700', chipset:'B660',
+    form:'ATX',  ramType:'DDR4', ramSlots:4, maxRam:128, maxRamSpeed:5000,
+    pcieGen:4.0, m2Slots:3, sataPorts:4, wifi:true,  usbC:true,  vrmTier:'great',     price:180 },
+  { name:'Gigabyte B660M DS3H DDR4',        brand:'Gigabyte',  socket:'LGA1700', chipset:'B660',
+    form:'mATX', ramType:'DDR4', ramSlots:4, maxRam:128, maxRamSpeed:4400,
+    pcieGen:4.0, m2Slots:2, sataPorts:4, wifi:false, usbC:false, vrmTier:'good',      price:130 },
+
+  /* --- B760 (mainstream LGA1700, DDR4 + DDR5 variants) --- */
+  { name:'MSI MAG B760 Tomahawk WiFi DDR4', brand:'MSI',       socket:'LGA1700', chipset:'B760',
+    form:'ATX',  ramType:'DDR4', ramSlots:4, maxRam:128, maxRamSpeed:5333,
+    pcieGen:4.0, m2Slots:3, sataPorts:6, wifi:true,  usbC:true,  vrmTier:'great',     price:200 },
+  { name:'MSI MAG B760 Tomahawk WiFi',      brand:'MSI',       socket:'LGA1700', chipset:'B760',
+    form:'ATX',  ramType:'DDR5', ramSlots:4, maxRam:192, maxRamSpeed:7000,
+    pcieGen:4.0, m2Slots:3, sataPorts:6, wifi:true,  usbC:true,  vrmTier:'great',     price:230 },
+  { name:'ASUS ROG Strix B760-A Gaming WiFi',brand:'ASUS',     socket:'LGA1700', chipset:'B760',
+    form:'ATX',  ramType:'DDR5', ramSlots:4, maxRam:192, maxRamSpeed:7800,
+    pcieGen:4.0, m2Slots:3, sataPorts:4, wifi:true,  usbC:true,  vrmTier:'great',     price:250 },
+  { name:'Gigabyte B760M DS3H DDR4',        brand:'Gigabyte',  socket:'LGA1700', chipset:'B760',
+    form:'mATX', ramType:'DDR4', ramSlots:4, maxRam:128, maxRamSpeed:5333,
+    pcieGen:4.0, m2Slots:2, sataPorts:4, wifi:false, usbC:true,  vrmTier:'good',      price:140 },
+
+  /* --- Z690 (high-end, DDR4 + DDR5 variants) --- */
+  { name:'ASUS ROG Strix Z690-A Gaming WiFi D4',brand:'ASUS',  socket:'LGA1700', chipset:'Z690',
+    form:'ATX',  ramType:'DDR4', ramSlots:4, maxRam:128, maxRamSpeed:5333,
+    pcieGen:5.0, m2Slots:4, sataPorts:6, wifi:true,  usbC:true,  vrmTier:'excellent', price:290 },
+  { name:'MSI MPG Z690 Edge WiFi DDR4',     brand:'MSI',       socket:'LGA1700', chipset:'Z690',
+    form:'ATX',  ramType:'DDR4', ramSlots:4, maxRam:128, maxRamSpeed:5200,
+    pcieGen:5.0, m2Slots:4, sataPorts:6, wifi:true,  usbC:true,  vrmTier:'excellent', price:300 },
+  { name:'Gigabyte Z690 Aorus Elite AX DDR4',brand:'Gigabyte', socket:'LGA1700', chipset:'Z690',
+    form:'ATX',  ramType:'DDR4', ramSlots:4, maxRam:128, maxRamSpeed:5333,
+    pcieGen:5.0, m2Slots:3, sataPorts:6, wifi:true,  usbC:true,  vrmTier:'excellent', price:270 },
+  { name:'ASUS ROG Maximus Z690 Hero',      brand:'ASUS',      socket:'LGA1700', chipset:'Z690',
+    form:'ATX',  ramType:'DDR5', ramSlots:4, maxRam:128, maxRamSpeed:6400,
+    pcieGen:5.0, m2Slots:4, sataPorts:6, wifi:true,  usbC:true,  vrmTier:'excellent', price:600 },
+
+  /* --- Z790 (top LGA1700, DDR4 + DDR5 variants) --- */
+  { name:'MSI MAG Z790 Tomahawk WiFi DDR4', brand:'MSI',       socket:'LGA1700', chipset:'Z790',
+    form:'ATX',  ramType:'DDR4', ramSlots:4, maxRam:128, maxRamSpeed:5333,
+    pcieGen:5.0, m2Slots:4, sataPorts:6, wifi:true,  usbC:true,  vrmTier:'excellent', price:260 },
+  { name:'MSI MAG Z790 Tomahawk WiFi',      brand:'MSI',       socket:'LGA1700', chipset:'Z790',
+    form:'ATX',  ramType:'DDR5', ramSlots:4, maxRam:192, maxRamSpeed:7200,
+    pcieGen:5.0, m2Slots:4, sataPorts:8, wifi:true,  usbC:true,  vrmTier:'excellent', price:290 },
+  { name:'ASUS ROG Strix Z790-E Gaming WiFi',brand:'ASUS',     socket:'LGA1700', chipset:'Z790',
+    form:'ATX',  ramType:'DDR5', ramSlots:4, maxRam:192, maxRamSpeed:7800,
+    pcieGen:5.0, m2Slots:5, sataPorts:4, wifi:true,  usbC:true,  vrmTier:'excellent', price:450 },
+
+  /* --- B860 (mainstream Core Ultra) --- */
+  { name:'MSI MAG B860 Tomahawk WiFi',      brand:'MSI',       socket:'LGA1851', chipset:'B860',
+    form:'ATX',  ramType:'DDR5', ramSlots:4, maxRam:192, maxRamSpeed:8600,
+    pcieGen:5.0, m2Slots:3, sataPorts:4, wifi:true,  usbC:true,  vrmTier:'great',     price:250 },
+  { name:'ASUS TUF Gaming B860-Plus WiFi',  brand:'ASUS',      socket:'LGA1851', chipset:'B860',
+    form:'ATX',  ramType:'DDR5', ramSlots:4, maxRam:192, maxRamSpeed:8000,
+    pcieGen:5.0, m2Slots:3, sataPorts:4, wifi:true,  usbC:true,  vrmTier:'great',     price:230 },
+  { name:'Gigabyte B860M Aorus Elite WiFi6E',brand:'Gigabyte', socket:'LGA1851', chipset:'B860',
+    form:'mATX', ramType:'DDR5', ramSlots:4, maxRam:192, maxRamSpeed:8000,
+    pcieGen:5.0, m2Slots:3, sataPorts:4, wifi:true,  usbC:true,  vrmTier:'great',     price:200 },
+
+  /* --- Z890 (flagship Core Ultra) --- */
+  { name:'MSI MPG Z890 Carbon WiFi',        brand:'MSI',       socket:'LGA1851', chipset:'Z890',
+    form:'ATX',  ramType:'DDR5', ramSlots:4, maxRam:256, maxRamSpeed:9200,
+    pcieGen:5.0, m2Slots:5, sataPorts:6, wifi:true,  usbC:true,  vrmTier:'excellent', price:500 },
+  { name:'ASUS ROG Maximus Z890 Hero',      brand:'ASUS',      socket:'LGA1851', chipset:'Z890',
+    form:'ATX',  ramType:'DDR5', ramSlots:4, maxRam:256, maxRamSpeed:9200,
+    pcieGen:5.0, m2Slots:5, sataPorts:6, wifi:true,  usbC:true,  vrmTier:'excellent', price:750 },
+  { name:'Gigabyte Z890 Aorus Master',      brand:'Gigabyte',  socket:'LGA1851', chipset:'Z890',
+    form:'E-ATX',ramType:'DDR5', ramSlots:4, maxRam:256, maxRamSpeed:9500,
+    pcieGen:5.0, m2Slots:5, sataPorts:6, wifi:true,  usbC:true,  vrmTier:'excellent', price:600 },
+];
