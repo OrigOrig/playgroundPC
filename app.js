@@ -2762,14 +2762,33 @@ function renderBapcScene(){
   const vp  = $('#bapcViewport');
   if(!svg || !vp) return;
 
+  // Always rebuild the scene from current bapc state
+  const objects = window.caseBuilder
+    ? window.caseBuilder.build(bapc.case)
+    : [];
+
   if(!b3dBooted){
     b3d.init(vp, svg);
-    b3d.setScene(b3d.demoScene());
     b3dBooted = true;
-  } else {
-    // re-init scene each time renderBapcScene is called so future
-    // stages can rebuild the object list based on bapc state
-    b3d.setScene(b3d.demoScene());
+  }
+
+  b3d.setScene(objects);
+
+  // Auto-frame the camera based on case size
+  const dims = caseDims(bapc.case);
+  if(dims){
+    b3d._state.camera.dist = Math.max(dims.w, dims.h, dims.d) * 2.6;
+  }
+}
+
+function caseDims(c){
+  if(!c) return null;
+  switch(c.form){
+    case 'ITX':   return { w:1.4, h:2.4, d:2.2 };
+    case 'mATX':  return { w:1.7, h:3.2, d:3.0 };
+    case 'ATX':   return { w:1.9, h:3.8, d:3.6 };
+    case 'E-ATX': return { w:2.1, h:4.4, d:4.0 };
+    default:      return { w:1.9, h:3.8, d:3.6 };
   }
 }
 
@@ -3274,4 +3293,323 @@ const b3d = (function(){
     _math: { V, M },
     _mesh: { box: boxMesh }
   };
+})();
+
+/* ================================================================
+   5c-2  —  CASE CHASSIS BUILDER
+   ----------------------------------------------------------------
+   Builds a 3D mesh for the current bapc.case, reacting to form
+   factor (dimensions) and style (front panel treatment, side panel,
+   PSU shroud presence).
+
+   Depends on b3d._mesh.box (from 5c-1).
+   ================================================================ */
+(function caseBuilder(){
+
+  const { box } = b3d._mesh;
+
+  /* --------------------------------------------------------------
+     CASE DIMENSIONS — driven by form factor.
+     Values are in "world units" (~10cm per unit).
+     Width (X), Height (Y), Depth (Z).
+     -------------------------------------------------------------- */
+  function caseDimensions(form){
+    switch(form){
+      case 'ITX':    return { w: 1.4, h: 2.4, d: 2.2 };
+      case 'mATX':   return { w: 1.7, h: 3.2, d: 3.0 };
+      case 'ATX':    return { w: 1.9, h: 3.8, d: 3.6 };
+      case 'E-ATX':  return { w: 2.1, h: 4.4, d: 4.0 };
+      default:       return { w: 1.9, h: 3.8, d: 3.6 };
+    }
+  }
+
+  /* --------------------------------------------------------------
+     STYLE PROFILE — cosmetic treatment per case `style` field.
+     -------------------------------------------------------------- */
+  function styleProfile(style){
+    switch(style){
+      case 'sff':      return { front:'mesh',  side:'mesh',  shroud:false, glassTint:'rgba(255,255,255,0.05)' };
+      case 'matx':     return { front:'mesh',  side:'solid', shroud:false, glassTint:'rgba(255,255,255,0.05)' };
+      case 'atx':      return { front:'mesh',  side:'solid', shroud:true,  glassTint:'rgba(255,255,255,0.05)' };
+      case 'full':     return { front:'mesh',  side:'glass', shroud:true,  glassTint:'rgba(120,180,255,0.06)' };
+      case 'showcase': return { front:'glass', side:'glass', shroud:false, glassTint:'rgba(180,140,255,0.07)' };
+      default:         return { front:'mesh',  side:'solid', shroud:true,  glassTint:'rgba(255,255,255,0.05)' };
+    }
+  }
+
+  /* --------------------------------------------------------------
+     MESH PRIMITIVES
+     -------------------------------------------------------------- */
+
+  // A flat panel facing +Z, +X, -X, +Y, or -Y with a given normal,
+  // used for case walls (single-sided quads, not full boxes).
+  function panelMesh(w, h, color, normal, opts){
+    opts = opts || {};
+    const x = w/2, y = h/2;
+    // two-sided quad; cull happens implicitly via painter's algorithm
+    const verts = [
+      [-x,-y,0], [ x,-y,0], [ x, y,0], [-x, y,0]
+    ];
+    const stroke = opts.stroke || 'rgba(0,0,0,0.35)';
+    const strokeWidth = opts.strokeWidth != null ? opts.strokeWidth : 1;
+    const faces = [
+      { idx:[0,1,2,3], color, normal, stroke, strokeWidth,
+        meta: opts.meta || {} }
+    ];
+    return { verts, faces };
+  }
+
+  // A thin box used for structural frame members (rails, feet, shroud).
+  function frameMesh(w, h, d, color, opts){
+    return box(w, h, d, color, opts);
+  }
+
+  // Vent / mesh grille: a set of thin bars on a panel.
+  function grilleBars(count, length, thickness, spacing, color){
+    const meshes = [];
+    const start = -((count - 1) * spacing) / 2;
+    for(let i = 0; i < count; i++){
+      const y = start + i * spacing;
+      const m = panelMesh(length, thickness, color, [0,0,1]);
+      m._offset = [0, y, 0];
+      meshes.push(m);
+    }
+    return meshes;
+  }
+
+  /* --------------------------------------------------------------
+     BUILD THE CASE — returns an array of {mesh, pos, rot} objects
+     that b3d.setScene can consume.
+     -------------------------------------------------------------- */
+  function buildCase(caseData){
+    if(!caseData) return [];
+
+    const dims   = caseDimensions(caseData.form);
+    const style  = styleProfile(caseData.style);
+    const w = dims.w, h = dims.h, d = dims.d;
+    const halfW = w/2, halfH = h/2, halfD = d/2;
+
+    const objects = [];
+
+    /* ---- palette ---- */
+    const frameColor   = '#2a3142';   // dark charcoal for structure
+    const panelColor   = '#1a1f2c';   // slightly darker panel
+    const glassColor   = style.glassTint;
+    const meshColor    = '#141821';
+    const frontColor   = style.front === 'glass' ? glassColor : panelColor;
+
+    /* ============================================================
+       1. STRUCTURAL FRAME — 12 thin edge rails forming a wireframe box
+       ============================================================ */
+    const railT = 0.08;   // rail thickness
+    const railColor = frameColor;
+
+    // vertical rails (4 corners)
+    const vRails = [
+      [-halfW, 0, -halfD],
+      [ halfW, 0, -halfD],
+      [-halfW, 0,  halfD],
+      [ halfW, 0,  halfD]
+    ];
+    vRails.forEach(p=>{
+      objects.push({
+        mesh: frameMesh(railT, h, railT, railColor),
+        pos: p, rot: [0,0,0]
+      });
+    });
+
+    // horizontal rails along X (top and bottom, front and back) — 4 rails
+    const hRailsX = [
+      [0,  halfH, -halfD],
+      [0, -halfH, -halfD],
+      [0,  halfH,  halfD],
+      [0, -halfH,  halfD]
+    ];
+    hRailsX.forEach(p=>{
+      objects.push({
+        mesh: frameMesh(w, railT, railT, railColor),
+        pos: p, rot: [0,0,0]
+      });
+    });
+
+    // horizontal rails along Z (top and bottom, left and right) — 4 rails
+    const hRailsZ = [
+      [-halfW,  halfH, 0],
+      [ halfW,  halfH, 0],
+      [-halfW, -halfH, 0],
+      [ halfW, -halfH, 0]
+    ];
+    hRailsZ.forEach(p=>{
+      objects.push({
+        mesh: frameMesh(railT, railT, d, railColor),
+        pos: p, rot: [0,0,0]
+      });
+    });
+
+    /* ============================================================
+       2. SIDE PANEL — left side (+X in our coordinate system after
+          the case is drawn; from camera it reads as the "visible"
+          side once rotated). Glass or solid based on style.
+       ============================================================ */
+    const sideColor = style.side === 'glass' ? glassColor : panelColor;
+    objects.push({
+      mesh: panelMesh(d, h, sideColor, [1,0,0], { stroke:'rgba(0,0,0,0.4)' }),
+      pos: [halfW, 0, 0],
+      rot: [0, Math.PI/2, 0]
+    });
+
+    /* ============================================================
+       3. RIGHT SIDE PANEL — solid, holds the motherboard tray
+       ============================================================ */
+    objects.push({
+      mesh: panelMesh(d, h, panelColor, [-1,0,0], { stroke:'rgba(0,0,0,0.4)' }),
+      pos: [-halfW, 0, 0],
+      rot: [0, -Math.PI/2, 0]
+    });
+
+    /* ============================================================
+       4. FRONT PANEL — mesh grille, glass, or solid
+       ============================================================ */
+    if(style.front === 'mesh'){
+      // solid front backing
+      objects.push({
+        mesh: panelMesh(w, h, meshColor, [0,0,1], { stroke:'rgba(0,0,0,0.4)' }),
+        pos: [0, 0, halfD],
+        rot: [0, 0, 0]
+      });
+      // grille bars on top of it
+      const bars = grilleBars(
+        Math.max(6, Math.round(h / 0.18)),
+        w * 0.85,
+        0.04,
+        0.16,
+        '#3a4255'
+      );
+      bars.forEach(bar=>{
+        objects.push({
+          mesh: bar,
+          pos: [bar._offset[0], bar._offset[1], halfD + 0.02],
+          rot: [0,0,0]
+        });
+      });
+    } else if(style.front === 'glass'){
+      objects.push({
+        mesh: panelMesh(w, h, glassColor, [0,0,1], { stroke:'rgba(255,255,255,0.15)' }),
+        pos: [0, 0, halfD],
+        rot: [0, 0, 0]
+      });
+    } else {
+      objects.push({
+        mesh: panelMesh(w, h, frontColor, [0,0,1], { stroke:'rgba(0,0,0,0.4)' }),
+        pos: [0, 0, halfD],
+        rot: [0, 0, 0]
+      });
+    }
+
+    /* ============================================================
+       5. REAR PANEL — solid, with a rectangular cutout for rear I/O
+          (we approximate the cutout by leaving a gap: the panel is
+          drawn as four strips around the I/O rectangle)
+       ============================================================ */
+    const ioW = w * 0.35;
+    const ioH = h * 0.10;
+    const ioY = halfH - h * 0.12;   // near top
+    const ioX = 0;                  // centred horizontally
+
+    // rear panel strips (above, below, left, right of I/O cutout)
+    // above
+    const aboveH = h/2 - (ioY + ioH/2);
+    objects.push({
+      mesh: panelMesh(w, aboveH, panelColor, [0,0,-1], { stroke:'rgba(0,0,0,0.4)' }),
+      pos: [0, (ioY + ioH/2) + aboveH/2, -halfD],
+      rot: [0, 0, 0]
+    });
+    // below
+    const belowH = (ioY - ioH/2) + h/2;
+    objects.push({
+      mesh: panelMesh(w, belowH, panelColor, [0,0,-1], { stroke:'rgba(0,0,0,0.4)' }),
+      pos: [0, -(h/2) + belowH/2, -halfD],
+      rot: [0, 0, 0]
+    });
+    // left of I/O
+    const leftW = (w/2) - (ioX - ioW/2);
+    objects.push({
+      mesh: panelMesh(leftW, ioH, panelColor, [0,0,-1], { stroke:'rgba(0,0,0,0.4)' }),
+      pos: [-(w/2) + leftW/2, ioY, -halfD],
+      rot: [0, 0, 0]
+    });
+    // right of I/O
+    const rightW = (ioX + ioW/2) + w/2;
+    objects.push({
+      mesh: panelMesh(rightW, ioH, panelColor, [0,0,-1], { stroke:'rgba(0,0,0,0.4)' }),
+      pos: [(w/2) - rightW/2, ioY, -halfD],
+      rot: [0, 0, 0]
+    });
+
+    /* ============================================================
+       6. TOP PANEL — solid, slightly lighter shade
+       ============================================================ */
+    objects.push({
+      mesh: panelMesh(w, d, '#232a3a', [0,1,0], { stroke:'rgba(0,0,0,0.4)' }),
+      pos: [0, halfH, 0],
+      rot: [-Math.PI/2, 0, 0]
+    });
+
+    /* ============================================================
+       7. BOTTOM PANEL — dark
+       ============================================================ */
+    objects.push({
+      mesh: panelMesh(w, d, '#10141c', [0,-1,0], { stroke:'rgba(0,0,0,0.5)' }),
+      pos: [0, -halfH, 0],
+      rot: [Math.PI/2, 0, 0]
+    });
+
+    /* ============================================================
+       8. PSU SHROUD — a wide flat box in the bottom of the case,
+          present on ATX / E-ATX / full styles
+       ============================================================ */
+    if(style.shroud){
+      const shroudH = h * 0.22;
+      const shroudW = w * 0.95;
+      const shroudD = d * 0.85;
+      objects.push({
+        mesh: frameMesh(shroudW, shroudH, shroudD, '#181d28', {
+          stroke: 'rgba(0,0,0,0.5)'
+        }),
+        pos: [0, -halfH + shroudH/2 + 0.05, 0],
+        rot: [0, 0, 0]
+      });
+    }
+
+    /* ============================================================
+       9. FEET — four small cylinders approximated as boxes
+       ============================================================ */
+    const footSize = 0.14;
+    const footH = 0.10;
+    const feet = [
+      [-halfW + 0.15, -halfH - footH/2, -halfD + 0.15],
+      [ halfW - 0.15, -halfH - footH/2, -halfD + 0.15],
+      [-halfW + 0.15, -halfH - footH/2,  halfD - 0.15],
+      [ halfW - 0.15, -halfH - footH/2,  halfD - 0.15]
+    ];
+    feet.forEach(p=>{
+      objects.push({
+        mesh: frameMesh(footSize, footH, footSize, '#0a0d14'),
+        pos: p, rot: [0,0,0]
+      });
+    });
+
+    return objects;
+  }
+
+  /* --------------------------------------------------------------
+     PUBLIC API — called by renderBapcScene
+     -------------------------------------------------------------- */
+  function build(caseData){
+    return buildCase(caseData);
+  }
+
+  // expose to outer scope
+  window.caseBuilder = { build };
+
 })();
