@@ -2040,6 +2040,51 @@ function iconCase(color1, color2){
 }
 
 /* ----------------------------------------------------------------
+   MOTHERBOARD — square board with CPU socket, RAM slots, PCIe slot,
+   chipset heatsink, rear I/O shroud, and 24-pin connector
+   ---------------------------------------------------------------- */
+function iconMobo(color1, color2){
+  const c1 = color1 || 'var(--info)';
+  const c2 = color2 || 'var(--primary)';
+  const gid = 'bapc-mobo-' + Math.random().toString(36).slice(2,7);
+  return svgWrap(`
+    ${iconGrad(gid, c1, c2)}
+    <rect x="14" y="14" width="72" height="72" rx="4" fill="url(#${gid})"/>
+    <rect x="14" y="14" width="72" height="72" rx="4" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="1"/>
+
+    <!-- CPU socket -->
+    <rect x="30" y="30" width="26" height="26" rx="2" fill="rgba(0,0,0,0.32)"/>
+    <rect x="33" y="33" width="20" height="20" rx="1.5" fill="rgba(255,255,255,0.10)"/>
+    <rect x="38" y="38" width="10" height="10" rx="1" fill="rgba(255,255,255,0.22)"/>
+
+    <!-- RAM slots (right of socket) -->
+    <rect x="62" y="28" width="4" height="44" rx="1" fill="rgba(0,0,0,0.32)"/>
+    <rect x="68" y="28" width="4" height="44" rx="1" fill="rgba(0,0,0,0.32)"/>
+    <rect x="74" y="28" width="4" height="44" rx="1" fill="rgba(0,0,0,0.32)"/>
+
+    <!-- PCIe x16 slot (below socket) -->
+    <rect x="26" y="62" width="46" height="4" rx="1" fill="rgba(0,0,0,0.38)"/>
+    <rect x="26" y="68" width="46" height="2.5" rx="1" fill="rgba(0,0,0,0.25)"/>
+
+    <!-- Chipset heatsink (bottom-right) -->
+    <rect x="62" y="62" width="18" height="16" rx="2" fill="rgba(255,255,255,0.18)"/>
+    <rect x="64" y="64" width="14" height="12" rx="1" fill="rgba(0,0,0,0.25)"/>
+
+    <!-- 24-pin connector (right edge) -->
+    <rect x="80" y="34" width="4" height="20" rx="1" fill="rgba(0,0,0,0.35)"/>
+
+    <!-- Rear I/O shroud (top-left) -->
+    <rect x="14" y="14" width="30" height="10" rx="2" fill="rgba(0,0,0,0.4)"/>
+    <rect x="18" y="17" width="4" height="4" fill="rgba(255,255,255,0.35)"/>
+    <rect x="24" y="17" width="4" height="4" fill="rgba(255,255,255,0.35)"/>
+    <rect x="30" y="17" width="4" height="4" fill="rgba(255,255,255,0.35)"/>
+
+    <text x="50" y="92" text-anchor="middle" font-family="Inter,sans-serif" font-weight="800"
+          font-size="8" fill="rgba(255,255,255,0.55)" letter-spacing="1.5">MOBO</text>
+  `);
+}
+
+/* ----------------------------------------------------------------
    Generic dispatcher — call this when you need "the icon for X"
    ---------------------------------------------------------------- */
 function bapcIcon(type){
@@ -2051,6 +2096,7 @@ function bapcIcon(type){
     case 'psu':     return iconPsu();
     case 'storage': return iconStorage();
     case 'case':    return iconCase();
+    case 'mobo':    return iconMobo();
     default:        return svgWrap(`<circle cx="50" cy="50" r="30" fill="var(--surface-3)"/>`);
   }
 }
