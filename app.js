@@ -3349,19 +3349,48 @@ const b3d = (function(){
   // used for case walls (single-sided quads, not full boxes).
   function panelMesh(w, h, color, normal, opts){
     opts = opts || {};
-    const x = w/2, y = h/2;
+    const t = opts.thickness != null ? opts.thickness : 0.04;
+    const x = w/2, y = h/2, z = t/2;
+
+    // A thin box instead of a flat quad. Front face at +z, back at -z.
     const verts = [
-      [-x,-y,0], [ x,-y,0], [ x, y,0], [-x, y,0]
+      [-x,-y,-z], [ x,-y,-z], [ x, y,-z], [-x, y,-z], // back   (0-3)
+      [-x,-y, z], [ x,-y, z], [ x, y, z], [-x, y, z]  // front  (4-7)
     ];
+
     const stroke = opts.stroke || 'rgba(0,0,0,0.35)';
     const strokeWidth = opts.strokeWidth != null ? opts.strokeWidth : 1;
+    const dark = shadeHexLocal(color, 0.70);
+    const mid  = shadeHexLocal(color, 0.85);
+
     const faces = [
-      { idx:[0,1,2,3], color, normal, stroke, strokeWidth,
-        meta: opts.meta || {} },
-      { idx:[3,2,1,0], color, normal, stroke, strokeWidth,
-        meta: opts.meta || {} }
+      { idx:[4,5,6,7], color,            normal:[0,0,1],  stroke, strokeWidth, meta: opts.meta || {} }, // front
+      { idx:[1,0,3,2], color: dark,      normal:[0,0,-1], stroke, strokeWidth, meta: opts.meta || {} }, // back
+      { idx:[0,4,7,3], color: mid,       normal:[-1,0,0], stroke, strokeWidth, meta: opts.meta || {} }, // left
+      { idx:[5,1,2,6], color: mid,       normal:[1,0,0],  stroke, strokeWidth, meta: opts.meta || {} }, // right
+      { idx:[3,7,6,2], color: shadeHexLocal(color, 1.10), normal:[0,1,0],  stroke, strokeWidth, meta: opts.meta || {} }, // top
+      { idx:[0,1,5,4], color: dark,      normal:[0,-1,0], stroke, strokeWidth, meta: opts.meta || {} }  // bottom
     ];
     return { verts, faces };
+  }
+
+  // local hex shade helper — caseBuilder doesn't have access to b3d's internal shadeHex
+  function shadeHexLocal(hex, factor){
+    const c = hex.replace('#','');
+    let r = parseInt(c.substring(0,2),16);
+    let g = parseInt(c.substring(2,4),16);
+    let b = parseInt(c.substring(4,6),16);
+    if(factor > 1){
+      r = Math.min(255, Math.round(r + (255-r) * (factor-1)));
+      g = Math.min(255, Math.round(g + (255-g) * (factor-1)));
+      b = Math.min(255, Math.round(b + (255-b) * (factor-1)));
+    } else {
+      r = Math.round(r * factor);
+      g = Math.round(g * factor);
+      b = Math.round(b * factor);
+    }
+    const h = n => n.toString(16).padStart(2,'0');
+    return '#' + h(r) + h(g) + h(b);
   }
 
   // A thin box used for structural frame members (rails, feet, shroud).
