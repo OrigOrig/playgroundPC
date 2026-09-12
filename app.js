@@ -2930,14 +2930,13 @@ const b3d = (function(){
     }
   };
 
-  const M = {
+    const M = {
     ident: () => [
       1,0,0,0,
       0,1,0,0,
       0,0,1,0,
       0,0,0,1
     ],
-    // rotation around X axis
     rotX: (rad) => {
       const c = Math.cos(rad), s = Math.sin(rad);
       return [
@@ -2947,7 +2946,6 @@ const b3d = (function(){
         0,0,0,1
       ];
     },
-    // rotation around Y axis
     rotY: (rad) => {
       const c = Math.cos(rad), s = Math.sin(rad);
       return [
@@ -2957,7 +2955,6 @@ const b3d = (function(){
         0,0,0,1
       ];
     },
-    // perspective projection: near plane mapping
     perspective: (fovDeg, aspect, near, far) => {
       const f = 1 / Math.tan((fovDeg * Math.PI / 180) / 2);
       const nf = 1 / (near - far);
@@ -2968,28 +2965,25 @@ const b3d = (function(){
         0, 0, 2 * far * near * nf, 0
       ];
     },
-    // translate matrix (used to place objects)
     trans: (x,y,z) => [
       1,0,0,0,
       0,1,0,0,
       0,0,1,0,
       x,y,z,1
     ],
-    // matrix multiplication (A * B), column-major
     mul: (a,b) => {
       const r = new Array(16);
       for(let i = 0; i < 4; i++){
         for(let j = 0; j < 4; j++){
-          r[i*4+j] =
-            a[0*4+j] * b[i*4+0] +
-            a[1*4+j] * b[i*4+1] +
-            a[2*4+j] * b[i*4+2] +
-            a[3*4+j] * b[i*4+3];
+          let s = 0;
+          for(let k = 0; k < 4; k++){
+            s += a[k*4+j] * b[i*4+k];
+          }
+          r[i*4+j] = s;
         }
       }
       return r;
     },
-    // apply matrix to vec4 (x,y,z,w)
     apply: (m,v) => [
       m[0]*v[0] + m[4]*v[1] + m[8]*v[2]  + m[12]*v[3],
       m[1]*v[0] + m[5]*v[1] + m[9]*v[2]  + m[13]*v[3],
