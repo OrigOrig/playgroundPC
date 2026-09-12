@@ -1288,7 +1288,7 @@ $$('#advisorGoals button').forEach(btn=>btn.addEventListener('click', ()=>{
   } else if(goal==='target'){
     // Build a game <option> list sorted alphabetically
     const sorted = [...a.gameResults].sort((x,y)=>x.name.localeCompare(y.name));
-    const gameOptions = `<option value="" disabled selected hidden>— Select a game —</option>` +
+    const gameOptions = `<option value="" disabled selected hidden>Select a game</option>` +
       sorted.map(g => `<option value="${g.name.replace(/"/g,'&quot;')}">${g.name}</option>`).join('');
     html = `
       <div class="card-title mb-2"><i class="fas fa-bullseye"></i> Target FPS Advisor</div>
