@@ -782,6 +782,13 @@ table.data tr:hover td{background:var(--surface-2);}
 @media(max-width:1100px){
   .bapc-grid{grid-template-columns:1fr;}
 }
+.bapc-mini-icon{
+  display:inline-block;
+  width:16px;height:16px;
+  vertical-align:-3px;
+  margin-right:.35rem;
+}
+.bapc-mini-icon svg{width:100%;height:100%;display:block;}
 .bapc-visual-card{overflow:hidden;}
 .bapc-viewport{
   position:relative;
@@ -1747,27 +1754,27 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
             </div>
 
             <div class="bapc-field">
-              <label>Case</label>
+              <label><span class="bapc-mini-icon" data-icon="case"></span> Case</label>
               <select id="bapcCase"></select>
             </div>
 
             <div class="bapc-field">
-              <label>CPU</label>
+              <label><span class="bapc-mini-icon" data-icon="cpu"></span> CPU</label>
               <select id="bapcCpu"></select>
             </div>
 
             <div class="bapc-field">
-              <label>GPU</label>
+              <label><span class="bapc-mini-icon" data-icon="gpu"></span> GPU</label>
               <select id="bapcGpu"></select>
             </div>
 
             <div class="bapc-field">
-              <label>RAM</label>
+              <label><span class="bapc-mini-icon" data-icon="ram"></span> RAM</label>
               <select id="bapcRam"></select>
             </div>
 
             <div class="bapc-field">
-              <label>Cooler</label>
+              <label><span class="bapc-mini-icon" data-icon="cooler"></span> Cooler</label>
               <select id="bapcCooler">
                 <option value="Stock cooler">Stock cooler</option>
                 <option value="Tower air">Tower air</option>
@@ -1778,12 +1785,12 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
             </div>
 
             <div class="bapc-field">
-              <label>PSU</label>
+              <label><span class="bapc-mini-icon" data-icon="psu"></span> PSU</label>
               <select id="bapcPsu"></select>
             </div>
 
             <div class="bapc-field">
-              <label>Storage (main drive)</label>
+              <label><span class="bapc-mini-icon" data-icon="storage"></span> Storage (main drive)</label>
               <select id="bapcStorage"></select>
             </div>
 
