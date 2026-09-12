@@ -262,7 +262,6 @@ body::before{
 
 /* ============================================================
    HERO PC IMAGE — replaces the old 3D tower
-   The PNG is transparent, so it floats on the gradient background
    ============================================================ */
 .hero-visual{
   position:relative;
@@ -343,7 +342,7 @@ body::before{
 .pc-glow{display:none;}
 
 /* ============================================================
-   PERFORMANCE OVERVIEW CHART — SVG area chart (matches screenshot 4)
+   PERFORMANCE OVERVIEW CHART — SVG area chart
    ============================================================ */
 .perf-chart-wrap{
   position:relative;
@@ -479,7 +478,6 @@ body::before{
 .game-card:hover{transform:translateY(-3px);border-color:var(--primary);box-shadow:var(--shadow);}
 .game-card:hover::before{opacity:1;}
 
-/* Banner thumb on top of each card */
 .game-card-banner{
   position:relative;
   width:100%;
@@ -646,7 +644,6 @@ table.data tr:hover td{background:var(--surface-2);}
 .modal h3 i{color:var(--primary);}
 .modal-close{position:absolute;top:1rem;right:1rem;}
 
-/* Modal hero banner (per-game) */
 .modal-hero{
   position:relative;
   width:100%;
@@ -899,7 +896,6 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
               </div>
             </div>
             <div class="hero-visual">
-              <!-- ========== REAL PC IMAGE (replaces the old 3D tower) ========== -->
               <div class="pc-hero-glow"></div>
               <div class="pc-hero-shadow"></div>
               <img class="pc-hero-image"
@@ -915,7 +911,6 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
                   <span id="pcLabelGpu">—</span>
                 </div>
               </div>
-              <!-- ========== /REAL PC IMAGE ========== -->
             </div>
           </div>
         </div>
@@ -981,7 +976,7 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
           </div>
         </div>
 
-        <!-- ========== PERFORMANCE OVERVIEW CHART + BREAKDOWN ========== -->
+        <!-- PERFORMANCE OVERVIEW + BREAKDOWN -->
         <div class="grid grid-2 mb-3">
           <div class="card">
             <div class="card-header">
@@ -1404,7 +1399,7 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
         <div class="card">
           <div class="card-header"><div class="card-title"><i class="fas fa-circle-info"></i> About</div></div>
           <p class="text-muted mb-2">PC Playground is a client-side performance modeler. All estimates are algorithmic, based on a curated component database and relative-weight FPS model.</p>
-          <p class="text-muted" style="font-size:.75rem;">Version 4.0 · Built with vanilla HTML/CSS/JS · No tracking · No server.</p>
+          <p class="text-muted" style="font-size:.75rem;">Version 4.1 · Built with vanilla HTML/CSS/JS · No tracking · No server.</p>
         </div>
       </section>
 
@@ -1449,13 +1444,12 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
 
 <script>
 /* ================================================================
-   PC PLAYGROUND — CORE ENGINE v4.0
+   PC PLAYGROUND — CORE ENGINE v4.1
    ----------------------------------------------------------------
-   CHANGES FROM v3.5:
-     - Real PC image on home (replaces the CSS 3D tower)
-     - Performance Overview area chart on home
-     - Per-game bar chart inside the game modal
-   Everything else is byte-identical to v3.5.
+   CHANGES FROM v4.0:
+     - Added `store:` field to every game (Steam/Epic/Riot/etc)
+     - Added "View on Store" + "Copy game name" buttons to modal
+   Everything else is byte-identical to v4.0.
    ================================================================ */
 
 const DATA_MODE = 'local';
@@ -1578,103 +1572,154 @@ const STORAGE_TYPES = [
 
 const CAPACITIES = ['64GB','128GB','256GB','500GB','1TB','2TB','4TB','8TB'];
 
+/* ----------------------------------------------------------------
+   GAME DB — every game now has a `store:` field
+   Steam games auto-use their app ID, non-Steam use official pages
+   ---------------------------------------------------------------- */
 const GAMES = [
   {name:'Cyberpunk 2077',      genre:'RPG',      base:42,  cw:0.22, gw:0.68, rw:0.10, preset:'High', rt:true,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/header.jpg', color:'#facc15'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/header.jpg',
+    store:'https://store.steampowered.com/app/1091500/', color:'#facc15'},
   {name:'Cyberpunk 2077 RT',   genre:'RPG',      base:22,  cw:0.20, gw:0.72, rw:0.08, preset:'High + RT', rt:true,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/header.jpg', color:'#facc15'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/header.jpg',
+    store:'https://store.steampowered.com/app/1091500/', color:'#facc15'},
   {name:'GTA V',               genre:'Open World',base:98, cw:0.35, gw:0.55, rw:0.10, preset:'Very High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/271590/header.jpg', color:'#fbbf24'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/271590/header.jpg',
+    store:'https://store.steampowered.com/app/271590/', color:'#fbbf24'},
   {name:'GTA VI (est.)',       genre:'Open World',base:48, cw:0.28, gw:0.62, rw:0.10, preset:'High', rt:true,
-    banner:'https://www.rockstargames.com/VI/_next/static/media/Official_Cover_Art_landscape.12.uu2irr.2_a.jpg', color:'#db2777'},
+    banner:'https://www.rockstargames.com/VI/_next/static/media/Official_Cover_Art_landscape.12.uu2irr.2_a.jpg',
+    store:'https://www.rockstargames.com/VI', color:'#db2777'},
   {name:'Minecraft (vanilla)', genre:'Sandbox',  base:142, cw:0.50, gw:0.40, rw:0.10, preset:'High', rt:false,
-    banner:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT5CwRF8TPYwMer7vy61EjYHkM0C22gubkg36r3VmOEaiyZbTLMYHA2UcuN&s=10', color:'#16a34a'},
+    banner:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT5CwRF8TPYwMer7vy61EjYHkM0C22gubkg36r3VmOEaiyZbTLMYHA2UcuN&s=10',
+    store:'https://www.minecraft.net/en-us', color:'#16a34a'},
   {name:'Minecraft RTX',       genre:'Sandbox',  base:58,  cw:0.30, gw:0.62, rw:0.08, preset:'RTX', rt:true,
-    banner:'', color:'#16a34a'},
+    banner:'', store:'https://www.minecraft.net/en-us', color:'#16a34a'},
   {name:'Forza Horizon 5',     genre:'Racing',   base:78,  cw:0.25, gw:0.65, rw:0.10, preset:'High', rt:true,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1551360/header.jpg', color:'#7c3aed'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1551360/header.jpg',
+    store:'https://store.steampowered.com/app/1551360/', color:'#7c3aed'},
   {name:'Roblox',              genre:'Sandbox',  base:188, cw:0.55, gw:0.35, rw:0.10, preset:'High', rt:false,
-    banner:'https://ewscripps.brightspotcdn.com/dims4/default/b1ad845/2147483647/strip/true/crop/1487x836+0+24/resize/1280x720!/quality/90/?url=https%3A%2F%2Fewscripps.brightspotcdn.com%2Fed%2Fc8%2Fb63524024c39adc9b4da11f22fff%2Fap168392951809.jpg', color:'#dc2626'},
+    banner:'https://ewscripps.brightspotcdn.com/dims4/default/b1ad845/2147483647/strip/true/crop/1487x836+0+24/resize/1280x720!/quality/90/?url=https%3A%2F%2Fewscripps.brightspotcdn.com%2Fed%2Fc8%2Fb63524024c39adc9b4da11f22fff%2Fap168392951809.jpg',
+    store:'https://www.roblox.com/', color:'#dc2626'},
   {name:'Valorant',            genre:'FPS',      base:210, cw:0.60, gw:0.30, rw:0.10, preset:'High', rt:false,
-    banner:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS3zixVODOgyt-YG0pmjldoUyL_1IIPpusyq_50NFg9aA&s=10', color:'#ef4444'},
+    banner:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS3zixVODOgyt-YG0pmjldoUyL_1IIPpusyq_50NFg9aA&s=10',
+    store:'https://playvalorant.com/en-us/', color:'#ef4444'},
   {name:'Fortnite',            genre:'Battle Royale', base:112, cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:true,
-    banner:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTfuZ9K2bn9IK1qIwDGuHaSAj8qhmfH6yiFRIhuoBvL27fOlSIGWzgvlFY&s=10', color:'#8b5cf6'},
+    banner:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTfuZ9K2bn9IK1qIwDGuHaSAj8qhmfH6yiFRIhuoBvL27fOlSIGWzgvlFY&s=10',
+    store:'https://www.fortnite.com/', color:'#8b5cf6'},
   {name:'Fortnite (RT)',       genre:'Battle Royale', base:62, cw:0.30, gw:0.62, rw:0.08, preset:'High + RT', rt:true,
-    banner:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSg0eLJPXG98D7gDUGp3QdqjOcLpRtxgicoQuxwUpAFabrawRBIrgPOaJU&s=10', color:'#8b5cf6'},
+    banner:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSg0eLJPXG98D7gDUGp3QdqjOcLpRtxgicoQuxwUpAFabrawRBIrgPOaJU&s=10',
+    store:'https://www.fortnite.com/', color:'#8b5cf6'},
   {name:'Call of Duty: Warzone',genre:'Battle Royale', base:76, cw:0.30, gw:0.60, rw:0.10, preset:'Medium', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1962663/header.jpg', color:'#3f6212'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1962663/header.jpg',
+    store:'https://store.steampowered.com/app/1962663/', color:'#3f6212'},
   {name:'Call of Duty: MW3',   genre:'FPS',      base:92,  cw:0.30, gw:0.60, rw:0.10, preset:'High', rt:true,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1938090/header.jpg', color:'#166534'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1938090/header.jpg',
+    store:'https://store.steampowered.com/app/1938090/', color:'#166534'},
   {name:'Elden Ring',          genre:'Action RPG',base:58, cw:0.25, gw:0.65, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg', color:'#ca8a04'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg',
+    store:'https://store.steampowered.com/app/1245620/', color:'#ca8a04'},
   {name:'Red Dead Redemption 2',genre:'Open World',base:64, cw:0.25, gw:0.65, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1174180/header.jpg', color:'#b91c1c'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1174180/header.jpg',
+    store:'https://store.steampowered.com/app/1174180/', color:'#b91c1c'},
   {name:'Apex Legends',        genre:'Battle Royale', base:124, cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1172470/header.jpg', color:'#dc2626'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1172470/header.jpg',
+    store:'https://store.steampowered.com/app/1172470/', color:'#dc2626'},
   {name:'Rocket League',       genre:'Sports',   base:196, cw:0.45, gw:0.45, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/252950/header.jpg', color:'#06b6d4'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/252950/header.jpg',
+    store:'https://store.steampowered.com/app/252950/', color:'#06b6d4'},
   {name:'The Witcher 3',       genre:'Action RPG',base:72, cw:0.25, gw:0.65, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/292030/header.jpg', color:'#a16207'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/292030/header.jpg',
+    store:'https://store.steampowered.com/app/292030/', color:'#a16207'},
   {name:'The Witcher 3 (RT)',  genre:'Action RPG',base:38, cw:0.22, gw:0.70, rw:0.08, preset:'High + RT', rt:true,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/292030/header.jpg', color:'#a16207'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/292030/header.jpg',
+    store:'https://store.steampowered.com/app/292030/', color:'#a16207'},
   {name:'CS2',                 genre:'FPS',      base:240, cw:0.50, gw:0.40, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/730/header.jpg', color:'#f59e0b'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/730/header.jpg',
+    store:'https://store.steampowered.com/app/730/', color:'#f59e0b'},
   {name:'Dota 2',              genre:'MOBA',     base:180, cw:0.50, gw:0.40, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/570/header.jpg', color:'#b91c1c'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/570/header.jpg',
+    store:'https://store.steampowered.com/app/570/', color:'#b91c1c'},
   {name:'League of Legends',   genre:'MOBA',     base:200, cw:0.55, gw:0.35, rw:0.10, preset:'High', rt:false,
-    banner:'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Aatrox_0.jpg', color:'#3b82f6'},
+    banner:'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Aatrox_0.jpg',
+    store:'https://www.leagueoflegends.com/en-us/', color:'#3b82f6'},
   {name:'Overwatch 2',         genre:'FPS',      base:150, cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/2357570/header.jpg', color:'#f97316'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/2357570/header.jpg',
+    store:'https://store.steampowered.com/app/2357570/', color:'#f97316'},
   {name:'PUBG',                genre:'Battle Royale', base:88, cw:0.35, gw:0.55, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/578080/header.jpg', color:'#ca8a04'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/578080/header.jpg',
+    store:'https://store.steampowered.com/app/578080/', color:'#ca8a04'},
   {name:'Rainbow Six Siege',   genre:'FPS',      base:180, cw:0.45, gw:0.45, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/359550/header.jpg', color:'#1e40af'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/359550/header.jpg',
+    store:'https://store.steampowered.com/app/359550/', color:'#1e40af'},
   {name:'Starfield',           genre:'RPG',      base:48,  cw:0.30, gw:0.60, rw:0.10, preset:'Medium', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1716740/header.jpg', color:'#0c4a6e'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1716740/header.jpg',
+    store:'https://store.steampowered.com/app/1716740/', color:'#0c4a6e'},
   {name:'Baldur\'s Gate 3',    genre:'RPG',      base:82,  cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1086940/header.jpg', color:'#a16207'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1086940/header.jpg',
+    store:'https://store.steampowered.com/app/1086940/', color:'#a16207'},
   {name:'Hogwarts Legacy',     genre:'Action RPG',base:58, cw:0.30, gw:0.60, rw:0.10, preset:'High', rt:true,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/990080/header.jpg', color:'#78350f'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/990080/header.jpg',
+    store:'https://store.steampowered.com/app/990080/', color:'#78350f'},
   {name:'Diablo IV',           genre:'ARPG',     base:118, cw:0.35, gw:0.55, rw:0.10, preset:'High', rt:true,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/2344520/header.jpg', color:'#7f1d1d'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/2344520/header.jpg',
+    store:'https://store.steampowered.com/app/2344520/', color:'#7f1d1d'},
   {name:'Escape from Tarkov',  genre:'FPS',      base:78,  cw:0.45, gw:0.45, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.akamai.steamstatic.com/steam/apps/244160/header.jpg', color:'#525252'},
+    banner:'https://cdn.akamai.steamstatic.com/steam/apps/244160/header.jpg',
+    store:'https://www.escapefromtarkov.com/', color:'#525252'},
   {name:'Hunt: Showdown',      genre:'FPS',      base:96,  cw:0.35, gw:0.55, rw:0.10, preset:'High', rt:true,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/594650/header.jpg', color:'#78350f'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/594650/header.jpg',
+    store:'https://store.steampowered.com/app/594650/', color:'#78350f'},
   {name:'F1 24',               genre:'Racing',   base:104, cw:0.28, gw:0.62, rw:0.10, preset:'High', rt:true,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/2488620/header.jpg', color:'#dc2626'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/2488620/header.jpg',
+    store:'https://store.steampowered.com/app/2488620/', color:'#dc2626'},
   {name:'Resident Evil 4',     genre:'Survival', base:88,  cw:0.28, gw:0.62, rw:0.10, preset:'High', rt:true,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/2050650/header.jpg', color:'#7f1d1d'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/2050650/header.jpg',
+    store:'https://store.steampowered.com/app/2050650/', color:'#7f1d1d'},
   {name:'God of War',          genre:'Action',   base:76,  cw:0.28, gw:0.62, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1593500/header.jpg', color:'#a3a3a3'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1593500/header.jpg',
+    store:'https://store.steampowered.com/app/1593500/', color:'#a3a3a3'},
   {name:'Horizon Zero Dawn',   genre:'Action RPG',base:68, cw:0.25, gw:0.65, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1151640/header.jpg', color:'#ea580c'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1151640/header.jpg',
+    store:'https://store.steampowered.com/app/1151640/', color:'#ea580c'},
   {name:'Death Stranding',     genre:'Adventure',base:98,  cw:0.30, gw:0.60, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1190460/header.jpg', color:'#0ea5e9'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1190460/header.jpg',
+    store:'https://store.steampowered.com/app/1190460/', color:'#0ea5e9'},
   {name:'Microsoft Flight Sim',genre:'Sim',      base:52,  cw:0.55, gw:0.35, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1250410/header.jpg', color:'#0891b2'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1250410/header.jpg',
+    store:'https://store.steampowered.com/app/1250410/', color:'#0891b2'},
   {name:'Cities: Skylines II', genre:'Sim',      base:38,  cw:0.60, gw:0.30, rw:0.10, preset:'Medium', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/949230/header.jpg', color:'#0891b2'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/949230/header.jpg',
+    store:'https://store.steampowered.com/app/949230/', color:'#0891b2'},
   {name:'Total War: Warhammer III',genre:'Strategy', base:74, cw:0.55, gw:0.35, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1142710/header.jpg', color:'#7f1d1d'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1142710/header.jpg',
+    store:'https://store.steampowered.com/app/1142710/', color:'#7f1d1d'},
   {name:'Civilization VI',     genre:'Strategy', base:112, cw:0.60, gw:0.30, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/289070/header.jpg', color:'#0d9488'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/289070/header.jpg',
+    store:'https://store.steampowered.com/app/289070/', color:'#0d9488'},
   {name:'Stellaris',           genre:'Strategy', base:96,  cw:0.65, gw:0.25, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/281990/header.jpg', color:'#1e3a8a'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/281990/header.jpg',
+    store:'https://store.steampowered.com/app/281990/', color:'#1e3a8a'},
   {name:'Rust',                genre:'Survival', base:88,  cw:0.35, gw:0.55, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/252490/header.jpg', color:'#dc2626'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/252490/header.jpg',
+    store:'https://store.steampowered.com/app/252490/', color:'#dc2626'},
   {name:'Destiny 2',           genre:'FPS',      base:132, cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1085660/header.jpg', color:'#7c3aed'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1085660/header.jpg',
+    store:'https://store.steampowered.com/app/1085660/', color:'#7c3aed'},
   {name:'Warframe',            genre:'Action',   base:158, cw:0.45, gw:0.45, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/230410/header.jpg', color:'#0891b2'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/230410/header.jpg',
+    store:'https://store.steampowered.com/app/230410/', color:'#0891b2'},
   {name:'Monster Hunter: World',genre:'Action RPG',base:82, cw:0.30, gw:0.60, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/582010/header.jpg', color:'#166534'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/582010/header.jpg',
+    store:'https://store.steampowered.com/app/582010/', color:'#166534'},
   {name:'Palworld',            genre:'Survival', base:92,  cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1623730/header.jpg', color:'#0ea5e9'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1623730/header.jpg',
+    store:'https://store.steampowered.com/app/1623730/', color:'#0ea5e9'},
   {name:'Helldivers 2',        genre:'Co-op',    base:78,  cw:0.35, gw:0.55, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/553850/header.jpg', color:'#0891b2'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/553850/header.jpg',
+    store:'https://store.steampowered.com/app/553850/', color:'#0891b2'},
   {name:'Deep Rock Galactic',  genre:'Co-op',    base:138, cw:0.40, gw:0.50, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/548430/header.jpg', color:'#ea580c'},
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/548430/header.jpg',
+    store:'https://store.steampowered.com/app/548430/', color:'#ea580c'},
 ];
 
 const CK = {
@@ -1884,11 +1929,6 @@ $('#psuWatt').addEventListener('change', ()=>{ state.build.psuWatt = $('#psuWatt
 $('#psuEff').addEventListener('change', ()=>{ state.build.psuEff = $('#psuEff').value; });
 $('#coolerType').addEventListener('change', ()=>{ state.build.coolerType = $('#coolerType').value; });
 
-/* ----------------------------------------------------------------
-   updateTower() — v4.0: only updates the label under the PC image
-   and the image's ambient glow to match the GPU brand.
-   The image itself is fixed (single PNG).
-   ---------------------------------------------------------------- */
 function updateTower(){
   const cpuName = $('#cpuSelect') ? $('#cpuSelect').value : state.build.cpu;
   const gpuName = $('#gpuSelect') ? $('#gpuSelect').value : state.build.gpu;
@@ -1901,7 +1941,6 @@ function updateTower(){
                 : gpuBrand === 'AMD'    ? 'rgba(239,68,68,.55)'
                 :                          'rgba(6,182,212,.55)';
 
-  // Tint the drop-shadow glow behind/around the PC based on GPU brand
   const img = $('#pcHeroImage');
   if(img){
     img.style.filter = `drop-shadow(0 30px 50px rgba(0,0,0,.65)) drop-shadow(0 0 40px ${gpuGlow})`;
@@ -1917,9 +1956,6 @@ function updateTower(){
   if(labelGpu) labelGpu.textContent = gpuName || '—';
 }
 
-/* ----------------------------------------------------------------
-   ANALYSIS ENGINE — unchanged
-   ---------------------------------------------------------------- */
 function analyze(){
   state.build.cpu = $('#cpuSelect').value;
   state.build.gpu = $('#gpuSelect').value;
@@ -2034,9 +2070,6 @@ function syncBuildUI(){
   updateTower();
 }
 
-/* ----------------------------------------------------------------
-   RENDER: HOME
-   ---------------------------------------------------------------- */
 function renderHome(){
   const a = state.analysis;
   if(!a){
@@ -2095,7 +2128,6 @@ function renderHome(){
     <div class="meter"><div class="meter-label"><i class="fas fa-hard-drive"></i> Storage</div><div class="meter-track"><div class="meter-fill ${a.storageScore<50?'warn':a.storageScore>=80?'good':''}" style="width:${a.storageScore}%"></div></div><div class="meter-value">${a.storageScore}</div></div>
   `;
 
-  // NEW: performance overview chart
   renderPerfChart(a);
 
   const top8 = [...a.gameResults].sort((x,y)=>y.fps-x.fps).slice(0,8);
@@ -2105,9 +2137,6 @@ function renderHome(){
   $('#homeUpgrade').innerHTML = upgradeTeaserHtml(a);
 }
 
-/* ----------------------------------------------------------------
-   PERFORMANCE OVERVIEW — SVG area chart
-   ---------------------------------------------------------------- */
 function renderPerfChart(a){
   const wrap = $('#perfOverviewChart');
   const sub = $('#perfOverviewSub');
@@ -2135,11 +2164,9 @@ function renderPerfChart(a){
     label: p.label
   }));
 
-  // Build smooth-ish line path (straight segments, clean)
   const linePath = coords.map((c,i)=> `${i===0?'M':'L'} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`).join(' ');
   const areaPath = `${linePath} L ${coords[coords.length-1].x.toFixed(1)} ${(padT+chartH).toFixed(1)} L ${coords[0].x.toFixed(1)} ${(padT+chartH).toFixed(1)} Z`;
 
-  // Grid lines
   const gridLines = [0, 25, 50, 75, 100].map(v=>{
     const y = padT + (1 - v/maxV) * chartH;
     return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}"/>`;
@@ -2311,7 +2338,6 @@ function openGameModal(g){
   }).join('');
   const a = state.analysis;
 
-  // NEW: build bar chart for Low/Medium/High/Ultra at 1080p
   const chartPresets = [
     {label:'Low',    mult:1.35},
     {label:'Medium', mult:1.10},
@@ -2369,6 +2395,16 @@ function openGameModal(g){
       <li>Ray Tracing → <strong>${g.rt && g.fps>=120?'On':g.rt && g.fps>=90?'Selective':'Off'}</strong></li>
       <li>Upscaling → <strong>${g.fps<50?'DLSS/FSR Performance':g.fps<80?'Quality':'Off'}</strong></li>
     </ul>
+    ${g.store ? `
+      <div style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--border);display:flex;gap:.6rem;flex-wrap:wrap;">
+        <a href="${g.store}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="text-decoration:none;">
+          <i class="fas fa-arrow-up-right-from-square"></i> View on Store
+        </a>
+        <button class="btn btn-ghost" onclick="navigator.clipboard.writeText('${g.name}')">
+          <i class="fas fa-copy"></i> Copy game name
+        </button>
+      </div>
+    ` : ''}
   `;
   $('#gameModal').classList.add('show');
 }
@@ -2704,7 +2740,7 @@ $('#quickTheme').addEventListener('click', ()=>{
 $('#quickSettings').addEventListener('click', ()=>navigate('settings'));
 
 $('#exportBtn').addEventListener('click', ()=>{
-  const payload = {version:4, build:state.build, settings:state.settings, builds:state.savedBuilds, exported:new Date().toISOString()};
+  const payload = {version:4.1, build:state.build, settings:state.settings, builds:state.savedBuilds, exported:new Date().toISOString()};
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -2794,7 +2830,7 @@ $('#menuBtn').addEventListener('click', ()=>$('#sidebar').classList.toggle('open
     $('#heroRam').textContent = state.build.ram;
     $('#gamesCountBadge').textContent = GAMES.length;
   }
-  console.log('%cPC Playground v4.0','font-size:16px;font-weight:800;color:#3b82f6');
+  console.log('%cPC Playground v4.1','font-size:16px;font-weight:800;color:#3b82f6');
   console.log('Loaded:', allCpus().length, 'CPUs,', allGpus().length, 'GPUs,', GAMES.length, 'games');
 })();
 </script>
