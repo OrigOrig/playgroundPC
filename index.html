@@ -1496,6 +1496,34 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
         </div>
 
         <div class="card mb-3">
+          <div class="card-header"><div class="card-title"><i class="fas fa-square-poll-vertical"></i> Motherboard</div></div>
+          <div class="form-grid">
+            <div class="field">
+              <label>Socket</label>
+              <select id="moboSocket">
+                <option value="" disabled hidden>-</option>
+                <option value="AM4">AM4</option>
+                <option value="AM5">AM5</option>
+                <option value="LGA1700">LGA1700</option>
+                <option value="LGA1851">LGA1851</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Chipset</label>
+              <select id="moboChipset">
+                <option value="" disabled hidden>-</option>
+              </select>
+            </div>
+            <div class="field" style="grid-column:span 2;">
+              <label>Model</label>
+              <select id="moboSelect">
+                <option value="" disabled hidden>-</option>
+              </select>
+            </div>
+          </div>
+        </div>
+         
+        <div class="card mb-3">
           <div class="card-header">
             <div class="card-title"><i class="fas fa-hard-drive"></i> Storage <span class="card-sub" id="storageCount">0/4 drives</span></div>
             <button class="btn btn-sm btn-ghost" id="addStorage"><i class="fas fa-plus"></i> Add drive</button>
