@@ -1815,23 +1815,477 @@ document.addEventListener('keydown', (e)=>{
   if(e.key === 'Escape' && $('#sidebar').classList.contains('open')) closeSidebar();
 });
 
-/* ----------------------------------------------------------------
-   BUILD A PC — placeholder (full logic in the next message)
-   ---------------------------------------------------------------- */
-function renderBuildAPC(){
-  // Message 5 will fill this in. For now, just a placeholder so
-  // the page can open without errors.
-  const svg = $('#bapcSvg');
-  if(svg){
-    svg.innerHTML = `
-      <text x="400" y="240" text-anchor="middle" fill="var(--text-3)" font-family="Inter, sans-serif" font-size="18" font-weight="600">
-        Visual builder coming next
-      </text>
-      <text x="400" y="270" text-anchor="middle" fill="var(--text-3)" font-family="Inter, sans-serif" font-size="13">
-        Message 5 completes this page
-      </text>
-    `;
+/* ================================================================
+   BUILD A PC  —  Paste 5a-2
+   Dropdown population + cost table + compatibility checks
+   ================================================================ */
+
+/* ---------- Build-A-PC state (kept separate from My PC) ---------- */
+const bapc = {
+  case:    CASES[0],
+  cpu:     null,
+  gpu:     null,
+  ram:     null,
+  cooler:  COOLERS[0],
+  psu:     PSUS[0],
+  storage: STORAGE_EXTENDED[0],
+  storageQty: 1,
+  prices:  {},           // component key -> editable price
+  lastCompat: null,
+  rotation: -12         // for later (5b-2)
+};
+
+/* ---------- Helpers ---------- */
+function findCpu(name){ return allCpus().find(c=>c.name===name) || null; }
+function findGpu(name){ return allGpus().find(g=>g.name===name) || null; }
+function findRamByLabel(label){
+  const m = String(label).match(/^(\d+)GB\s+(DDR\d)/);
+  if(!m) return null;
+  const cap = parseInt(m[1],10), type = m[2];
+  return RAM_EXTENDED.find(r=>r.capacity===cap && r.type===type) || null;
+}
+function ramLabel(r){ return `${r.capacity}GB ${r.type}`; }
+
+/* ---------- Populate each <select> ---------- */
+function populateBapcSelects(){
+  const $case  = $('#bapcCase');
+  const $cpu   = $('#bapcCpu');
+  const $gpu   = $('#bapcGpu');
+  const $ram   = $('#bapcRam');
+  const $cool  = $('#bapcCooler');
+  const $psu   = $('#bapcPsu');
+  const $stg   = $('#bapcStorage');
+
+  if($case && !$case.innerHTML){
+    $case.innerHTML = CASES.map((c,i)=>
+      `<option value="${i}">${c.brand} ${c.name} · ${c.form} · max GPU ${c.maxGpu}mm</option>`
+    ).join('');
   }
+
+  if($cpu && !$cpu.innerHTML){
+    // Group by brand
+    let html = '';
+    ['AMD','Intel'].forEach(brand=>{
+      html += `<optgroup label="${brand}">`;
+      CPUS[brand].forEach(c=>{
+        html += `<option value="${c.name}">${c.name} · ${c.cores} · ${c.socket}</option>`;
+      });
+      html += `</optgroup>`;
+    });
+    $cpu.innerHTML = html;
+  }
+
+  if($gpu && !$gpu.innerHTML){
+    let html = '';
+    ['NVIDIA','AMD','Intel'].forEach(brand=>{
+      html += `<optgroup label="${brand}">`;
+      GPUS[brand].forEach(g=>{
+        html += `<option value="${g.name}">${g.name} · ${g.vram}GB · ${g.tdp}W</option>`;
+      });
+      html += `</optgroup>`;
+    });
+    $gpu.innerHTML = html;
+  }
+
+  if($ram && !$ram.innerHTML){
+    // Collapse duplicate capacity+type into a single option (use fastest kit as reference)
+    const seen = new Set();
+    const rows = [];
+    RAM_EXTENDED.forEach(r=>{
+      const key = `${r.capacity}-${r.type}`;
+      if(seen.has(key)) return;
+      seen.add(key);
+      rows.push(r);
+    });
+    $ram.innerHTML = rows.map(r=>{
+      const label = ramLabel(r);
+      return `<option value="${label}">${label} · ${r.speeds[r.speeds.length-1]}MHz · ${r.tdp}W</option>`;
+    }).join('');
+  }
+
+  if($cool && !$cool.innerHTML){
+    $cool.innerHTML = COOLERS.map((c,i)=>
+      `<option value="${i}">${c.name} · up to ${c.maxTdp}W TDP</option>`
+    ).join('');
+  }
+
+  if($psu && !$psu.innerHTML){
+    $psu.innerHTML = PSUS.map((p,i)=>
+      `<option value="${i}">${p.wattage}W · ${p.efficiency} · ${p.form} · ${p.modular}-mod</option>`
+    ).join('');
+  }
+
+  if($stg && !$stg.innerHTML){
+    $stg.innerHTML = STORAGE_EXTENDED.map((s,i)=>
+      `<option value="${i}">${s.name} · ${s.speed} MB/s</option>`
+    ).join('');
+  }
+}
+
+/* ---------- Compatibility engine ---------- */
+function runBapcCompatibility(){
+  const issues = [];
+  const notes  = [];
+  const { case: cse, cpu, gpu, ram, cooler, psu } = bapc;
+
+  if(!cpu || !gpu || !ram) {
+    return {issues, notes, ready:false};
+  }
+
+  /* --- Case vs GPU length --- */
+  if(gpu.name){
+    const gpuLenMap = {
+      'RTX 5090': 360, 'RTX 5080': 304, 'RTX 5070 Ti': 305, 'RTX 5070': 242,
+      'RTX 4090': 336, 'RTX 4080 Super': 310, 'RTX 4080': 310,
+      'RTX 4070 Ti Super': 305, 'RTX 4070 Ti': 305, 'RTX 4070 Super': 305,
+      'RTX 4070': 244, 'RTX 4060 Ti': 240, 'RTX 4060': 200,
+      'RTX 3090': 313, 'RTX 3080 Ti': 285, 'RTX 3080 10GB': 285,
+      'RTX 3070': 242, 'RTX 3060 Ti': 242, 'RTX 3060 12GB': 242,
+      'RX 7900 XTX': 287, 'RX 7900 XT': 276, 'RX 7900 GRE': 280,
+      'RX 7800 XT': 267, 'RX 7700 XT': 267, 'RX 7600': 204,
+      'RX 6950 XT': 267, 'RX 6900 XT': 267, 'RX 6800 XT': 267,
+      'RX 6800': 267, 'RX 6750 XT': 267, 'RX 6700 XT': 267,
+      'RX 9070 XT': 320, 'RX 9070': 300,
+      'Arc B770': 280, 'Arc B580': 272, 'Arc A770 16GB': 280,
+      'Arc A750': 280, 'Arc A580': 272, 'Arc A380': 222
+    };
+    const gpuLen = gpuLenMap[gpu.name] || 260;
+    if(gpuLen > cse.maxGpu){
+      issues.push({icon:'triangle-exclamation', level:'danger',
+        text:`GPU (${gpuLen}mm) is longer than case limit (${cse.maxGpu}mm). It will NOT fit.`});
+    } else if(gpuLen > cse.maxGpu - 20){
+      notes.push({icon:'circle-info', level:'warn',
+        text:`GPU (${gpuLen}mm) is tight against case limit (${cse.maxGpu}mm). Cable routing may be tricky.`});
+    } else {
+      notes.push({icon:'circle-check', level:'ok',
+        text:`GPU length OK (${gpuLen}mm ≤ ${cse.maxGpu}mm).`});
+    }
+  }
+
+  /* --- Cooler height vs case --- */
+  if(cooler){
+    if(cooler.height > cse.maxCooler){
+      issues.push({icon:'triangle-exclamation', level:'danger',
+        text:`Cooler (${cooler.height}mm tall) exceeds case limit (${cse.maxCooler}mm). Won't fit.`});
+    } else {
+      notes.push({icon:'circle-check', level:'ok',
+        text:`Cooler fits (${cooler.height}mm ≤ ${cse.maxCooler}mm).`});
+    }
+    if(cooler.maxTdp < cpu.tdp){
+      notes.push({icon:'temperature-high', level:'warn',
+        text:`Cooler rated for ${cooler.maxTdp}W, CPU TDP is ${cpu.tdp}W. Thermals will throttle.`});
+    }
+  }
+
+  /* --- CPU socket vs RAM type sanity --- */
+  const cpuGen = cpu.gen || '';
+  const wantsDDR5 = cpuGen.includes('Zen 5') || cpuGen.includes('Zen 4') ||
+                    cpuGen.includes('Arrow') || cpuGen.includes('Raptor') ||
+                    cpuGen.includes('Alder');
+  const ramIsDDR5 = ram.type === 'DDR5';
+  if(wantsDDR5 && !ramIsDDR5){
+    issues.push({icon:'microchip', level:'danger',
+      text:`${cpu.name} (${cpu.socket}) needs DDR5 — you selected ${ramLabel(ram)}.`});
+  } else if(!wantsDDR5 && ramIsDDR5){
+    notes.push({icon:'circle-info', level:'warn',
+      text:`${cpu.name} pairs with DDR4 — ${ramLabel(ram)} may not be supported on its socket.`});
+  } else {
+    notes.push({icon:'circle-check', level:'ok',
+      text:`Memory type matches CPU platform (${cpu.socket} / ${ramLabel(ram)}).`});
+  }
+
+  /* --- PSU wattage vs estimated draw --- */
+  if(psu){
+    const estDraw = (cpu.tdp || 65) + (gpu.tdp || 100) + (ram.tdp || 10) +
+                    (bapc.storage.tdp || 5) * bapc.storageQty + 75;
+    const headroom = psu.wattage - estDraw;
+    bapc.lastCompat = {...(bapc.lastCompat||{}), estDraw, headroom};
+    if(headroom < 0){
+      issues.push({icon:'plug', level:'danger',
+        text:`PSU ${psu.wattage}W is BELOW estimated draw (${estDraw}W). System will shut down under load.`});
+    } else if(headroom < 100){
+      notes.push({icon:'plug', level:'warn',
+        text:`PSU headroom only ${headroom}W. Recommend 100W+ for stability.`});
+    } else {
+      notes.push({icon:'circle-check', level:'ok',
+        text:`PSU headroom ${headroom}W (est. draw ${estDraw}W).`});
+    }
+
+    /* --- SFX PSU in ATX case is fine; ATX PSU in ITX case is not --- */
+    if(cse.form === 'ITX' && psu.form === 'ATX' && cse.maxPsu < 180){
+      issues.push({icon:'plug', level:'danger',
+        text:`ATX PSU doesn't fit in this ITX case (max ${cse.maxPsu}mm). Use an SFX unit.`});
+    }
+  }
+
+  /* --- Storage vs case bays --- */
+  const storageNeeded = bapc.storageQty;
+  if(storageNeeded > (cse.bays2_5 + cse.bays3_5)){
+    issues.push({icon:'hard-drive', level:'danger',
+      text:`${storageNeeded} drives selected but case has only ${cse.bays2_5 + cse.bays3_5} bays.`});
+  } else {
+    notes.push({icon:'circle-check', level:'ok',
+      text:`${storageNeeded} drive${storageNeeded>1?'s':''} fits in ${cse.bays2_5 + cse.bays3_5} bays.`});
+  }
+
+  return {issues, notes, ready:true};
+}
+
+/* ---------- Cost table ---------- */
+function getPrice(key, fallback){
+  return (bapc.prices && bapc.prices[key] != null) ? bapc.prices[key] : fallback;
+}
+
+function renderBapcCostTable(){
+  const tbody = $('#bapcCostTable');
+  if(!tbody) return;
+  if(!bapc.cpu || !bapc.gpu || !bapc.ram){
+    tbody.innerHTML = `<div class="empty" style="padding:1.25rem;"><i class="fas fa-receipt"></i><p>Pick CPU, GPU and RAM to see the full cost breakdown.</p></div>`;
+    return;
+  }
+  const rows = [
+    {key:'case',    label:'Case',            price:bapc.case.price},
+    {key:'cpu',     label:'CPU',             price:CPU_PRICES[bapc.cpu.name] || 200},
+    {key:'gpu',     label:'GPU',             price:GPU_PRICES[bapc.gpu.name] || 300},
+    {key:'ram',     label:'RAM',             price:bapc.ram.price || 60},
+    {key:'cooler',  label:'Cooler',          price:bapc.cooler.price},
+    {key:'psu',     label:'PSU',             price:bapc.psu.price},
+    {key:'storage', label:`Storage ×${bapc.storageQty}`, price:bapc.storage.price * bapc.storageQty},
+    {key:'mobo',    label:'Motherboard',     price:150},
+  ];
+  tbody.innerHTML = `
+    <table class="bapc-cost-table">
+      <thead><tr><th>Part</th><th style="text-align:right;">Price (USD)</th></tr></thead>
+      <tbody>
+        ${rows.map(r=>`
+          <tr>
+            <td>${r.label}</td>
+            <td style="text-align:right;">
+              <input type="number" min="0" step="5" data-key="${r.key}" value="${r.price}">
+            </td>
+          </tr>`).join('')}
+        <tr class="total-row">
+          <td>Total</td>
+          <td id="bapcTotalCell">$0</td>
+        </tr>
+      </tbody>
+    </table>
+  `;
+  $$('#bapcCostTable input[data-key]').forEach(inp=>{
+    inp.addEventListener('input', e=>{
+      bapc.prices[e.target.dataset.key] = Math.max(0, +e.target.value || 0);
+      updateBapcTotals();
+    });
+  });
+  updateBapcTotals();
+}
+
+function updateBapcTotals(){
+  if(!bapc.cpu || !bapc.gpu || !bapc.ram) return;
+  const rows = [
+    {key:'case',    price:bapc.case.price},
+    {key:'cpu',     price:CPU_PRICES[bapc.cpu.name] || 200},
+    {key:'gpu',     price:GPU_PRICES[bapc.gpu.name] || 300},
+    {key:'ram',     price:bapc.ram.price || 60},
+    {key:'cooler',  price:bapc.cooler.price},
+    {key:'psu',     price:bapc.psu.price},
+    {key:'storage', price:bapc.storage.price * bapc.storageQty},
+    {key:'mobo',    price:150},
+  ];
+  let subtotal = 0;
+  rows.forEach(r=>{
+    const v = (bapc.prices && bapc.prices[r.key] != null) ? bapc.prices[r.key] : r.price;
+    subtotal += v;
+  });
+
+  const $sub = $('#bapcSubtotal');
+  if($sub) $sub.textContent = '$' + subtotal.toLocaleString();
+
+  const $tot = $('#bapcTotalCell');
+  if($tot) $tot.textContent = '$' + subtotal.toLocaleString();
+
+  /* Performance score = weighted CPU + GPU score */
+  const cpuScore = clamp(Math.round(bapc.cpu.mult * 42), 5, 100);
+  const gpuScore = clamp(Math.round(bapc.gpu.mult * 30), 5, 100);
+  const ramScore = clamp(Math.round(bapc.ram.mult * 78), 5, 100);
+  const total = Math.round(cpuScore*0.35 + gpuScore*0.5 + ramScore*0.15);
+  const $score = $('#bapcScore');
+  if($score) $score.textContent = total + '/100';
+
+  /* FPS per dollar — rough average across GAMES at 1080p High */
+  let fpsSum = 0;
+  GAMES.forEach(g=>{
+    fpsSum += g.base * Math.pow(bapc.cpu.mult, g.cw) * Math.pow(bapc.gpu.mult, g.gw) * Math.pow(bapc.ram.mult, g.rw);
+  });
+  const avgFps = fpsSum / GAMES.length;
+  const fpsPerDollar = subtotal > 0 ? (avgFps / subtotal).toFixed(3) : '—';
+  const $fpsd = $('#bapcFpsPerDollar');
+  if($fpsd) $fpsd.textContent = fpsPerDollar === '—' ? '—' : fpsPerDollar + ' FPS/$';
+}
+
+/* ---------- Warnings panel ---------- */
+function renderBapcWarnings(){
+  const wrap = $('#bapcWarnings');
+  const summary = $('#bapcWarningsSummary');
+  const compatCount = $('#bapcCompatCount');
+  if(!wrap) return;
+
+  if(!bapc.cpu || !bapc.gpu || !bapc.ram){
+    wrap.innerHTML = `<div class="empty"><i class="fas fa-circle-check" style="color:var(--success);"></i><p>Pick a case, CPU, GPU and RAM to run the compatibility check.</p></div>`;
+    if(summary) summary.textContent = '—';
+    if(compatCount) compatCount.textContent = '—';
+    return;
+  }
+
+  const {issues, notes} = runBapcCompatibility();
+
+  if(summary) summary.textContent = issues.length === 0
+    ? `${notes.length} checks passed`
+    : `${issues.length} issue${issues.length>1?'s':''} found`;
+
+  if(compatCount) compatCount.textContent = `${notes.length} checks`;
+
+  const html = [
+    ...issues.map(i=>`
+      <div class="compat-warn bn-item" style="border-color:color-mix(in srgb,var(--danger) 40%,transparent);">
+        <div class="bn-icon" style="background:color-mix(in srgb,var(--danger) 15%,transparent);color:var(--danger);">
+          <i class="fas fa-${i.icon}"></i>
+        </div>
+        <div class="bn-body">
+          <div class="bn-head"><strong style="color:var(--danger);">Incompatible</strong></div>
+          <div class="bn-desc">${i.text}</div>
+        </div>
+      </div>`),
+    ...notes.map(n=>`
+      <div class="compat-warn bn-item" style="border-color:color-mix(in srgb,${n.level==='ok'?'var(--success)':'var(--warn)'} 35%,transparent);">
+        <div class="bn-icon" style="background:color-mix(in srgb,${n.level==='ok'?'var(--success)':'var(--warn)'} 15%,transparent);color:${n.level==='ok'?'var(--success)':'var(--warn)'};">
+          <i class="fas fa-${n.icon}"></i>
+        </div>
+        <div class="bn-body">
+          <div class="bn-head"><strong>${n.level==='ok'?'Passed':'Notice'}</strong></div>
+          <div class="bn-desc">${n.text}</div>
+        </div>
+      </div>`)
+  ].join('');
+
+  wrap.innerHTML = html || `<div class="empty"><i class="fas fa-circle-check" style="color:var(--success);"></i><p>No issues detected.</p></div>`;
+}
+
+/* ---------- Case label ---------- */
+function updateBapcCaseLabel(){
+  const el = $('#bapcCaseLabel');
+  if(el && bapc.case) el.textContent = `${bapc.case.brand} ${bapc.case.name} · ${bapc.case.form}`;
+}
+
+/* ---------- Main render ---------- */
+function renderBuildAPC(){
+  populateBapcSelects();
+  updateBapcCaseLabel();
+  renderBapcCostTable();
+  renderBapcWarnings();
+
+  // Default selections if empty
+  if($('#bapcCase') && !$('#bapcCase').value) $('#bapcCase').value = '0';
+  if($('#bapcCpu') && !$('#bapcCpu').value){
+    const defCpu = allCpus().find(c=>c.name==='Ryzen 5 7600X') || allCpus()[0];
+    $('#bapcCpu').value = defCpu.name;
+    bapc.cpu = defCpu;
+  }
+  if($('#bapcGpu') && !$('#bapcGpu').value){
+    const defGpu = allGpus().find(g=>g.name==='RTX 4070') || allGpus()[0];
+    $('#bapcGpu').value = defGpu.name;
+    bapc.gpu = defGpu;
+  }
+  if($('#bapcRam') && !$('#bapcRam').value){
+    const defRam = RAM_EXTENDED.find(r=>r.capacity===16 && r.type==='DDR5') || RAM_EXTENDED[0];
+    $('#bapcRam').value = ramLabel(defRam);
+    bapc.ram = defRam;
+  }
+  if($('#bapcCooler') && !$('#bapcCooler').value){
+    $('#bapcCooler').value = '13'; // AIO 240mm
+    bapc.cooler = COOLERS[13];
+  }
+  if($('#bapcPsu') && !$('#bapcPsu').value){
+    $('#bapcPsu').value = '12';    // 750W Gold
+    bapc.psu = PSUS[12];
+  }
+  if($('#bapcStorage') && !$('#bapcStorage').value){
+    $('#bapcStorage').value = '9'; // NVMe Gen4
+    bapc.storage = STORAGE_EXTENDED[9];
+  }
+
+  renderBapcWarnings();
+  renderBapcCostTable();
+}
+
+/* ---------- Wire up <select> change handlers (once) ---------- */
+(function wireBapcHandlers(){
+  document.addEventListener('change', (e)=>{
+    if(!e.target) return;
+    const id = e.target.id;
+    if(!id || !id.startsWith('bapc')) return;
+
+    if(id === 'bapcCase'){
+      bapc.case = CASES[+e.target.value] || CASES[0];
+      updateBapcCaseLabel();
+    } else if(id === 'bapcCpu'){
+      bapc.cpu = findCpu(e.target.value);
+    } else if(id === 'bapcGpu'){
+      bapc.gpu = findGpu(e.target.value);
+    } else if(id === 'bapcRam'){
+      bapc.ram = findRamByLabel(e.target.value);
+    } else if(id === 'bapcCooler'){
+      bapc.cooler = COOLERS[+e.target.value] || COOLERS[0];
+    } else if(id === 'bapcPsu'){
+      bapc.psu = PSUS[+e.target.value] || PSUS[0];
+    } else if(id === 'bapcStorage'){
+      bapc.storage = STORAGE_EXTENDED[+e.target.value] || STORAGE_EXTENDED[0];
+    }
+
+    renderBapcWarnings();
+    renderBapcCostTable();
+  });
+})();
+
+/* ---------- Analyze button ---------- */
+(function wireBapcAnalyze(){
+  document.addEventListener('click', (e)=>{
+    if(e.target && e.target.id === 'bapcAnalyzeBtn'){
+      renderBapcWarnings();
+      renderBapcCostTable();
+      const issues = (bapc.lastCompat && bapc.lastCompat.headroom != null && bapc.lastCompat.headroom < 0) ? 1 : 0;
+      toast(
+        issues ? 'Build analyzed — compatibility issues found' : 'Build analyzed — looks good!',
+        issues ? 'fa-triangle-exclamation' : 'fa-circle-check'
+      );
+    }
+    if(e.target && e.target.id === 'bapcResetBtn'){
+      confirmDialog('Reset the Build-A-PC configurator?', ()=>{
+        bapc.case = CASES[0];
+        bapc.cpu = null; bapc.gpu = null; bapc.ram = null;
+        bapc.cooler = COOLERS[0];
+        bapc.psu = PSUS[0];
+        bapc.storage = STORAGE_EXTENDED[0];
+        bapc.storageQty = 1;
+        bapc.prices = {};
+        ['bapcCase','bapcCpu','bapcGpu','bapcRam','bapcCooler','bapcPsu','bapcStorage'].forEach(id=>{
+          const el = document.getElementById(id);
+          if(el) el.value = '';
+        });
+        renderBuildAPC();
+        toast('Configurator reset', 'fa-rotate-left');
+      });
+    }
+  });
+})();
+
+/* ---------- Wire up storage qty spinner in the summary (optional) ----------
+   The HTML currently has no qty field. We add a tiny hook here so if a user
+   later adds one it just works.                                          */
+function setBapcStorageQty(n){
+  bapc.storageQty = clamp(n, 1, 8);
+  renderBapcCostTable();
+  renderBapcWarnings();
 }
 
 /* ----------------------------------------------------------------
