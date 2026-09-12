@@ -163,6 +163,40 @@ function navigate(page){
 }
 $$('.nav-item').forEach(item=>item.addEventListener('click', ()=>navigate(item.dataset.page)));
 
+/* ================================================================
+   COLLAPSIBLE SIDEBAR SECTIONS
+   ================================================================ */
+(function initSidebarCollapse(){
+  const STORAGE_KEY = 'pcp_sidebar_sections';
+  const sections = $$('.nav-section[data-section]');
+  if(sections.length === 0) return;
+
+  // Load saved state — default all open
+  const saved = CK.get(STORAGE_KEY) || {};
+
+  sections.forEach(section=>{
+    const key = section.dataset.section;
+    const group = document.querySelector(`.nav-group[data-group="${key}"]`);
+    if(!group) return;
+
+    // Apply saved state (default = open)
+    if(saved[key] === false){
+      section.classList.add('collapsed');
+      group.classList.add('collapsed');
+    }
+
+    section.addEventListener('click', ()=>{
+      const isCollapsed = section.classList.toggle('collapsed');
+      group.classList.toggle('collapsed', isCollapsed);
+
+      // Save state
+      const state = CK.get(STORAGE_KEY) || {};
+      state[key] = !isCollapsed;
+      CK.set(STORAGE_KEY, state);
+    });
+  });
+})();
+
 /* ----------------------------------------------------------------
    BUILD UI
    ---------------------------------------------------------------- */
