@@ -2190,6 +2190,8 @@ const bapc = {
   cpu:     null,
   gpu:     null,
   ram:     null,
+  mobo:    null,
+  moboIdx: 0,
   cooler:  COOLERS[0],
   psu:     PSUS[0],
   storage: STORAGE_EXTENDED[0],
@@ -2282,6 +2284,13 @@ function populateBapcSelects(){
   if($stg && !$stg.innerHTML){
     $stg.innerHTML = STORAGE_EXTENDED.map((s,i)=>
       `<option value="${i}">${s.name} · ${s.speed} MB/s</option>`
+    ).join('');
+  }
+
+  const $mobo = $('#bapcMobo');
+  if($mobo && !$mobo.innerHTML){
+    $mobo.innerHTML = MOTHERBOARDS.map((m,i)=>
+      `<option value="${i}">${m.name} · ${m.socket} · ${m.form} · $${m.price}</option>`
     ).join('');
   }
 }
@@ -2382,6 +2391,47 @@ function runBapcCompatibility(){
     }
   }
 
+  /* --- Motherboard vs CPU / RAM / Case --- */
+  if(bapc.mobo && cpu){
+    if(bapc.mobo.socket !== cpu.socket){
+      issues.push({icon:'square-poll-vertical', level:'danger',
+        text:`Mobo socket ${bapc.mobo.socket} doesn't match CPU socket ${cpu.socket}. Won't fit.`});
+    } else {
+      notes.push({icon:'circle-check', level:'ok',
+        text:`CPU socket matches mobo (${cpu.socket}).`});
+    }
+
+    if(ram && bapc.mobo.ramType !== ram.type){
+      issues.push({icon:'memory', level:'danger',
+        text:`Mobo uses ${bapc.mobo.ramType}, RAM is ${ram.type}. Won't fit.`});
+    } else if(ram){
+      notes.push({icon:'circle-check', level:'ok',
+        text:`RAM type matches mobo (${ram.type}).`});
+    }
+
+    if(ram && ram.capacity > bapc.mobo.maxRam){
+      issues.push({icon:'memory', level:'danger',
+        text:`${ram.capacity}GB exceeds mobo's ${bapc.mobo.maxRam}GB max.`});
+    }
+
+    if(cpu.tdp >= 150 && bapc.mobo.vrmTier === 'basic'){
+      notes.push({icon:'temperature-high', level:'warn',
+        text:`${cpu.tdp}W CPU on a basic VRM board — expect throttling.`});
+    }
+
+    const formRank = { ITX:0, mATX:1, ATX:2, 'E-ATX':3 };
+    if(formRank[bapc.mobo.form] > formRank[cse.form]){
+      issues.push({icon:'microchip', level:'danger',
+        text:`${bapc.mobo.form} board won't fit in a ${cse.form} case.`});
+    } else {
+      notes.push({icon:'circle-check', level:'ok',
+        text:`Mobo form factor fits case (${bapc.mobo.form} in ${cse.form}).`});
+    }
+  } else if(cpu){
+    notes.push({icon:'circle-info', level:'warn',
+      text:`No motherboard selected — pick one to run platform checks.`});
+  }
+   
   /* --- Storage vs case bays --- */
   const storageNeeded = bapc.storageQty;
   if(storageNeeded > (cse.bays2_5 + cse.bays3_5)){
@@ -2410,6 +2460,7 @@ function renderBapcCostTable(){
   const rows = [
     {key:'case',    label:'Case',            price:bapc.case.price},
     {key:'cpu',     label:'CPU',             price:CPU_PRICES[bapc.cpu.name] || 200},
+    {key:'mobo',    label:'Motherboard',     price:bapc.mobo ? bapc.mobo.price : 0},
     {key:'gpu',     label:'GPU',             price:GPU_PRICES[bapc.gpu.name] || 300},
     {key:'ram',     label:'RAM',             price:bapc.ram.price || 60},
     {key:'cooler',  label:'Cooler',          price:bapc.cooler.price},
@@ -2582,6 +2633,21 @@ function renderBuildAPC(){
   if($('#bapcStorageQty') && !$('#bapcStorageQty').value) $('#bapcStorageQty').value = '1';
   bapc.storageQty = +($('#bapcStorageQty')?.value || 1);
 
+  // Motherboard: default to a board matching the current CPU socket
+  if($('#bapcMobo')){
+    if(!$('#bapcMobo').value){
+      const cpuSocket = bapc.cpu ? bapc.cpu.socket : 'AM5';
+      const idx = MOTHERBOARDS.findIndex(m=>m.socket===cpuSocket);
+      const chosen = idx >= 0 ? idx : 0;
+      $('#bapcMobo').value = String(chosen);
+      bapc.moboIdx = chosen;
+      bapc.mobo = MOTHERBOARDS[chosen];
+    } else {
+      bapc.moboIdx = +$('#bapcMobo').value || 0;
+      bapc.mobo = MOTHERBOARDS[bapc.moboIdx] || null;
+    }
+  }
+
   renderBapcWarnings();
   renderBapcCostTable();
   renderBapcScene();
@@ -2599,10 +2665,25 @@ function renderBuildAPC(){
       updateBapcCaseLabel();
     } else if(id === 'bapcCpu'){
       bapc.cpu = findCpu(e.target.value);
+      // Auto-match mobo socket to CPU socket
+      if(bapc.cpu && bapc.mobo && bapc.mobo.socket !== bapc.cpu.socket){
+        const idx = MOTHERBOARDS.findIndex(m=>m.socket===bapc.cpu.socket);
+        if(idx >= 0){
+          bapc.moboIdx = idx;
+          bapc.mobo = MOTHERBOARDS[idx];
+          const $mobo = $('#bapcMobo');
+          if($mobo) $mobo.value = String(idx);
+        }
+      }
+    }
     } else if(id === 'bapcGpu'){
       bapc.gpu = findGpu(e.target.value);
     } else if(id === 'bapcRam'){
       bapc.ram = findRamByLabel(e.target.value);
+    } else if(id === 'bapcMobo'){
+      bapc.moboIdx = +e.target.value || 0;
+      bapc.mobo = MOTHERBOARDS[bapc.moboIdx] || null;
+    }
     } else if(id === 'bapcCooler'){
       bapc.cooler = COOLERS[+e.target.value] || COOLERS[0];
     } else if(id === 'bapcPsu'){
@@ -2680,108 +2761,22 @@ bapc.view = {
 function renderBapcScene(){
   const svg = $('#bapcSvg');
   if(!svg) return;
-
-  const cse  = bapc.case;
-  const cpu  = bapc.cpu;
-  const gpu  = bapc.gpu;
-  const ram  = bapc.ram;
-  const cool = bapc.cooler;
-  const psu  = bapc.psu;
-  const stg  = bapc.storage;
-
-  /* --- figure out glow colors per slot from compatibility --- */
-  const compat = runBapcCompatibility();
-  const glow = {
-    gpu:     '#22c55e',
-    cooler:  '#22c55e',
-    psu:     '#22c55e',
-    storage: '#22c55e',
-    ram:     '#22c55e',
-    cpu:     '#22c55e'
-  };
-  compat.issues.forEach(i=>{
-    if(i.text.toLowerCase().includes('gpu'))     glow.gpu = '#ef4444';
-    if(i.text.toLowerCase().includes('cooler'))  glow.cooler = '#ef4444';
-    if(i.text.toLowerCase().includes('psu'))     glow.psu = '#ef4444';
-    if(i.text.toLowerCase().includes('drive'))   glow.storage = '#ef4444';
-    if(i.text.toLowerCase().includes('ddr'))     glow.ram = '#ef4444';
-  });
-  compat.notes.filter(n=>n.level==='warn').forEach(n=>{
-    if(n.text.toLowerCase().includes('gpu')     && glow.gpu!=='#ef4444')     glow.gpu = '#f59e0b';
-    if(n.text.toLowerCase().includes('cooler')  && glow.cooler!=='#ef4444')  glow.cooler = '#f59e0b';
-    if(n.text.toLowerCase().includes('psu')     && glow.psu!=='#ef4444')     glow.psu = '#f59e0b';
-    if(n.text.toLowerCase().includes('drive')   && glow.storage!=='#ef4444') glow.storage = '#f59e0b';
-    if(n.text.toLowerCase().includes('memory')  && glow.ram!=='#ef4444')     glow.ram = '#f59e0b';
-  });
-
-  /* --- case outline scales with case size --- */
-  const formScale = { ITX:0.72, mATX:0.86, ATX:1.0, 'E-ATX':1.12 }[cse.form] || 1.0;
-  const caseW = 300 * formScale;
-  const caseH = 400 * formScale;
-  const caseX = 400 - caseW/2;
-  const caseY = 250 - caseH/2;
-
-  /* --- build the scene markup --- */
-  const gridLines = (()=>{
-    let g = '';
-    for(let x = 40; x < 800; x += 40){
-      g += `<line x1="${x}" y1="0" x2="${x}" y2="500" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>`;
-    }
-    for(let y = 20; y < 500; y += 40){
-      g += `<line x1="0" y1="${y}" x2="800" y2="${y}" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>`;
-    }
-    return g;
-  })();
-
-  /* icon scale — the icon functions render at 100×100, we scale to 60–90px */
-  const iconSlot = (iconFn, x, y, size, glowColor, label) => {
-    const half = size/2;
-    const scale = size/100;
-    return `
-      <g transform="translate(${x - half} ${y - half}) scale(${scale})" style="filter:drop-shadow(0 0 8px ${glowColor});">
-        <circle cx="50" cy="50" r="46" fill="${glowColor}" opacity="0.14"/>
-        <circle cx="50" cy="50" r="46" fill="none" stroke="${glowColor}" stroke-width="1.5" opacity="0.7"/>
-        ${iconFn()}
-      </g>
-      ${label ? `<text x="${x}" y="${y + half + 16}" text-anchor="middle"
-        font-family="Inter,sans-serif" font-size="10" font-weight="700"
-        fill="rgba(255,255,255,0.55)" letter-spacing="1">${label}</text>` : ''}
-    `;
-  };
-
-  const scene = `
-    <g id="bapc-scene-root">
-      ${gridLines}
-      <ellipse cx="400" cy="${caseY + caseH + 20}" rx="${caseW*0.55}" ry="14" fill="rgba(0,0,0,0.5)"/>
-      <g transform="translate(${caseX} ${caseY})">
-        <rect x="0" y="0" width="${caseW}" height="${caseH}" rx="14"
-              fill="rgba(20,24,34,0.55)" stroke="rgba(255,255,255,0.18)" stroke-width="2"/>
-        <rect x="8" y="8" width="${caseW-16}" height="${caseH-16}" rx="10"
-              fill="rgba(0,0,0,0.28)" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
-        <g transform="translate(${caseW-26} ${caseH/2})">
-          <rect x="0" y="-40" width="18" height="80" rx="4" fill="rgba(0,0,0,0.35)"/>
-          <circle cx="9" cy="-24" r="5" fill="${glow.cooler}" opacity="0.5"/>
-          <circle cx="9" cy="0"   r="5" fill="${glow.cooler}" opacity="0.5"/>
-          <circle cx="9" cy="24"  r="5" fill="${glow.cooler}" opacity="0.5"/>
-        </g>
-      </g>
-      ${cpu ? iconSlot(iconCpu, 400, caseY + caseH*0.22, 86*formScale, glow.cpu, 'CPU') : ''}
-      ${gpu ? iconSlot(iconGpu, 400, caseY + caseH*0.52, 120*formScale, glow.gpu, 'GPU') : ''}
-      ${ram ? iconSlot(iconRam, 400 + caseW*0.34, caseY + caseH*0.22, 56*formScale, glow.ram, 'RAM') : ''}
-      ${cool ? iconSlot(iconCooler, 400 - caseW*0.32, caseY + caseH*0.2, 64*formScale, glow.cooler, 'COOL') : ''}
-      ${psu ? iconSlot(iconPsu, 400, caseY + caseH*0.82, 92*formScale, glow.psu, 'PSU') : ''}
-      ${stg ? iconSlot(iconStorage, 400 - caseW*0.32, caseY + caseH*0.74, 60*formScale, glow.storage, 'SSD') : ''}
-    </g>
-  `;
-
-  /* preserveAspectRatio xMidYMid meet; the outer wrapper already handles rotation via CSS */
   svg.setAttribute('viewBox', '0 0 800 500');
   svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-  svg.innerHTML = scene;
-
-  /* apply rotation transform via the parent wrapper so it stays smooth */
-  svg.style.transformOrigin = '400px 250px';
-  svg.style.transform = `perspective(1200px) rotateX(${bapc.view.rotX}deg) rotateY(${bapc.view.rotY}deg)`;
+  svg.style.transform = 'none';
+  svg.innerHTML = `
+    <g>
+      <text x="400" y="240" text-anchor="middle"
+        font-family="Inter,system-ui,sans-serif" font-size="20" font-weight="700"
+        fill="var(--text-2)">3D builder arriving in the next pass</text>
+      <text x="400" y="272" text-anchor="middle"
+        font-family="Inter,system-ui,sans-serif" font-size="13" font-weight="500"
+        fill="var(--text-3)">Parts, cost table, and compatibility checks are live.</text>
+      <text x="400" y="296" text-anchor="middle"
+        font-family="Inter,system-ui,sans-serif" font-size="13" font-weight="500"
+        fill="var(--text-3)">Interact with the dropdowns on the right →</text>
+    </g>
+  `;
 }
 
 /* ---------- drag-to-rotate ---------- */
