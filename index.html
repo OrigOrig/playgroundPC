@@ -148,6 +148,8 @@ body::before{
   background:color-mix(in srgb,var(--surface) 88%, transparent);
   backdrop-filter:blur(20px);
   transition:background var(--transition),border-color var(--transition);
+  position:relative;
+  z-index:600;
 }
 .search-box{
   flex:1;max-width:420px;
