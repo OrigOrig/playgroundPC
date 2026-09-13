@@ -155,7 +155,9 @@ function hexToRgba(hex, a){
 /* ----------------------------------------------------------------
    ROUTER
    ---------------------------------------------------------------- */
-function navigate(page){
+const VALID_PAGES = ['home','mypc','games','compare','buildapc','upgrade','benchmarks','advisor','builds','settings'];
+
+function renderPage(page){
   $$('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.page===page));
   $$('.page').forEach(p=>p.classList.toggle('active', p.id === 'page-'+page));
   $('#pages').scrollTop = 0;
@@ -166,6 +168,28 @@ function navigate(page){
   if(page==='compare') populateCompareSelects();
   if(page==='buildapc') renderBuildAPC();
 }
+
+function navigate(page, push){
+  if(!VALID_PAGES.includes(page)) page = 'home';
+  renderPage(page);
+
+  // Update the URL hash
+  const target = '#/' + page;
+  if(push === false){
+    // Replace without adding a new history entry
+    history.replaceState(null, '', target);
+  } else if(window.location.hash !== target){
+    // Push a new history entry so Back button works
+    window.location.hash = target;
+  }
+}
+
+// Handle browser back/forward + manual hash edits
+window.addEventListener('hashchange', ()=>{
+  const page = (window.location.hash || '').replace(/^#\/?/, '') || 'home';
+  renderPage(VALID_PAGES.includes(page) ? page : 'home');
+});
+
 $$('.nav-item').forEach(item=>item.addEventListener('click', ()=>navigate(item.dataset.page)));
 
 /* ================================================================
@@ -2768,6 +2792,10 @@ function setBapcStorageQty(n){
     $('#heroRam').textContent = state.build.ram || '—';
     $('#gamesCountBadge').textContent = GAMES.length;
   }
+
+  // Open the page from the URL hash (or default to home)
+  const initialPage = (window.location.hash || '').replace(/^#\/?/, '') || 'home';
+  renderPage(VALID_PAGES.includes(initialPage) ? initialPage : 'home');
   console.log('%cPC Playground v4.3','font-size:16px;font-weight:800;color:#3b82f6');
   console.log('Loaded:', allCpus().length, 'CPUs,', allGpus().length, 'GPUs,', GAMES.length, 'games');
 })();
