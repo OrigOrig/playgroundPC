@@ -3031,8 +3031,14 @@ function renderRecentSlideshow(){
     const quality = a ? a.quality : null;
     const qclass  = a ? a.qclass  : 'q-good';
 
-    const bg = g.banner
-      ? `<img src="${g.banner}" alt="" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('no-img');">`
+    // Upgrade Steam header.jpg (460×215) to capsule_616x353.jpg for slideshow
+    // so the full-width banner is not stretched from a tiny source.
+    let bannerUrl = g.banner;
+    if(bannerUrl && bannerUrl.includes('/header.jpg')){
+      bannerUrl = bannerUrl.replace('/header.jpg', '/capsule_616x353.jpg');
+    }
+    const bg = bannerUrl
+      ? `<img src="${bannerUrl}" alt="" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('no-img');">`
       : proceduralBannerSvg(g, 800, 160);
 
     const fpsMarkup = fps !== null
@@ -3048,7 +3054,7 @@ function renderRecentSlideshow(){
           <div class="recent-slide-name">${g.name}</div>
           <div class="recent-slide-meta">
             ${fpsMarkup}
-            <span>${g.genre || ''}</span>
+            ${g.genre && g.genre.toUpperCase() !== 'FPS' ? `<span>${g.genre}</span>` : ''}
           </div>
         </div>
       </div>
