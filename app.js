@@ -58,10 +58,10 @@ let recentSlideIndex = 0;
 let recentTimer = null;
 
 function pushRecentlyViewed(gameName){
-  // If already present, remove so we don't duplicate.
-  const idx = recentlyViewed.indexOf(gameName);
-  if(idx >= 0) recentlyViewed.splice(idx, 1);
-  // Push to front.
+  // If the game is already in the queue, leave it where it is.
+  // (Viewing an already-viewed game should NOT reorder the slideshow.)
+  if(recentlyViewed.includes(gameName)) return;
+  // New game → push to front.
   recentlyViewed.unshift(gameName);
   // Cap at 10.
   if(recentlyViewed.length > 10) recentlyViewed.length = 10;
@@ -1082,10 +1082,15 @@ document.addEventListener('input', (e)=>{
    GAME MODAL
    ---------------------------------------------------------------- */
 function openGameModal(g){
-  // Record the view in the recently-viewed queue
+  // Record the view in the recently-viewed queue. pushRecentlyViewed
+  // is a no-op if the game is already in the queue, so viewing an
+  // already-queued game does not reorder the slideshow.
+  const wasAlreadyInQueue = recentlyViewed.includes(g.name);
   pushRecentlyViewed(g.name);
-  // Refresh the slideshow if we're on the games page
-  if($('#page-games').classList.contains('active')){
+
+  // Refresh the slideshow ONLY if a brand-new game was added.
+  // Otherwise leave the slideshow exactly as it was.
+  if(!wasAlreadyInQueue && $('#page-games').classList.contains('active')){
     renderRecentSlideshow();
   }
 
@@ -3017,11 +3022,24 @@ function renderRecentSlideshow(){
   // Reset index if out of range
   if(recentSlideIndex >= games.length) recentSlideIndex = 0;
 
-  // Build slide markup
+  // Build slide markup — use analyzed data if available, else raw
+  const analyzed = state.analysis && state.analysis.gameResults ? state.analysis.gameResults : null;
   const slidesHtml = games.map((g, i) => {
+    // Prefer the analyzed version (has fps + quality) if available
+    const a = analyzed ? analyzed.find(x => x.name === g.name) : null;
+    const fps     = a ? a.fps     : null;
+    const quality = a ? a.quality : null;
+    const qclass  = a ? a.qclass  : 'q-good';
+
     const bg = g.banner
       ? `<img src="${g.banner}" alt="" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('no-img');">`
       : proceduralBannerSvg(g, 800, 160);
+
+    const fpsMarkup = fps !== null
+      ? `<span class="quality-tag ${qclass}">${quality}</span>
+         <span>${fps} FPS</span>`
+      : `<span style="opacity:.7;">Run analysis to see FPS</span>`;
+
     return `
       <div class="recent-slide ${i===recentSlideIndex?'active':''}" data-slide-i="${i}">
         ${bg}
@@ -3029,8 +3047,7 @@ function renderRecentSlideshow(){
         <div class="recent-slide-info">
           <div class="recent-slide-name">${g.name}</div>
           <div class="recent-slide-meta">
-            <span class="quality-tag ${g.qclass || 'q-good'}">${g.quality || '—'}</span>
-            <span>${g.fps || '—'} FPS</span>
+            ${fpsMarkup}
             <span>${g.genre || ''}</span>
           </div>
         </div>
