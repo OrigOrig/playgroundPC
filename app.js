@@ -49,6 +49,24 @@ function toggleFavorite(gameName){
 }
 
 /* ----------------------------------------------------------------
+   RECENTLY VIEWED — persisted queue of up to 10 game names
+   Slot 0 is the most recent. New views shift everything right,
+   and slot 10 falls off.
+   ---------------------------------------------------------------- */
+let recentlyViewed = CK.get('pcp_recent') || [];
+
+function pushRecentlyViewed(gameName){
+  // If already present, remove so we don't duplicate.
+  const idx = recentlyViewed.indexOf(gameName);
+  if(idx >= 0) recentlyViewed.splice(idx, 1);
+  // Push to front.
+  recentlyViewed.unshift(gameName);
+  // Cap at 10.
+  if(recentlyViewed.length > 10) recentlyViewed.length = 10;
+  CK.set('pcp_recent', recentlyViewed);
+}
+
+/* ----------------------------------------------------------------
    STATE
    ---------------------------------------------------------------- */
 let state = {
@@ -994,6 +1012,7 @@ function renderGamesPage(){
     openGameModal(list[i]);
   }));
   wireFavButtons();
+  renderRecentSlideshow();
 }
 
 function wireFavButtons(){
@@ -1061,6 +1080,13 @@ document.addEventListener('input', (e)=>{
    GAME MODAL
    ---------------------------------------------------------------- */
 function openGameModal(g){
+  // Record the view in the recently-viewed queue
+  pushRecentlyViewed(g.name);
+  // Refresh the slideshow if we're on the games page
+  if($('#page-games').classList.contains('active')){
+    renderRecentSlideshow();
+  }
+
   const hero = $('#modalHero');
   const bannerMarkup = g.banner && g.banner.length
     ? `<img src="${g.banner}" alt="" onerror="this.style.display='none';this.parentElement.classList.add('no-img');">`
@@ -1731,9 +1757,10 @@ $('#resetPrefs').addEventListener('click', ()=>{
   });
 });
 $('#clearAll').addEventListener('click', ()=>{
-  confirmDialog('Clear ALL data (builds + settings + favorites)? This cannot be undone.', ()=>{
+  confirmDialog('Clear ALL data (builds + settings + favorites + recently viewed)? This cannot be undone.', ()=>{
     CK.clearAll();
     favorites = [];
+    recentlyViewed = [];
     location.reload();
   });
 });
@@ -2963,4 +2990,155 @@ function renderBapcSpecList(){
         ${r.sub ? `<div class="text-muted" style="font-size:.72rem;">${r.sub}</div>` : ''}
       </div>
     </div>`).join('');
+}
+
+/* ----------------------------------------------------------------
+   RECENTLY VIEWED SLIDESHOW
+   ---------------------------------------------------------------- */
+let recentSlideIndex = 0;
+let recentTimer = null;
+
+function renderRecentSlideshow(){
+  const container = $('#recentSlideshow');
+  if(!container) return;
+
+  // Resolve names to game objects (skip any that no longer exist)
+  const games = recentlyViewed
+    .map(name => GAMES.find(g => g.name === name))
+    .filter(Boolean);
+
+  // Hide section entirely if empty
+  if(games.length === 0){
+    container.style.display = 'none';
+    if(recentTimer){ clearInterval(recentTimer); recentTimer = null; }
+    return;
+  }
+  container.style.display = '';
+
+  // Reset index if out of range
+  if(recentSlideIndex >= games.length) recentSlideIndex = 0;
+
+  // Build slide markup
+  const slidesHtml = games.map((g, i) => {
+    const bg = g.banner
+      ? `<img src="${g.banner}" alt="" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('no-img');">`
+      : proceduralBannerSvg(g, 800, 160);
+    return `
+      <div class="recent-slide ${i===recentSlideIndex?'active':''}" data-slide-i="${i}">
+        ${bg}
+        <div class="recent-slide-overlay"></div>
+        <div class="recent-slide-info">
+          <div class="recent-slide-name">${g.name}</div>
+          <div class="recent-slide-meta">
+            <span class="quality-tag ${g.qclass || 'q-good'}">${g.quality || '—'}</span>
+            <span>${g.fps || '—'} FPS</span>
+            <span>${g.genre || ''}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Dots
+  const dotsHtml = games.map((g, i) =>
+    `<button class="recent-dot ${i===recentSlideIndex?'active':''}" data-dot-i="${i}" aria-label="Slide ${i+1}"></button>`
+  ).join('');
+
+  container.innerHTML = `
+    <div class="card recent-card">
+      <div class="card-header">
+        <div class="card-title"><i class="fas fa-clock-rotate-left"></i> Recently viewed</div>
+        <button class="btn btn-sm btn-ghost" id="recentClearBtn"><i class="fas fa-xmark"></i> Clear</button>
+      </div>
+      <div class="recent-slideshow">
+        <div class="recent-slides">
+          ${slidesHtml}
+        </div>
+        <button class="recent-arrow recent-arrow-left" data-dir="-1" aria-label="Previous">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="recent-arrow recent-arrow-right" data-dir="1" aria-label="Next">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+        <div class="recent-dots">${dotsHtml}</div>
+      </div>
+    </div>
+  `;
+
+  // --- Wire up interactions ---
+
+  // Click a slide to open its modal
+  $$('#recentSlideshow .recent-slide').forEach(slide => {
+    slide.addEventListener('click', (e) => {
+      if(e.target.closest('.recent-arrow') || e.target.closest('.recent-dot')) return;
+      const i = +slide.dataset.slideI;
+      const g = games[i];
+      if(!g) return;
+      // Look up the analyzed version if available
+      const analyzed = state.analysis && state.analysis.gameResults
+        ? state.analysis.gameResults.find(x => x.name === g.name)
+        : null;
+      openGameModal(analyzed || g);
+    });
+  });
+
+  // Arrows
+  $$('#recentSlideshow .recent-arrow').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const dir = +btn.dataset.dir;
+      recentSlideIndex = (recentSlideIndex + dir + games.length) % games.length;
+      applyRecentSlide();
+    });
+  });
+
+  // Dots
+  $$('#recentSlideshow .recent-dot').forEach(dot => {
+    dot.addEventListener('click', (e) => {
+      e.stopPropagation();
+      recentSlideIndex = +dot.dataset.dotI;
+      applyRecentSlide();
+    });
+  });
+
+  // Clear
+  const clearBtn = $('#recentClearBtn');
+  if(clearBtn){
+    clearBtn.addEventListener('click', () => {
+      recentlyViewed = [];
+      CK.set('pcp_recent', []);
+      recentSlideIndex = 0;
+      renderRecentSlideshow();
+    });
+  }
+
+  // Pause on hover
+  const wrapper = container.querySelector('.recent-slideshow');
+  if(wrapper){
+    wrapper.addEventListener('mouseenter', stopRecentTimer);
+    wrapper.addEventListener('mouseleave', startRecentTimer);
+  }
+
+  startRecentTimer();
+}
+
+function applyRecentSlide(){
+  const slides = $$('#recentSlideshow .recent-slide');
+  const dots = $$('#recentSlideshow .recent-dot');
+  slides.forEach((s, i) => s.classList.toggle('active', i === recentSlideIndex));
+  dots.forEach((d, i) => d.classList.toggle('active', i === recentSlideIndex));
+}
+
+function startRecentTimer(){
+  stopRecentTimer();
+  recentTimer = setInterval(() => {
+    const slides = $$('#recentSlideshow .recent-slide');
+    if(slides.length < 2) return;
+    recentSlideIndex = (recentSlideIndex + 1) % slides.length;
+    applyRecentSlide();
+  }, 4500);
+}
+
+function stopRecentTimer(){
+  if(recentTimer){ clearInterval(recentTimer); recentTimer = null; }
 }
