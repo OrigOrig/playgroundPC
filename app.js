@@ -1002,15 +1002,46 @@ function wireFavButtons(){
       e.stopPropagation();
       const name = btn.dataset.favGame;
       const nowFav = toggleFavorite(name);
+
+      // Update the button visuals immediately
       btn.classList.toggle('is-fav', nowFav);
-      btn.classList.add('pop');
-      setTimeout(()=>btn.classList.remove('pop'), 420);
       btn.querySelector('i').className = `fa-${nowFav?'solid':'regular'} fa-heart`;
       btn.title = nowFav ? 'Remove from favorites' : 'Add to favorites';
-      // Re-sort the games list (favorites first) without leaving the page
-      if($('#page-games').classList.contains('active')){
-        renderGamesPage();
+
+      // Re-trigger the pop animation (classList alone won't re-fire it)
+      btn.classList.remove('pop');
+      void btn.offsetWidth;
+      btn.classList.add('pop');
+
+      // Spawn 3 burst hearts (only when favoriting, not un-favoriting)
+      if(nowFav){
+        const parent = btn.closest('.game-card-banner') || btn.parentElement;
+        const burst = document.createElement('span');
+        burst.className = 'fav-burst';
+        const dirs = [
+          { dx:-28, dy:-34 },
+          { dx: 30, dy:-30 },
+          { dx:  4, dy:-42 }
+        ];
+        dirs.forEach(d=>{
+          const i = document.createElement('i');
+          i.className = 'fas fa-heart';
+          i.style.setProperty('--dx', d.dx + 'px');
+          i.style.setProperty('--dy', d.dy + 'px');
+          i.style.animationDelay = (Math.random() * 60) + 'ms';
+          burst.appendChild(i);
+        });
+        parent.appendChild(burst);
+        setTimeout(()=>burst.remove(), 700);
       }
+
+      // Wait for the animation to finish, then re-sort
+      setTimeout(()=>{
+        btn.classList.remove('pop');
+        if($('#page-games').classList.contains('active')){
+          renderGamesPage();
+        }
+      }, 480);
     });
   });
 }
