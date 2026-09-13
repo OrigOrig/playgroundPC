@@ -54,6 +54,8 @@ function toggleFavorite(gameName){
    and slot 10 falls off.
    ---------------------------------------------------------------- */
 let recentlyViewed = CK.get('pcp_recent') || [];
+let recentSlideIndex = 0;
+let recentTimer = null;
 
 function pushRecentlyViewed(gameName){
   // If already present, remove so we don't duplicate.
@@ -2995,9 +2997,6 @@ function renderBapcSpecList(){
 /* ----------------------------------------------------------------
    RECENTLY VIEWED SLIDESHOW
    ---------------------------------------------------------------- */
-let recentSlideIndex = 0;
-let recentTimer = null;
-
 function renderRecentSlideshow(){
   const container = $('#recentSlideshow');
   if(!container) return;
