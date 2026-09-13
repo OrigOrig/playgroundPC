@@ -1003,64 +1003,51 @@ function wireFavButtons(){
       const name = btn.dataset.favGame;
       const nowFav = toggleFavorite(name);
 
-      // Get the button's current on-screen position BEFORE we re-render.
-      // We'll spawn an animating clone there so the pop plays in-place.
-      const rect = btn.getBoundingClientRect();
-
-      // Update the button visuals immediately
-      btn.classList.toggle('is-fav', nowFav);
-      btn.querySelector('i').className = `fa-${nowFav?'solid':'regular'} fa-heart`;
-      btn.title = nowFav ? 'Remove from favorites' : 'Add to favorites';
-
-      // Re-sort the list right now — the button will unmount,
-      // but the animating clone survives above it.
+      // Re-render the list right away — favorites re-sort to the top.
       const pageActive = $('#page-games').classList.contains('active');
       const homeActive = $('#page-home').classList.contains('active');
       if(pageActive) renderGamesPage();
       if(homeActive) renderHome();
 
-      // --- spawn animating clone at the button's old screen position ---
-      const clone = document.createElement('div');
-      clone.className = 'game-card-fav fav-clone' + (nowFav ? ' is-fav' : '');
-      clone.style.position = 'fixed';
-      clone.style.left = (rect.left + rect.width/2 - 16) + 'px';
-      clone.style.top  = (rect.top + rect.height/2 - 16) + 'px';
-      clone.style.width = '32px';
-      clone.style.height = '32px';
-      clone.style.zIndex = '9999';
-      clone.style.pointerEvents = 'none';
-      clone.innerHTML = `<i class="fa-${nowFav?'solid':'regular'} fa-heart"></i>`;
-      document.body.appendChild(clone);
-      void clone.offsetWidth;
-      clone.classList.add('pop');
+      // Now find the button on the freshly re-rendered card
+      // (the same game, but possibly in a new grid position) and
+      // play the pop + burst on it so the user sees exactly which
+      // game just got hearted.
+      requestAnimationFrame(()=>{
+        const newBtn = document.querySelector(
+          `.game-card-fav[data-fav-game="${CSS.escape(name)}"]`
+        );
+        if(!newBtn) return;
 
-      // Burst hearts (only when favoriting)
-      if(nowFav){
-        const burst = document.createElement('span');
-        burst.className = 'fav-burst';
-        burst.style.position = 'fixed';
-        burst.style.left = (rect.left + rect.width/2) + 'px';
-        burst.style.top  = (rect.top + rect.height/2) + 'px';
-        burst.style.zIndex = '9999';
-        const dirs = [
-          { dx:-28, dy:-34 },
-          { dx: 30, dy:-30 },
-          { dx:  4, dy:-42 }
-        ];
-        dirs.forEach(d=>{
-          const i = document.createElement('i');
-          i.className = 'fas fa-heart';
-          i.style.setProperty('--dx', d.dx + 'px');
-          i.style.setProperty('--dy', d.dy + 'px');
-          i.style.animationDelay = (Math.random() * 60) + 'ms';
-          burst.appendChild(i);
-        });
-        document.body.appendChild(burst);
-        setTimeout(()=>burst.remove(), 700);
-      }
+        // Pop animation
+        newBtn.classList.remove('pop');
+        void newBtn.offsetWidth;
+        newBtn.classList.add('pop');
 
-      // Clean up the clone
-      setTimeout(()=>clone.remove(), 560);
+        // Burst hearts (favoriting only)
+        if(nowFav){
+          const parent = newBtn.closest('.game-card-banner') || newBtn.parentElement;
+          const burst = document.createElement('span');
+          burst.className = 'fav-burst';
+          const dirs = [
+            { dx:-28, dy:-34 },
+            { dx: 30, dy:-30 },
+            { dx:  4, dy:-42 }
+          ];
+          dirs.forEach(d=>{
+            const i = document.createElement('i');
+            i.className = 'fas fa-heart';
+            i.style.setProperty('--dx', d.dx + 'px');
+            i.style.setProperty('--dy', d.dy + 'px');
+            i.style.animationDelay = (Math.random() * 60) + 'ms';
+            burst.appendChild(i);
+          });
+          parent.appendChild(burst);
+          setTimeout(()=>burst.remove(), 700);
+        }
+
+        setTimeout(()=>newBtn.classList.remove('pop'), 560);
+      });
     });
   });
 }
