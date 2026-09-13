@@ -1056,7 +1056,7 @@ table.data tr:hover td{background:var(--surface-2);}
 .recent-slideshow{
   position:relative;
   width:100%;
-  height:170px;
+  height:200px;
   border-radius:var(--radius);
   overflow:hidden;
   background:var(--surface-2);
@@ -1072,8 +1072,6 @@ table.data tr:hover td{background:var(--surface-2);}
   transition:opacity 480ms ease;
   pointer-events:none;
   cursor:pointer;
-  display:flex;
-  align-items:stretch;
 }
 .recent-slide.active{
   opacity:1;
@@ -1082,44 +1080,43 @@ table.data tr:hover td{background:var(--surface-2);}
 .recent-slide img,
 .recent-slide svg{
   position:absolute;
-  left:0;
-  top:0;
-  width:280px;
+  inset:0;
+  width:100%;
   height:100%;
   object-fit:cover;
   display:block;
-  border-radius:var(--radius) 0 0 var(--radius);
 }
 .recent-slide-overlay{
   position:absolute;
   inset:0;
   background:
-    linear-gradient(90deg, transparent 0%, transparent 220px, var(--surface) 340px, var(--surface) 100%);
-  pointer-events:none;
+    linear-gradient(90deg, rgba(0,0,0,.7) 0%, rgba(0,0,0,.2) 55%, rgba(0,0,0,.1) 100%),
+    linear-gradient(0deg, rgba(0,0,0,.6) 0%, transparent 55%);
 }
 .recent-slide-info{
   position:absolute;
-  left:300px;
-  right:1.5rem;
-  top:50%;
-  transform:translateY(-50%);
+  left:1.25rem;
+  bottom:1.1rem;
+  right:1.25rem;
   z-index:2;
 }
 .recent-slide-name{
   font-size:1.6rem;
   font-weight:800;
   letter-spacing:-.03em;
-  color:var(--text);
+  color:#fff;
+  text-shadow:0 2px 12px rgba(0,0,0,.8);
   line-height:1.1;
 }
 .recent-slide-meta{
   display:flex;
   align-items:center;
   gap:.75rem;
-  margin-top:.6rem;
+  margin-top:.5rem;
   font-size:.82rem;
   font-weight:600;
-  color:var(--text-2);
+  color:rgba(255,255,255,.9);
+  text-shadow:0 1px 6px rgba(0,0,0,.7);
 }
 .recent-arrow{
   position:absolute;
@@ -1161,7 +1158,7 @@ table.data tr:hover td{background:var(--surface-2);}
   width:6px;
   height:6px;
   border-radius:50%;
-  background:var(--surface-3);
+  background:rgba(255,255,255,.4);
   border:none;
   padding:0;
   cursor:pointer;
@@ -1170,20 +1167,14 @@ table.data tr:hover td{background:var(--surface-2);}
 .recent-dot.active{
   width:18px;
   border-radius:3px;
-  background:var(--primary);
+  background:#fff;
 }
 .recent-dot:hover:not(.active){
-  background:var(--border-2);
+  background:rgba(255,255,255,.7);
 }
 @media(max-width:760px){
-  .recent-slideshow{ height:130px; }
-  .recent-slide img,
-  .recent-slide svg{ width:150px; }
-  .recent-slide-overlay{
-    background:linear-gradient(90deg, transparent 0%, transparent 110px, var(--surface) 200px, var(--surface) 100%);
-  }
-  .recent-slide-info{ left:165px; right:.75rem; }
-  .recent-slide-name{ font-size:1.05rem; }
+  .recent-slideshow{ height:150px; }
+  .recent-slide-name{ font-size:1.15rem; }
   .recent-slide-meta{ font-size:.72rem; }
   .recent-arrow{ opacity:1; }
 }
