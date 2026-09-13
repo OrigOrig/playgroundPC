@@ -29,6 +29,26 @@ const CK = {
 };
 
 /* ----------------------------------------------------------------
+   FAVORITES — persisted list of game names
+   ---------------------------------------------------------------- */
+let favorites = CK.get('pcp_favorites') || [];
+
+function isFavorite(gameName){
+  return favorites.includes(gameName);
+}
+
+function toggleFavorite(gameName){
+  const idx = favorites.indexOf(gameName);
+  if(idx >= 0){
+    favorites.splice(idx, 1);
+  } else {
+    favorites.push(gameName);
+  }
+  CK.set('pcp_favorites', favorites);
+  return favorites.includes(gameName);
+}
+
+/* ----------------------------------------------------------------
    STATE
    ---------------------------------------------------------------- */
 let state = {
@@ -621,7 +641,11 @@ function renderHome(){
 
   const top8 = [...a.gameResults].sort((x,y)=>y.fps-x.fps).slice(0,8);
   $('#homeGames').innerHTML = top8.map(g=>gameCardHtml(g)).join('');
-  $$('#homeGames .game-card').forEach((el,i)=>el.addEventListener('click',()=>openGameModal(top8[i])));
+  $$('#homeGames .game-card').forEach((el,i)=>el.addEventListener('click',(e)=>{
+    if(e.target.closest('.game-card-fav')) return;
+    openGameModal(top8[i]);
+  }));
+  wireFavButtons();
 
   $('#homeUpgrade').innerHTML = upgradeTeaserHtml(a);
 }
@@ -852,9 +876,13 @@ function gameCardHtml(g){
     : '';
   const fallbackSvg = proceduralBannerSvg(g, 320, 96);
   const showFallback = !g.banner || !g.banner.length;
+  const fav = isFavorite(g.name);
   return `
-    <div class="game-card">
+    <div class="game-card" data-game-name="${g.name.replace(/"/g,'&quot;')}">
       <div class="game-card-banner" style="${g.color?'--banner-color:'+g.color:''}">
+        <button class="game-card-fav ${fav?'is-fav':''}" data-fav-game="${g.name.replace(/"/g,'&quot;')}" title="${fav?'Remove from favorites':'Add to favorites'}" aria-label="Favorite">
+          <i class="fa-${fav?'solid':'regular'} fa-heart"></i>
+        </button>
         ${bannerInner}
         ${showFallback ? fallbackSvg : ''}
       </div>
@@ -942,6 +970,13 @@ function renderGamesPage(){
   else if(sort==='fps-asc') list.sort((x,y)=>x.fps-y.fps);
   else list.sort((x,y)=>x.name.localeCompare(y.name));
 
+  // Favorites float to the top, keeping their relative order within each group
+  list.sort((x,y)=>{
+    const fx = isFavorite(x.name) ? 0 : 1;
+    const fy = isFavorite(y.name) ? 0 : 1;
+    return fx - fy;
+  });
+
   if(filter==='hits-target'){
     const hits = list.length;
     const total = a.gameResults.length;
@@ -954,7 +989,30 @@ function renderGamesPage(){
   } else {
     $('#gamesList').innerHTML = list.map(g=>gameCardHtml(g)).join('');
   }
-  $$('#gamesList .game-card').forEach((el,i)=>el.addEventListener('click',()=>openGameModal(list[i])));
+  $$('#gamesList .game-card').forEach((el,i)=>el.addEventListener('click',(e)=>{
+    if(e.target.closest('.game-card-fav')) return;
+    openGameModal(list[i]);
+  }));
+  wireFavButtons();
+}
+
+function wireFavButtons(){
+  $$('.game-card-fav').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const name = btn.dataset.favGame;
+      const nowFav = toggleFavorite(name);
+      btn.classList.toggle('is-fav', nowFav);
+      btn.classList.add('pop');
+      setTimeout(()=>btn.classList.remove('pop'), 420);
+      btn.querySelector('i').className = `fa-${nowFav?'solid':'regular'} fa-heart`;
+      btn.title = nowFav ? 'Remove from favorites' : 'Add to favorites';
+      // Re-sort the games list (favorites first) without leaving the page
+      if($('#page-games').classList.contains('active')){
+        renderGamesPage();
+      }
+    });
+  });
 }
 $('#gameFilterQuality').addEventListener('change', renderGamesPage);
 $('#gameSort').addEventListener('change', renderGamesPage);
@@ -1636,8 +1694,9 @@ $('#resetPrefs').addEventListener('click', ()=>{
   });
 });
 $('#clearAll').addEventListener('click', ()=>{
-  confirmDialog('Clear ALL data (builds + settings)? This cannot be undone.', ()=>{
+  confirmDialog('Clear ALL data (builds + settings + favorites)? This cannot be undone.', ()=>{
     CK.clearAll();
+    favorites = [];
     location.reload();
   });
 });
