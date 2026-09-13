@@ -37,9 +37,9 @@ let state = {
     gpuBrand:'NVIDIA', gpu:'',
     ram:'', ramCapacity:'', ramType:'', ramSpeed:'',
     moboSocket:'', moboChipset:'', mobo:'',
-    storages:[{type:'NVMe Gen4', capacity:'1TB'}],
-    psuWatt:'', psuEff:'80+ Gold',
-    coolerType:'AIO 240mm'
+    storages:[{type:'', capacity:''}],
+    psuWatt:'', psuEff:'',
+    coolerType:''
   },
   settings: {
     theme:'dark',
@@ -272,8 +272,8 @@ function populateMoboSelect(){
 
   if(sockSel.value && chipSel.value){
     const boards = mobosForChipset(sockSel.value, chipSel.value);
-    moboSel.innerHTML = `<option value="" disabled hidden>-</option>` +
-      boards.map(m=>`<option value="${m.name}">${m.name} — ${m.form} · $${m.price}</option>`).join('');
+    moboSel.innerHTML = `<option value="" disabled selected>—</option>` +
+      boards.map(m=>`<option value="${m.name}">${m.name} — ${m.form}</option>`).join('');
     if(state.build.mobo && boards.some(b=>b.name===state.build.mobo)) moboSel.value = state.build.mobo;
     else moboSel.value = '';
   } else {
@@ -293,12 +293,14 @@ function renderStorage(){
       <div class="storage-field">
         <label>Type</label>
         <select class="stg-type" data-i="${i}">
+          <option value="" disabled ${s.type?'':'selected'}>—</option>
           ${STORAGE_TYPES.map(t=>`<option value="${t.name}" ${t.name===s.type?'selected':''}>${t.name}</option>`).join('')}
         </select>
       </div>
       <div class="storage-field">
         <label>Capacity</label>
         <select class="stg-cap" data-i="${i}">
+          <option value="" disabled ${s.capacity?'':'selected'}>—</option>
           ${CAPACITIES.map(c=>`<option value="${c}" ${c===s.capacity?'selected':''}>${c}</option>`).join('')}
         </select>
       </div>
@@ -2273,7 +2275,7 @@ function populateBapcSelects(){
   if($cool && !$cool.innerHTML){
     $cool.innerHTML = `<option value="" disabled selected>—</option>` +
       COOLERS.map((c,i)=>
-        `<option value="${i}">${c.name} · up to ${c.maxTdp}W · $${c.price}</option>`
+        `<option value="${i}">${c.name} · up to ${c.maxTdp}W</option>`
       ).join('');
   }
 
@@ -2294,7 +2296,7 @@ function populateBapcSelects(){
   if($mobo && !$mobo.innerHTML){
     $mobo.innerHTML = `<option value="" disabled selected>—</option>` +
       MOTHERBOARDS.map((m,i)=>
-        `<option value="${i}">${m.name} · ${m.socket} · ${m.form} · $${m.price}</option>`
+        `<option value="${i}">${m.name} · ${m.socket} · ${m.form}</option>`
       ).join('');
   }
 }
