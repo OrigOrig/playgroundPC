@@ -1046,6 +1046,137 @@ table.data tr:hover td{background:var(--surface-2);}
   letter-spacing:-.02em;
   text-align:right;
 }
+
+/* ============================================================
+   RECENTLY VIEWED SLIDESHOW
+   ============================================================ */
+.recent-card{
+  padding:1rem;
+}
+.recent-slideshow{
+  position:relative;
+  width:100%;
+  height:180px;
+  border-radius:var(--radius);
+  overflow:hidden;
+  background:var(--surface-2);
+}
+.recent-slides{
+  position:absolute;
+  inset:0;
+}
+.recent-slide{
+  position:absolute;
+  inset:0;
+  opacity:0;
+  transition:opacity 480ms ease;
+  pointer-events:none;
+  cursor:pointer;
+}
+.recent-slide.active{
+  opacity:1;
+  pointer-events:auto;
+}
+.recent-slide img,
+.recent-slide svg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.recent-slide-overlay{
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.72) 0%, rgba(0,0,0,.25) 55%, rgba(0,0,0,.15) 100%),
+    linear-gradient(0deg, rgba(0,0,0,.55) 0%, transparent 60%);
+}
+.recent-slide-info{
+  position:absolute;
+  left:1.25rem;
+  bottom:1.1rem;
+  right:1.25rem;
+  z-index:2;
+}
+.recent-slide-name{
+  font-size:1.5rem;
+  font-weight:800;
+  letter-spacing:-.03em;
+  color:#fff;
+  text-shadow:0 2px 12px rgba(0,0,0,.75);
+  line-height:1.1;
+}
+.recent-slide-meta{
+  display:flex;
+  align-items:center;
+  gap:.75rem;
+  margin-top:.45rem;
+  font-size:.8rem;
+  font-weight:600;
+  color:rgba(255,255,255,.85);
+  text-shadow:0 1px 6px rgba(0,0,0,.7);
+}
+.recent-arrow{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:rgba(0,0,0,.5);
+  border:1px solid rgba(255,255,255,.15);
+  color:rgba(255,255,255,.85);
+  cursor:pointer;
+  z-index:3;
+  opacity:0;
+  transition:opacity 180ms ease, background 180ms ease, transform 180ms ease;
+  backdrop-filter:blur(6px);
+  font-size:.85rem;
+  padding:0;
+}
+.recent-arrow:hover{
+  background:rgba(0,0,0,.75);
+  color:#fff;
+  transform:translateY(-50%) scale(1.08);
+}
+.recent-arrow-left{ left:.6rem; }
+.recent-arrow-right{ right:.6rem; }
+.recent-slideshow:hover .recent-arrow{ opacity:1; }
+.recent-dots{
+  position:absolute;
+  right:1rem;
+  bottom:.75rem;
+  display:flex;
+  gap:.35rem;
+  z-index:3;
+}
+.recent-dot{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:rgba(255,255,255,.35);
+  border:none;
+  padding:0;
+  cursor:pointer;
+  transition:width 240ms ease, background 240ms ease;
+}
+.recent-dot.active{
+  width:18px;
+  border-radius:3px;
+  background:var(--primary);
+}
+.recent-dot:hover:not(.active){
+  background:rgba(255,255,255,.6);
+}
+@media(max-width:760px){
+  .recent-slideshow{ height:150px; }
+  .recent-slide-name{ font-size:1.15rem; }
+  .recent-arrow{ opacity:1; }
+}
    
 /* ============================================================
    MODAL
@@ -1724,6 +1855,7 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
             </select>
           </div>
         </div>
+        <div id="recentSlideshow" style="display:none;margin-bottom:1.5rem;"></div>
         <div id="gamesList" class="game-grid"></div>
       </section>
 
