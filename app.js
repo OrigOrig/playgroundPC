@@ -1003,21 +1003,45 @@ function wireFavButtons(){
       const name = btn.dataset.favGame;
       const nowFav = toggleFavorite(name);
 
+      // Get the button's current on-screen position BEFORE we re-render.
+      // We'll spawn an animating clone there so the pop plays in-place.
+      const rect = btn.getBoundingClientRect();
+
       // Update the button visuals immediately
       btn.classList.toggle('is-fav', nowFav);
       btn.querySelector('i').className = `fa-${nowFav?'solid':'regular'} fa-heart`;
       btn.title = nowFav ? 'Remove from favorites' : 'Add to favorites';
 
-      // Re-trigger the pop animation (classList alone won't re-fire it)
-      btn.classList.remove('pop');
-      void btn.offsetWidth;
-      btn.classList.add('pop');
+      // Re-sort the list right now — the button will unmount,
+      // but the animating clone survives above it.
+      const pageActive = $('#page-games').classList.contains('active');
+      const homeActive = $('#page-home').classList.contains('active');
+      if(pageActive) renderGamesPage();
+      if(homeActive) renderHome();
 
-      // Spawn 3 burst hearts (only when favoriting, not un-favoriting)
+      // --- spawn animating clone at the button's old screen position ---
+      const clone = document.createElement('div');
+      clone.className = 'game-card-fav fav-clone' + (nowFav ? ' is-fav' : '');
+      clone.style.position = 'fixed';
+      clone.style.left = (rect.left + rect.width/2 - 16) + 'px';
+      clone.style.top  = (rect.top + rect.height/2 - 16) + 'px';
+      clone.style.width = '32px';
+      clone.style.height = '32px';
+      clone.style.zIndex = '9999';
+      clone.style.pointerEvents = 'none';
+      clone.innerHTML = `<i class="fa-${nowFav?'solid':'regular'} fa-heart"></i>`;
+      document.body.appendChild(clone);
+      void clone.offsetWidth;
+      clone.classList.add('pop');
+
+      // Burst hearts (only when favoriting)
       if(nowFav){
-        const parent = btn.closest('.game-card-banner') || btn.parentElement;
         const burst = document.createElement('span');
         burst.className = 'fav-burst';
+        burst.style.position = 'fixed';
+        burst.style.left = (rect.left + rect.width/2) + 'px';
+        burst.style.top  = (rect.top + rect.height/2) + 'px';
+        burst.style.zIndex = '9999';
         const dirs = [
           { dx:-28, dy:-34 },
           { dx: 30, dy:-30 },
@@ -1031,17 +1055,12 @@ function wireFavButtons(){
           i.style.animationDelay = (Math.random() * 60) + 'ms';
           burst.appendChild(i);
         });
-        parent.appendChild(burst);
+        document.body.appendChild(burst);
         setTimeout(()=>burst.remove(), 700);
       }
 
-      // Wait for the animation to finish, then re-sort
-      setTimeout(()=>{
-        btn.classList.remove('pop');
-        if($('#page-games').classList.contains('active')){
-          renderGamesPage();
-        }
-      }, 480);
+      // Clean up the clone
+      setTimeout(()=>clone.remove(), 560);
     });
   });
 }
