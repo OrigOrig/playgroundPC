@@ -690,11 +690,13 @@ function renderHome(){
     $('#bnSummary').textContent = a.bottlenecks.length + ' issue' + (a.bottlenecks.length>1?'s':'');
   }
 
+  const tierClass = (s) => s >= 80 ? 'good' : s >= 50 ? 'medium' : 'warn';
+
   $('#meterGroup').innerHTML = `
-    <div class="meter"><div class="meter-label"><i class="fas fa-microchip"></i> CPU</div><div class="meter-track"><div class="meter-fill ${a.cpuScore<50?'warn':a.cpuScore>=80?'good':''}" data-score-target="${a.cpuScore}" style="width:0%"></div></div><div class="meter-value" data-score-target="${a.cpuScore}">0</div></div>
-    <div class="meter"><div class="meter-label"><i class="fas fa-display"></i> GPU</div><div class="meter-track"><div class="meter-fill ${a.gpuScore<50?'warn':a.gpuScore>=80?'good':''}" data-score-target="${a.gpuScore}" style="width:0%"></div></div><div class="meter-value" data-score-target="${a.gpuScore}">0</div></div>
-    <div class="meter"><div class="meter-label"><i class="fas fa-memory"></i> RAM</div><div class="meter-track"><div class="meter-fill ${a.ramScore<50?'warn':a.ramScore>=80?'good':''}" data-score-target="${a.ramScore}" style="width:0%"></div></div><div class="meter-value" data-score-target="${a.ramScore}">0</div></div>
-    <div class="meter"><div class="meter-label"><i class="fas fa-hard-drive"></i> Storage</div><div class="meter-track"><div class="meter-fill ${a.storageScore<50?'warn':a.storageScore>=80?'good':''}" data-score-target="${a.storageScore}" style="width:0%"></div></div><div class="meter-value" data-score-target="${a.storageScore}">0</div></div>
+    <div class="meter"><div class="meter-label"><i class="fas fa-microchip"></i> CPU</div><div class="meter-track"><div class="meter-fill ${tierClass(a.cpuScore)}" data-score-target="${a.cpuScore}" style="width:0%"></div></div><div class="meter-value" data-score-target="${a.cpuScore}">0</div></div>
+    <div class="meter"><div class="meter-label"><i class="fas fa-display"></i> GPU</div><div class="meter-track"><div class="meter-fill ${tierClass(a.gpuScore)}" data-score-target="${a.gpuScore}" style="width:0%"></div></div><div class="meter-value" data-score-target="${a.gpuScore}">0</div></div>
+    <div class="meter"><div class="meter-label"><i class="fas fa-memory"></i> RAM</div><div class="meter-track"><div class="meter-fill ${tierClass(a.ramScore)}" data-score-target="${a.ramScore}" style="width:0%"></div></div><div class="meter-value" data-score-target="${a.ramScore}">0</div></div>
+    <div class="meter"><div class="meter-label"><i class="fas fa-hard-drive"></i> Storage</div><div class="meter-track"><div class="meter-fill ${tierClass(a.storageScore)}" data-score-target="${a.storageScore}" style="width:0%"></div></div><div class="meter-value" data-score-target="${a.storageScore}">0</div></div>
   `;
 
   // Animate each meter to its target
