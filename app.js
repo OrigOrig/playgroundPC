@@ -146,6 +146,34 @@ function toast(msg, icon='fa-info-circle'){
 }
 
 /* ----------------------------------------------------------------
+   NUMBER + WIDTH ANIMATION — for the score count-up and meter sweeps
+   ---------------------------------------------------------------- */
+function animateNumber(el, from, to, duration){
+  if(!el) return;
+  const start = performance.now();
+  const range = to - from;
+  function step(now){
+    const t = Math.min(1, (now - start) / duration);
+    // ease-out cubic
+    const eased = 1 - Math.pow(1 - t, 3);
+    el.textContent = Math.round(from + range * eased);
+    if(t < 1) requestAnimationFrame(step);
+    else el.textContent = to;
+  }
+  requestAnimationFrame(step);
+}
+
+function animateWidth(el, fromPct, toPct, duration){
+  if(!el) return;
+  el.style.transition = 'none';
+  el.style.width = fromPct + '%';
+  // force reflow so the browser acknowledges the starting width
+  void el.offsetWidth;
+  el.style.transition = `width ${duration}ms cubic-bezier(.22,1,.36,1)`;
+  el.style.width = toPct + '%';
+}
+
+/* ----------------------------------------------------------------
    THEME
    ---------------------------------------------------------------- */
 function applyTheme(){
@@ -620,8 +648,20 @@ function renderHome(){
 
   const pct = a.totalScore/100;
   const circ = 2*Math.PI*54;
-  $('#scoreRing').setAttribute('stroke-dashoffset', String(circ * (1-pct)));
-  $('#scoreNum').textContent = a.totalScore;
+
+  // Animate from the previously displayed score to the new one
+  const scoreNumEl = $('#scoreNum');
+  const fromScore = parseInt(scoreNumEl.textContent, 10);
+  const validFrom = Number.isFinite(fromScore) ? fromScore : 0;
+
+  animateNumber(scoreNumEl, validFrom, a.totalScore, 700);
+
+  const ringEl = $('#scoreRing');
+  const fromPct = validFrom / 100;
+  // Animate the ring using its existing CSS transition on stroke-dashoffset
+  ringEl.style.strokeDashoffset = String(circ * (1 - fromPct));
+  void ringEl.getBoundingClientRect();
+  ringEl.style.strokeDashoffset = String(circ * (1 - pct));
   $('#scoreLabel').textContent =
     a.totalScore>=85?'Excellent':a.totalScore>=70?'Very Good':a.totalScore>=50?'Good':'Needs upgrade';
   $('#scoreHint').textContent = 'Based on your full configuration.';
@@ -651,11 +691,20 @@ function renderHome(){
   }
 
   $('#meterGroup').innerHTML = `
-    <div class="meter"><div class="meter-label"><i class="fas fa-microchip"></i> CPU</div><div class="meter-track"><div class="meter-fill ${a.cpuScore<50?'warn':a.cpuScore>=80?'good':''}" style="width:${a.cpuScore}%"></div></div><div class="meter-value">${a.cpuScore}</div></div>
-    <div class="meter"><div class="meter-label"><i class="fas fa-display"></i> GPU</div><div class="meter-track"><div class="meter-fill ${a.gpuScore<50?'warn':a.gpuScore>=80?'good':''}" style="width:${a.gpuScore}%"></div></div><div class="meter-value">${a.gpuScore}</div></div>
-    <div class="meter"><div class="meter-label"><i class="fas fa-memory"></i> RAM</div><div class="meter-track"><div class="meter-fill ${a.ramScore<50?'warn':a.ramScore>=80?'good':''}" style="width:${a.ramScore}%"></div></div><div class="meter-value">${a.ramScore}</div></div>
-    <div class="meter"><div class="meter-label"><i class="fas fa-hard-drive"></i> Storage</div><div class="meter-track"><div class="meter-fill ${a.storageScore<50?'warn':a.storageScore>=80?'good':''}" style="width:${a.storageScore}%"></div></div><div class="meter-value">${a.storageScore}</div></div>
+    <div class="meter"><div class="meter-label"><i class="fas fa-microchip"></i> CPU</div><div class="meter-track"><div class="meter-fill ${a.cpuScore<50?'warn':a.cpuScore>=80?'good':''}" data-score-target="${a.cpuScore}" style="width:0%"></div></div><div class="meter-value" data-score-target="${a.cpuScore}">0</div></div>
+    <div class="meter"><div class="meter-label"><i class="fas fa-display"></i> GPU</div><div class="meter-track"><div class="meter-fill ${a.gpuScore<50?'warn':a.gpuScore>=80?'good':''}" data-score-target="${a.gpuScore}" style="width:0%"></div></div><div class="meter-value" data-score-target="${a.gpuScore}">0</div></div>
+    <div class="meter"><div class="meter-label"><i class="fas fa-memory"></i> RAM</div><div class="meter-track"><div class="meter-fill ${a.ramScore<50?'warn':a.ramScore>=80?'good':''}" data-score-target="${a.ramScore}" style="width:0%"></div></div><div class="meter-value" data-score-target="${a.ramScore}">0</div></div>
+    <div class="meter"><div class="meter-label"><i class="fas fa-hard-drive"></i> Storage</div><div class="meter-track"><div class="meter-fill ${a.storageScore<50?'warn':a.storageScore>=80?'good':''}" data-score-target="${a.storageScore}" style="width:0%"></div></div><div class="meter-value" data-score-target="${a.storageScore}">0</div></div>
   `;
+
+  // Animate each meter to its target
+  $$('#meterGroup .meter').forEach(meter => {
+    const fill = meter.querySelector('.meter-fill');
+    const valEl = meter.querySelector('.meter-value');
+    const target = +fill.dataset.scoreTarget;
+    animateNumber(valEl, 0, target, 700);
+    animateWidth(fill, 0, target, 700);
+  });
 
   renderPerfChart(a);
 
