@@ -1693,7 +1693,7 @@ function runCompare(){
       </div>
     ` : `
       <div style="padding:1rem;background:color-mix(in srgb,var(--primary) 8%,transparent);border-radius:var(--radius-sm);border-left:3px solid var(--primary);">
-        <strong>🏆 Recommended: Build ${winner}</strong>
+        <strong>Recommended: Build ${winner}</strong>
         <p class="text-muted mt-1" style="font-size:.85rem;">
           Build ${winner} scores ${Math.max(A.total,B.total)} vs ${Math.min(A.total,B.total)} — a ${diff}-point lead (${((diff / Math.min(A.total,B.total)) * 100).toFixed(0)}% faster overall).
         </p>
