@@ -3288,3 +3288,5 @@ function startRecentTimer(){
 function stopRecentTimer(){
   if(recentTimer){ clearInterval(recentTimer); recentTimer = null; }
 }
+
+$('#runCompare').addEventListener('click', runCompare);
