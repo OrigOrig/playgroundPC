@@ -1370,18 +1370,25 @@ function renderBenchmarksPage(){
    COMPARE
    ---------------------------------------------------------------- */
 function populateCompareSelects(){
-  const cpuOpts = allCpus().map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
-  const gpuOpts = allGpus().map(g=>`<option value="${g.name}">${g.name}</option>`).join('');
-  const ramOpts = RAMS.map(r=>`<option value="${r.capacity}GB ${r.type}">${r.capacity}GB ${r.type}</option>`).join('');
-  ['cmpACpu','cmpBCpu'].forEach(id=>{ const el=$('#'+id); if(el && !el.innerHTML) el.innerHTML = cpuOpts; });
-  ['cmpAGpu','cmpBGpu'].forEach(id=>{ const el=$('#'+id); if(el && !el.innerHTML) el.innerHTML = gpuOpts; });
-  ['cmpARam','cmpBRam'].forEach(id=>{ const el=$('#'+id); if(el && !el.innerHTML) el.innerHTML = ramOpts; });
-  if($('#cmpACpu').value==='' && state.build.cpu) $('#cmpACpu').value = state.build.cpu;
-  if($('#cmpAGpu').value==='' && state.build.gpu) $('#cmpAGpu').value = state.build.gpu;
-  if($('#cmpARam').value==='' && state.build.ramType) $('#cmpARam').value = `${state.build.ramCapacity}GB ${state.build.ramType}`;
-  if($('#cmpBCpu').value==='' ) $('#cmpBCpu').value = 'Ryzen 7 7800X3D';
-  if($('#cmpBGpu').value==='' ) $('#cmpBGpu').value = 'RTX 5080';
-  if($('#cmpBRam').value==='' ) $('#cmpBRam').value = '32GB DDR5';
+  const cpuOpts = `<option value="" disabled selected>—</option>` +
+    allCpus().map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
+  const gpuOpts = `<option value="" disabled selected>—</option>` +
+    allGpus().map(g=>`<option value="${g.name}">${g.name}</option>`).join('');
+  const ramOpts = `<option value="" disabled selected>—</option>` +
+    RAMS.map(r=>`<option value="${r.capacity}GB ${r.type}">${r.capacity}GB ${r.type}</option>`).join('');
+
+  ['cmpACpu','cmpBCpu'].forEach(id=>{
+    const el=$('#'+id);
+    if(el && !el.innerHTML) el.innerHTML = cpuOpts;
+  });
+  ['cmpAGpu','cmpBGpu'].forEach(id=>{
+    const el=$('#'+id);
+    if(el && !el.innerHTML) el.innerHTML = gpuOpts;
+  });
+  ['cmpARam','cmpBRam'].forEach(id=>{
+    const el=$('#'+id);
+    if(el && !el.innerHTML) el.innerHTML = ramOpts;
+  });
 }
 function evalBuild(cpuName, gpuName, ramLabel){
   const cpu = getCpuData(cpuName), gpu = getGpuData(gpuName);
@@ -1397,48 +1404,165 @@ function evalBuild(cpuName, gpuName, ramLabel){
   return {cpu, gpu, ram, cpuScore, gpuScore, ramScore, total};
 }
 function runCompare(){
-  const A = evalBuild($('#cmpACpu').value, $('#cmpAGpu').value, $('#cmpARam').value);
-  const B = evalBuild($('#cmpBCpu').value, $('#cmpBGpu').value, $('#cmpBRam').value);
-  const gpuDelta = ((B.gpuScore - A.gpuScore) / A.gpuScore * 100);
-  const cpuDelta = ((B.cpuScore - A.cpuScore) / A.cpuScore * 100);
-  const ramDelta = ((B.ramScore - A.ramScore) / A.ramScore * 100);
-  const winner = B.total > A.total ? 'B' : 'A';
-  const diff = Math.abs(B.total - A.total);
+  const aCpu = $('#cmpACpu').value;
+  const aGpu = $('#cmpAGpu').value;
+  const aRam = $('#cmpARam').value;
+  const bCpu = $('#cmpBCpu').value;
+  const bGpu = $('#cmpBGpu').value;
+  const bRam = $('#cmpBRam').value;
 
-  $('#compareResult').innerHTML = `
+  const result = $('#compareResult');
+
+  // Validation: both builds must be fully selected
+  if(!aCpu || !aGpu || !aRam || !bCpu || !bGpu || !bRam){
+    result.innerHTML = `
+      <div class="empty" style="padding:2.5rem 1rem;">
+        <i class="fas fa-triangle-exclamation" style="color:var(--warn);"></i>
+        <p>Fill in all six fields — CPU, GPU, and RAM for both Build A and Build B — then hit Compare.</p>
+      </div>`;
+    return;
+  }
+
+  // Validation: builds must differ
+  if(aCpu === bCpu && aGpu === bGpu && aRam === bRam){
+    result.innerHTML = `
+      <div class="empty" style="padding:2.5rem 1rem;">
+        <i class="fas fa-equals" style="color:var(--warn);"></i>
+        <p>Build A and Build B are identical. Change at least one component to see a comparison.</p>
+      </div>`;
+    return;
+  }
+
+  const A = evalBuild(aCpu, aGpu, aRam);
+  const B = evalBuild(bCpu, bGpu, bRam);
+
+  const cpuDelta = A.cpuScore === 0 ? 0 : ((B.cpuScore - A.cpuScore) / A.cpuScore * 100);
+  const gpuDelta = A.gpuScore === 0 ? 0 : ((B.gpuScore - A.gpuScore) / A.gpuScore * 100);
+  const ramDelta = A.ramScore === 0 ? 0 : ((B.ramScore - A.ramScore) / A.ramScore * 100);
+  const totalDelta = B.total - A.total;
+  const winner = totalDelta > 0 ? 'B' : totalDelta < 0 ? 'A' : 'tie';
+  const diff = Math.abs(totalDelta);
+
+  // Bar-width helper: higher score fills more of its track
+  const barWidth = (score) => Math.max(4, Math.min(100, score)) + '%';
+
+  result.innerHTML = `
+    <!-- Score cards -->
     <div class="grid grid-2 mb-3">
-      <div class="card-soft" style="background:var(--surface-2);padding:1.25rem;border-radius:var(--radius-sm);">
+      <div class="card-soft" style="background:var(--surface-2);padding:1.25rem;border-radius:var(--radius-sm);border:2px solid ${winner==='A'?'var(--success)':'transparent'};">
         <div class="card-title mb-2"><i class="fas fa-desktop"></i> Build A</div>
-        <div class="text-muted" style="font-size:.8rem;">${A.cpu.name}</div>
-        <div class="text-muted" style="font-size:.8rem;">${A.gpu.name}</div>
-        <div class="text-muted mb-2" style="font-size:.8rem;">${A.ram.capacity}GB ${A.ram.type}</div>
-        <div style="font-size:2.2rem;font-weight:800;letter-spacing:-.03em;">${A.total}<span style="font-size:1rem;color:var(--text-3);">/100</span></div>
-        ${winner==='A'?'<span class="pill pill-green">Winner</span>':''}
+        <div class="text-muted" style="font-size:.82rem;">${A.cpu.name}</div>
+        <div class="text-muted" style="font-size:.82rem;">${A.gpu.name}</div>
+        <div class="text-muted mb-2" style="font-size:.82rem;">${A.ram.capacity}GB ${A.ram.type}</div>
+        <div style="font-size:2.4rem;font-weight:800;letter-spacing:-.03em;line-height:1;">
+          ${A.total}<span style="font-size:1rem;color:var(--text-3);">/100</span>
+        </div>
+        ${winner==='A' ? '<span class="pill pill-green" style="margin-top:.5rem;display:inline-block;">Winner</span>' : ''}
       </div>
-      <div class="card-soft" style="background:var(--surface-2);padding:1.25rem;border-radius:var(--radius-sm);">
+      <div class="card-soft" style="background:var(--surface-2);padding:1.25rem;border-radius:var(--radius-sm);border:2px solid ${winner==='B'?'var(--success)':'transparent'};">
         <div class="card-title mb-2"><i class="fas fa-desktop"></i> Build B</div>
-        <div class="text-muted" style="font-size:.8rem;">${B.cpu.name}</div>
-        <div class="text-muted" style="font-size:.8rem;">${B.gpu.name}</div>
-        <div class="text-muted mb-2" style="font-size:.8rem;">${B.ram.capacity}GB ${B.ram.type}</div>
-        <div style="font-size:2.2rem;font-weight:800;letter-spacing:-.03em;">${B.total}<span style="font-size:1rem;color:var(--text-3);">/100</span></div>
-        ${winner==='B'?'<span class="pill pill-green">Winner</span>':''}
+        <div class="text-muted" style="font-size:.82rem;">${B.cpu.name}</div>
+        <div class="text-muted" style="font-size:.82rem;">${B.gpu.name}</div>
+        <div class="text-muted mb-2" style="font-size:.82rem;">${B.ram.capacity}GB ${B.ram.type}</div>
+        <div style="font-size:2.4rem;font-weight:800;letter-spacing:-.03em;line-height:1;">
+          ${B.total}<span style="font-size:1rem;color:var(--text-3);">/100</span>
+        </div>
+        ${winner==='B' ? '<span class="pill pill-green" style="margin-top:.5rem;display:inline-block;">Winner</span>' : ''}
       </div>
     </div>
-    <table class="data">
-      <thead><tr><th>Metric</th><th>Build A</th><th>Build B</th><th>Δ</th></tr></thead>
-      <tbody>
-        <tr><td>CPU Score</td><td>${A.cpuScore}</td><td>${B.cpuScore}</td><td style="color:${cpuDelta>=0?'var(--success)':'var(--danger)'};">${cpuDelta>=0?'+':''}${cpuDelta.toFixed(0)}%</td></tr>
-        <tr><td>GPU Score</td><td>${A.gpuScore}</td><td>${B.gpuScore}</td><td style="color:${gpuDelta>=0?'var(--success)':'var(--danger)'};">${gpuDelta>=0?'+':''}${gpuDelta.toFixed(0)}%</td></tr>
-        <tr><td>RAM Score</td><td>${A.ramScore}</td><td>${B.ramScore}</td><td style="color:${ramDelta>=0?'var(--success)':'var(--danger)'};">${ramDelta>=0?'+':''}${ramDelta.toFixed(0)}%</td></tr>
-      </tbody>
-    </table>
-    <div class="mt-3" style="padding:1rem;background:color-mix(in srgb,var(--primary) 8%,transparent);border-radius:var(--radius-sm);border-left:3px solid var(--primary);">
-      <strong>🏆 Recommended: Build ${winner}</strong>
-      <p class="text-muted mt-1" style="font-size:.85rem;">Build ${winner} scores ${Math.max(A.total,B.total)} vs ${Math.min(A.total,B.total)} (${diff} point difference). ${winner==='B'?'Build B is significantly faster.':'Build A is the better performer.'}</p>
+
+    <!-- Comparative bars -->
+    <div class="card-soft" style="background:var(--surface-2);padding:1.25rem;border-radius:var(--radius-sm);margin-bottom:1.5rem;">
+      <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:1rem;">
+        Component scores — A vs B
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:1rem;">
+
+        <div>
+          <div class="flex-between mb-1" style="font-size:.82rem;">
+            <span style="font-weight:600;">CPU</span>
+            <span class="text-muted">
+              ${A.cpuScore} vs ${B.cpuScore}
+              <span style="color:${cpuDelta>=0?'var(--success)':'var(--danger)'};margin-left:.5rem;font-weight:700;">
+                ${cpuDelta>=0?'+':''}${cpuDelta.toFixed(0)}%
+              </span>
+            </span>
+          </div>
+          <div style="display:flex;gap:4px;">
+            <div style="flex:1;height:8px;background:var(--surface-3);border-radius:4px;overflow:hidden;">
+              <div style="width:${barWidth(A.cpuScore)};height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:4px;"></div>
+            </div>
+            <div style="flex:1;height:8px;background:var(--surface-3);border-radius:4px;overflow:hidden;">
+              <div style="width:${barWidth(B.cpuScore)};height:100%;background:linear-gradient(90deg,var(--success),#4ade80);border-radius:4px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex-between mb-1" style="font-size:.82rem;">
+            <span style="font-weight:600;">GPU</span>
+            <span class="text-muted">
+              ${A.gpuScore} vs ${B.gpuScore}
+              <span style="color:${gpuDelta>=0?'var(--success)':'var(--danger)'};margin-left:.5rem;font-weight:700;">
+                ${gpuDelta>=0?'+':''}${gpuDelta.toFixed(0)}%
+              </span>
+            </span>
+          </div>
+          <div style="display:flex;gap:4px;">
+            <div style="flex:1;height:8px;background:var(--surface-3);border-radius:4px;overflow:hidden;">
+              <div style="width:${barWidth(A.gpuScore)};height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:4px;"></div>
+            </div>
+            <div style="flex:1;height:8px;background:var(--surface-3);border-radius:4px;overflow:hidden;">
+              <div style="width:${barWidth(B.gpuScore)};height:100%;background:linear-gradient(90deg,var(--success),#4ade80);border-radius:4px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex-between mb-1" style="font-size:.82rem;">
+            <span style="font-weight:600;">RAM</span>
+            <span class="text-muted">
+              ${A.ramScore} vs ${B.ramScore}
+              <span style="color:${ramDelta>=0?'var(--success)':'var(--danger)'};margin-left:.5rem;font-weight:700;">
+                ${ramDelta>=0?'+':''}${ramDelta.toFixed(0)}%
+              </span>
+            </span>
+          </div>
+          <div style="display:flex;gap:4px;">
+            <div style="flex:1;height:8px;background:var(--surface-3);border-radius:4px;overflow:hidden;">
+              <div style="width:${barWidth(A.ramScore)};height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:4px;"></div>
+            </div>
+            <div style="flex:1;height:8px;background:var(--surface-3);border-radius:4px;overflow:hidden;">
+              <div style="width:${barWidth(B.ramScore)};height:100%;background:linear-gradient(90deg,var(--success),#4ade80);border-radius:4px;"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="display:flex;gap:1rem;justify-content:center;margin-top:1rem;font-size:.72rem;color:var(--text-3);">
+        <span><span style="display:inline-block;width:10px;height:10px;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:2px;vertical-align:middle;margin-right:.35rem;"></span>Build A</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:linear-gradient(90deg,var(--success),#4ade80);border-radius:2px;vertical-align:middle;margin-right:.35rem;"></span>Build B</span>
+      </div>
     </div>
+
+    <!-- Verdict -->
+    ${winner === 'tie' ? `
+      <div style="padding:1rem;background:color-mix(in srgb,var(--warn) 10%,transparent);border-radius:var(--radius-sm);border-left:3px solid var(--warn);">
+        <strong>⚖️ It's a tie</strong>
+        <p class="text-muted mt-1" style="font-size:.85rem;">Both builds score ${A.total}/100. Look at the component bars above to see which one leans toward your use case.</p>
+      </div>
+    ` : `
+      <div style="padding:1rem;background:color-mix(in srgb,var(--primary) 8%,transparent);border-radius:var(--radius-sm);border-left:3px solid var(--primary);">
+        <strong>🏆 Recommended: Build ${winner}</strong>
+        <p class="text-muted mt-1" style="font-size:.85rem;">
+          Build ${winner} scores ${Math.max(A.total,B.total)} vs ${Math.min(A.total,B.total)} — a ${diff}-point lead (${((diff / Math.min(A.total,B.total)) * 100).toFixed(0)}% faster overall).
+        </p>
+      </div>
+    `}
   `;
 }
-$('#runCompare').addEventListener('click', runCompare);
 
 /* ----------------------------------------------------------------
    ADVISOR
