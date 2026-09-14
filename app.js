@@ -1403,6 +1403,90 @@ function evalBuild(cpuName, gpuName, ramLabel){
   const total = Math.round(cpuScore*0.35 + gpuScore*0.5 + ramScore*0.15);
   return {cpu, gpu, ram, cpuScore, gpuScore, ramScore, total};
 }
+/* ----------------------------------------------------------------
+   Compare chart — line profile of A vs B across CPU / GPU / RAM / Overall
+   ---------------------------------------------------------------- */
+function compareChartSvg(A, B){
+  const points = [
+    { label:'CPU',     a:A.cpuScore, b:B.cpuScore },
+    { label:'GPU',     a:A.gpuScore, b:B.gpuScore },
+    { label:'RAM',     a:A.ramScore, b:B.ramScore },
+    { label:'Overall', a:A.total,    b:B.total    }
+  ];
+
+  const W = 900, H = 240;
+  const padL = 40, padR = 24, padT = 26, padB = 40;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+  const maxV = 100;
+  const stepX = chartW / (points.length - 1);
+
+  const coordsA = points.map((p,i)=>({
+    x: padL + i*stepX,
+    y: padT + (1 - p.a/maxV) * chartH,
+    value: p.a,
+    label: p.label
+  }));
+  const coordsB = points.map((p,i)=>({
+    x: padL + i*stepX,
+    y: padT + (1 - p.b/maxV) * chartH,
+    value: p.b
+  }));
+
+  const linePathA = coordsA.map((c,i)=> `${i===0?'M':'L'} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`).join(' ');
+  const areaPathA = `${linePathA} L ${coordsA[coordsA.length-1].x.toFixed(1)} ${(padT+chartH).toFixed(1)} L ${coordsA[0].x.toFixed(1)} ${(padT+chartH).toFixed(1)} Z`;
+
+  const linePathB = coordsB.map((c,i)=> `${i===0?'M':'L'} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`).join(' ');
+  const areaPathB = `${linePathB} L ${coordsB[coordsB.length-1].x.toFixed(1)} ${(padT+chartH).toFixed(1)} L ${coordsB[0].x.toFixed(1)} ${(padT+chartH).toFixed(1)} Z`;
+
+  const gridLines = [0, 25, 50, 75, 100].map(v=>{
+    const y = padT + (1 - v/maxV) * chartH;
+    return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="var(--border)" stroke-dasharray="2 3" stroke-width="1"/>`;
+  }).join('');
+
+  const gridLabels = [0, 25, 50, 75, 100].map(v=>{
+    const y = padT + (1 - v/maxV) * chartH;
+    return `<text x="${padL-6}" y="${(y+3).toFixed(1)}" text-anchor="end" fill="var(--text-3)" font-size="9" font-weight="600" font-family="Inter,sans-serif">${v}</text>`;
+  }).join('');
+
+  const axisLabels = coordsA.map(c=>
+    `<text x="${c.x.toFixed(1)}" y="${(H-10).toFixed(1)}" text-anchor="middle" fill="var(--text-3)" font-size="10" font-weight="700" font-family="Inter,sans-serif" letter-spacing=".05em">${c.label.toUpperCase()}</text>`
+  ).join('');
+
+  const dotsA = coordsA.map(c=>
+    `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4" fill="var(--surface)" stroke="var(--primary)" stroke-width="2.5"/>
+     <text x="${c.x.toFixed(1)}" y="${(c.y-10).toFixed(1)}" text-anchor="middle" fill="var(--text)" font-size="10" font-weight="800" font-family="Inter,sans-serif">${c.value}</text>`
+  ).join('');
+
+  const dotsB = coordsB.map(c=>
+    `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4" fill="var(--surface)" stroke="var(--success)" stroke-width="2.5"/>
+     <text x="${c.x.toFixed(1)}" y="${(c.y+16).toFixed(1)}" text-anchor="middle" fill="var(--text)" font-size="10" font-weight="800" font-family="Inter,sans-serif">${c.value}</text>`
+  ).join('');
+
+  return `
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;display:block;">
+      <defs>
+        <linearGradient id="cmpGradA" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--primary)" stop-opacity="0.35"/>
+          <stop offset="100%" stop-color="var(--primary)" stop-opacity="0.02"/>
+        </linearGradient>
+        <linearGradient id="cmpGradB" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--success)" stop-opacity="0.28"/>
+          <stop offset="100%" stop-color="var(--success)" stop-opacity="0.02"/>
+        </linearGradient>
+      </defs>
+      ${gridLines}
+      ${gridLabels}
+      <path d="${areaPathA}" fill="url(#cmpGradA)"/>
+      <path d="${areaPathB}" fill="url(#cmpGradB)"/>
+      <path d="${linePathA}" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="${linePathB}" fill="none" stroke="var(--success)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="6 4"/>
+      ${dotsA}
+      ${dotsB}
+      ${axisLabels}
+    </svg>
+  `;
+}
 function runCompare(){
   const aCpu = $('#cmpACpu').value;
   const aGpu = $('#cmpAGpu').value;
@@ -1472,79 +1556,133 @@ function runCompare(){
     </div>
 
     <!-- Comparative bars -->
-    <div class="card-soft" style="background:var(--surface-2);padding:1.25rem;border-radius:var(--radius-sm);margin-bottom:1.5rem;">
-      <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:1rem;">
+    <div class="card-soft" style="background:var(--surface-2);padding:1.5rem;border-radius:var(--radius-sm);margin-bottom:1.5rem;">
+      <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:1.25rem;">
         Component scores — A vs B
       </div>
 
-      <div style="display:flex;flex-direction:column;gap:1rem;">
+      <div style="display:flex;flex-direction:column;gap:1.4rem;">
 
         <div>
-          <div class="flex-between mb-1" style="font-size:.82rem;">
+          <div class="flex-between mb-1" style="font-size:.82rem;align-items:baseline;">
             <span style="font-weight:600;">CPU</span>
-            <span class="text-muted">
-              ${A.cpuScore} vs ${B.cpuScore}
-              <span style="color:${cpuDelta>=0?'var(--success)':'var(--danger)'};margin-left:.5rem;font-weight:700;">
+            <span class="text-muted" style="display:inline-flex;align-items:baseline;gap:.65rem;">
+              <span><strong style="color:var(--text);">${A.cpuScore}</strong> vs <strong style="color:var(--text);">${B.cpuScore}</strong></span>
+              <span style="color:${cpuDelta>=0?'var(--success)':'var(--danger)'};font-weight:700;min-width:44px;text-align:right;">
                 ${cpuDelta>=0?'+':''}${cpuDelta.toFixed(0)}%
               </span>
             </span>
           </div>
-          <div style="display:flex;gap:4px;">
+          <div style="display:flex;gap:8px;">
             <div style="flex:1;height:8px;background:var(--surface-3);border-radius:4px;overflow:hidden;">
               <div style="width:${barWidth(A.cpuScore)};height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:4px;"></div>
             </div>
             <div style="flex:1;height:8px;background:var(--surface-3);border-radius:4px;overflow:hidden;">
-              <div style="width:${barWidth(B.cpuScore)};height:100%;background:linear-gradient(90deg,var(--success),#4ade80);border-radius:4px;"></div>
+              <div style="width:${barWidth(B.cpuScore)};height:100%;background:linear-gradient(90deg,var(--info),var(--success));border-radius:4px;"></div>
             </div>
           </div>
         </div>
 
         <div>
-          <div class="flex-between mb-1" style="font-size:.82rem;">
+          <div class="flex-between mb-1" style="font-size:.82rem;align-items:baseline;">
             <span style="font-weight:600;">GPU</span>
-            <span class="text-muted">
-              ${A.gpuScore} vs ${B.gpuScore}
-              <span style="color:${gpuDelta>=0?'var(--success)':'var(--danger)'};margin-left:.5rem;font-weight:700;">
+            <span class="text-muted" style="display:inline-flex;align-items:baseline;gap:.65rem;">
+              <span><strong style="color:var(--text);">${A.gpuScore}</strong> vs <strong style="color:var(--text);">${B.gpuScore}</strong></span>
+              <span style="color:${gpuDelta>=0?'var(--success)':'var(--danger)'};font-weight:700;min-width:44px;text-align:right;">
                 ${gpuDelta>=0?'+':''}${gpuDelta.toFixed(0)}%
               </span>
             </span>
           </div>
-          <div style="display:flex;gap:4px;">
+          <div style="display:flex;gap:8px;">
             <div style="flex:1;height:8px;background:var(--surface-3);border-radius:4px;overflow:hidden;">
               <div style="width:${barWidth(A.gpuScore)};height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:4px;"></div>
             </div>
             <div style="flex:1;height:8px;background:var(--surface-3);border-radius:4px;overflow:hidden;">
-              <div style="width:${barWidth(B.gpuScore)};height:100%;background:linear-gradient(90deg,var(--success),#4ade80);border-radius:4px;"></div>
+              <div style="width:${barWidth(B.gpuScore)};height:100%;background:linear-gradient(90deg,var(--info),var(--success));border-radius:4px;"></div>
             </div>
           </div>
         </div>
 
         <div>
-          <div class="flex-between mb-1" style="font-size:.82rem;">
+          <div class="flex-between mb-1" style="font-size:.82rem;align-items:baseline;">
             <span style="font-weight:600;">RAM</span>
-            <span class="text-muted">
-              ${A.ramScore} vs ${B.ramScore}
-              <span style="color:${ramDelta>=0?'var(--success)':'var(--danger)'};margin-left:.5rem;font-weight:700;">
+            <span class="text-muted" style="display:inline-flex;align-items:baseline;gap:.65rem;">
+              <span><strong style="color:var(--text);">${A.ramScore}</strong> vs <strong style="color:var(--text);">${B.ramScore}</strong></span>
+              <span style="color:${ramDelta>=0?'var(--success)':'var(--danger)'};font-weight:700;min-width:44px;text-align:right;">
                 ${ramDelta>=0?'+':''}${ramDelta.toFixed(0)}%
               </span>
             </span>
           </div>
-          <div style="display:flex;gap:4px;">
+          <div style="display:flex;gap:8px;">
             <div style="flex:1;height:8px;background:var(--surface-3);border-radius:4px;overflow:hidden;">
               <div style="width:${barWidth(A.ramScore)};height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:4px;"></div>
             </div>
             <div style="flex:1;height:8px;background:var(--surface-3);border-radius:4px;overflow:hidden;">
-              <div style="width:${barWidth(B.ramScore)};height:100%;background:linear-gradient(90deg,var(--success),#4ade80);border-radius:4px;"></div>
+              <div style="width:${barWidth(B.ramScore)};height:100%;background:linear-gradient(90deg,var(--info),var(--success));border-radius:4px;"></div>
             </div>
           </div>
         </div>
 
       </div>
 
-      <div style="display:flex;gap:1rem;justify-content:center;margin-top:1rem;font-size:.72rem;color:var(--text-3);">
+      <div style="display:flex;gap:1.5rem;justify-content:center;margin-top:1.25rem;font-size:.72rem;color:var(--text-3);">
         <span><span style="display:inline-block;width:10px;height:10px;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:2px;vertical-align:middle;margin-right:.35rem;"></span>Build A</span>
-        <span><span style="display:inline-block;width:10px;height:10px;background:linear-gradient(90deg,var(--success),#4ade80);border-radius:2px;vertical-align:middle;margin-right:.35rem;"></span>Build B</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:linear-gradient(90deg,var(--info),var(--success));border-radius:2px;vertical-align:middle;margin-right:.35rem;"></span>Build B</span>
       </div>
+    </div>
+
+    <!-- Numeric table -->
+    <table class="data" style="margin-bottom:1.5rem;">
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th>Build A</th>
+          <th>Build B</th>
+          <th style="text-align:right;">Δ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>CPU Score</td>
+          <td><strong>${A.cpuScore}</strong></td>
+          <td><strong>${B.cpuScore}</strong></td>
+          <td style="text-align:right;color:${cpuDelta>=0?'var(--success)':'var(--danger)'};font-weight:700;">
+            ${cpuDelta>=0?'+':''}${cpuDelta.toFixed(0)}%
+          </td>
+        </tr>
+        <tr>
+          <td>GPU Score</td>
+          <td><strong>${A.gpuScore}</strong></td>
+          <td><strong>${B.gpuScore}</strong></td>
+          <td style="text-align:right;color:${gpuDelta>=0?'var(--success)':'var(--danger)'};font-weight:700;">
+            ${gpuDelta>=0?'+':''}${gpuDelta.toFixed(0)}%
+          </td>
+        </tr>
+        <tr>
+          <td>RAM Score</td>
+          <td><strong>${A.ramScore}</strong></td>
+          <td><strong>${B.ramScore}</strong></td>
+          <td style="text-align:right;color:${ramDelta>=0?'var(--success)':'var(--danger)'};font-weight:700;">
+            ${ramDelta>=0?'+':''}${ramDelta.toFixed(0)}%
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Overall</strong></td>
+          <td><strong>${A.total}/100</strong></td>
+          <td><strong>${B.total}/100</strong></td>
+          <td style="text-align:right;color:${totalDelta>=0?'var(--success)':'var(--danger)'};font-weight:700;">
+            ${totalDelta>=0?'+':''}${totalDelta}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Line chart -->
+    <div class="card-soft" style="background:var(--surface-2);padding:1.5rem;border-radius:var(--radius-sm);margin-bottom:1.5rem;">
+      <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:1rem;">
+        Score profile
+      </div>
+      ${compareChartSvg(A, B)}
     </div>
 
     <!-- Verdict -->
