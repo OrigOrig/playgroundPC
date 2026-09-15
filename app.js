@@ -2945,9 +2945,9 @@ function renderBapcCostTable(){
 
   const rows = [
     bapc.case    ? {key:'case',    label:'Case',        price:bapc.case.price}                            : null,
-    bapc.cpu     ? {key:'cpu',     label:'CPU',         price:CPU_PRICES[bapc.cpu.name] || 200}           : null,
+    bapc.cpu     ? {key:'cpu',     label:'CPU',         price:(bapc.cpu.price != null ? bapc.cpu.price : (CPU_PRICES[bapc.cpu.name] || 200))}  : null,
     bapc.mobo    ? {key:'mobo',    label:'Motherboard', price:bapc.mobo.price}                            : null,
-    bapc.gpu     ? {key:'gpu',     label:'GPU',         price:GPU_PRICES[bapc.gpu.name] || 300}           : null,
+    bapc.gpu     ? {key:'gpu',     label:'GPU',         price:(bapc.gpu.price != null ? bapc.gpu.price : (GPU_PRICES[bapc.gpu.name] || 300))}  : null,
     bapc.ram     ? {key:'ram',     label:'RAM',         price:bapc.ram.price || 60}                       : null,
     bapc.cooler  ? {key:'cooler',  label:'Cooler',      price:bapc.cooler.price}                          : null,
     bapc.psu     ? {key:'psu',     label:'PSU',         price:bapc.psu.price}                             : null,
@@ -2985,9 +2985,9 @@ function renderBapcCostTable(){
 function updateBapcTotals(){
   const rows = [
     bapc.case    ? {key:'case',    price:bapc.case.price}                              : null,
-    bapc.cpu     ? {key:'cpu',     price:CPU_PRICES[bapc.cpu.name] || 200}             : null,
+    bapc.cpu     ? {key:'cpu',     price:(bapc.cpu.price != null ? bapc.cpu.price : (CPU_PRICES[bapc.cpu.name] || 200))}  : null,
     bapc.mobo    ? {key:'mobo',    price:bapc.mobo.price}                              : null,
-    bapc.gpu     ? {key:'gpu',     price:GPU_PRICES[bapc.gpu.name] || 300}             : null,
+    bapc.gpu     ? {key:'gpu',     price:(bapc.gpu.price != null ? bapc.gpu.price : (GPU_PRICES[bapc.gpu.name] || 300))}  : null,
     bapc.ram     ? {key:'ram',     price:bapc.ram.price || 60}                         : null,
     bapc.cooler  ? {key:'cooler',  price:bapc.cooler.price}                            : null,
     bapc.psu     ? {key:'psu',     price:bapc.psu.price}                               : null,
