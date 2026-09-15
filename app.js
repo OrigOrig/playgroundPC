@@ -109,6 +109,106 @@ const $$ = (sel, root=document)=>Array.from(root.querySelectorAll(sel));
 const fmt = n => n.toLocaleString();
 const clamp = (n,min,max)=>Math.min(max,Math.max(min,n));
 
+/* ================================================================
+   COMPONENT SORT HELPERS — auto-detect brand from name
+   ================================================================ */
+
+function formRank(form){
+  return { 'ITX':0, 'mATX':1, 'ATX':2, 'E-ATX':3 }[form] ?? 99;
+}
+
+function socketRank(socket){
+  return {
+    'AM4':0, 'AM5':1,
+    'LGA1155':2, 'LGA1150':3, 'LGA1151':4, 'LGA1200':5,
+    'LGA1700':6, 'LGA1851':7
+  }[socket] ?? 99;
+}
+
+function extractModelNumber(name){
+  const m = String(name).match(/(\d{3,5})/);
+  return m ? parseInt(m[1], 10) : 0;
+}
+
+function cpuFamilyRank(name){
+  if(/Core i3/i.test(name))  return 100;
+  if(/Core i5/i.test(name))  return 101;
+  if(/Core i7/i.test(name))  return 102;
+  if(/Core i9/i.test(name))  return 103;
+  if(/Ultra 5/i.test(name))  return 104;
+  if(/Ultra 7/i.test(name))  return 105;
+  if(/Ultra 9/i.test(name))  return 106;
+  if(/^FX-/i.test(name))          return 200;
+  if(/Ryzen 3/i.test(name))       return 201;
+  if(/Ryzen 5/i.test(name))       return 202;
+  if(/Ryzen 7/i.test(name))       return 203;
+  if(/Ryzen 9/i.test(name))       return 204;
+  if(/Threadripper/i.test(name))  return 205;
+  return 999;
+}
+
+function gpuSeriesRank(name){
+  if(/^GTX 7\d\d/i.test(name))   return 100;
+  if(/^GTX 9\d\d/i.test(name))   return 101;
+  if(/^GTX 10\d\d/i.test(name))  return 102;
+  if(/^GTX 16\d\d/i.test(name))  return 103;
+  if(/^RTX 20\d\d/i.test(name))  return 104;
+  if(/^RTX 30\d\d/i.test(name))  return 105;
+  if(/^RTX 40\d\d/i.test(name))  return 106;
+  if(/^RTX 50\d\d/i.test(name))  return 107;
+  if(/Titan/i.test(name))        return 108;
+  if(/^Radeon HD/i.test(name))   return 200;
+  if(/^Radeon R[79]/i.test(name))return 201;
+  if(/^RX 4\d\d/i.test(name))    return 202;
+  if(/^RX 5[0-9]\d/i.test(name)) return 203;
+  if(/^RX 5\d\d\d/i.test(name))  return 204;
+  if(/^RX 6\d\d\d/i.test(name))  return 205;
+  if(/^RX 7\d\d\d/i.test(name))  return 206;
+  if(/^RX 9\d\d\d/i.test(name))  return 207;
+  if(/iGPU/i.test(name))         return 208;
+  if(/^Arc A/i.test(name))       return 300;
+  if(/^Arc B/i.test(name))       return 301;
+  return 999;
+}
+
+function sortCpus(list){
+  return [...list].sort((a, b) => {
+    const fa = cpuFamilyRank(a.name), fb = cpuFamilyRank(b.name);
+    if(fa !== fb) return fa - fb;
+    const ga = extractModelNumber(a.name), gb = extractModelNumber(b.name);
+    if(ga !== gb) return ga - gb;
+    return a.name.localeCompare(b.name);
+  });
+}
+
+function sortGpus(list){
+  return [...list].sort((a, b) => {
+    const sa = gpuSeriesRank(a.name), sb = gpuSeriesRank(b.name);
+    if(sa !== sb) return sa - sb;
+    const na = extractModelNumber(a.name), nb = extractModelNumber(b.name);
+    if(na !== nb) return na - nb;
+    return a.name.localeCompare(b.name);
+  });
+}
+
+function sortMobos(list){
+  return [...list].sort((a, b) => {
+    const sa = socketRank(a.socket), sb = socketRank(b.socket);
+    if(sa !== sb) return sa - sb;
+    const fa = formRank(a.form), fb = formRank(b.form);
+    if(fa !== fb) return fa - fb;
+    return a.name.localeCompare(b.name);
+  });
+}
+
+function sortCases(list){
+  return [...list].sort((a, b) => {
+    const fa = formRank(a.form), fb = formRank(b.form);
+    if(fa !== fb) return fa - fb;
+    return a.name.localeCompare(b.name);
+  });
+}
+
 /* ----------------------------------------------------------------
    LOOKUPS
    ---------------------------------------------------------------- */
@@ -296,7 +396,7 @@ $$('.nav-item').forEach(item=>item.addEventListener('click', ()=>navigate(item.d
    ---------------------------------------------------------------- */
 function populateCpuSelect(){
   const brand = $('#cpuBrand').value;
-  const list = CPUS[brand] || CPUS.AMD;
+  const list = sortCpus(CPUS[brand] || CPUS.AMD);
   const sel = $('#cpuSelect');
   sel.innerHTML = `<option value="" disabled hidden>-</option>` +
     list.map(c=>`<option value="${c.name}">${c.name} — ${c.cores} · ${c.clock}</option>`).join('');
@@ -305,7 +405,7 @@ function populateCpuSelect(){
 }
 function populateGpuSelect(){
   const brand = $('#gpuBrand').value;
-  const list = GPUS[brand] || GPUS.NVIDIA;
+  const list = sortGpus(GPUS[brand] || GPUS.NVIDIA);
   const sel = $('#gpuSelect');
   sel.innerHTML = `<option value="" disabled hidden>-</option>` +
     list.map(g=>`<option value="${g.name}">${g.name} — ${g.vram}GB · ${g.tdp}W</option>`).join('');
@@ -363,7 +463,7 @@ function populateMoboSelect(){
   }
 
   if(sockSel.value && chipSel.value){
-    const boards = mobosForChipset(sockSel.value, chipSel.value);
+    const boards = sortMobos(mobosForChipset(sockSel.value, chipSel.value));
     moboSel.innerHTML = `<option value="" disabled selected>—</option>` +
       boards.map(m=>`<option value="${m.name}">${m.name} — ${m.form}</option>`).join('');
     if(state.build.mobo && boards.some(b=>b.name===state.build.mobo)) moboSel.value = state.build.mobo;
@@ -1422,9 +1522,9 @@ function renderBenchmarksPage(){
    ---------------------------------------------------------------- */
 function populateCompareSelects(){
   const cpuOpts = `<option value="" disabled selected>—</option>` +
-    allCpus().map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
+    sortCpus(allCpus()).map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
   const gpuOpts = `<option value="" disabled selected>—</option>` +
-    allGpus().map(g=>`<option value="${g.name}">${g.name}</option>`).join('');
+    sortGpus(allGpus()).map(g=>`<option value="${g.name}">${g.name}</option>`).join('');
   const ramOpts = `<option value="" disabled selected>—</option>` +
     RAMS.map(r=>`<option value="${r.capacity}GB ${r.type}">${r.capacity}GB ${r.type}</option>`).join('');
 
@@ -2693,9 +2793,10 @@ function populateBapcSelects(){
   const $mobo  = $('#bapcMobo');
 
   if($case && !$case.innerHTML){
+    const sortedCases = sortCases(CASES);
     $case.innerHTML = `<option value="" disabled selected>—</option>` +
-      CASES.map((c,i)=>
-        `<option value="${i}">${c.brand} ${c.name} · ${c.form} · max GPU ${c.maxGpu}mm</option>`
+      sortedCases.map(c=>
+        `<option value="${CASES.indexOf(c)}">${c.brand} ${c.name} · ${c.form} · max GPU ${c.maxGpu}mm</option>`
       ).join('');
   }
 
@@ -2703,7 +2804,7 @@ function populateBapcSelects(){
     let html = `<option value="" disabled selected>—</option>`;
     ['AMD','Intel'].forEach(brand=>{
       html += `<optgroup label="${brand}">`;
-      CPUS[brand].forEach(c=>{
+      sortCpus(CPUS[brand]).forEach(c=>{
         html += `<option value="${c.name}">${c.name} · ${c.cores} · ${c.socket}</option>`;
       });
       html += `</optgroup>`;
@@ -2715,7 +2816,7 @@ function populateBapcSelects(){
     let html = `<option value="" disabled selected>—</option>`;
     ['NVIDIA','AMD','Intel'].forEach(brand=>{
       html += `<optgroup label="${brand}">`;
-      GPUS[brand].forEach(g=>{
+      sortGpus(GPUS[brand]).forEach(g=>{
         html += `<option value="${g.name}">${g.name} · ${g.vram}GB · ${g.tdp}W</option>`;
       });
       html += `</optgroup>`;
@@ -2761,9 +2862,10 @@ function populateBapcSelects(){
   }
 
   if($mobo && !$mobo.innerHTML){
+    const sortedMobos = sortMobos(MOTHERBOARDS);
     $mobo.innerHTML = `<option value="" disabled selected>—</option>` +
-      MOTHERBOARDS.map((m,i)=>
-        `<option value="${i}">${m.name} · ${m.socket} · ${m.form}</option>`
+      sortedMobos.map(m=>
+        `<option value="${MOTHERBOARDS.indexOf(m)}">${m.name} · ${m.socket} · ${m.form}</option>`
       ).join('');
   }
 }
