@@ -1429,6 +1429,9 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
   position:relative;
   width:100%;
 }
+.combobox.open{
+  z-index:1;
+}
 .combobox-input{
   width:100%;
   background:var(--surface-2);
@@ -1526,6 +1529,11 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
 }
 .combobox-panel::-webkit-scrollbar-thumb:hover{
   background:var(--border-2);
+}
+/* Lift any card that contains an open combobox above its siblings */
+.card:has(.combobox.open){
+  position:relative;
+  z-index:100;
 }
 </style>
 </head>
