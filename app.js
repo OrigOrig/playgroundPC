@@ -3477,3 +3477,239 @@ function stopRecentTimer(){
 }
 
 $('#runCompare').addEventListener('click', runCompare);
+
+/* ================================================================
+   COMBOBOX — typable dropdown component
+   Replaces native <select> elements with a type-to-filter input.
+   ================================================================ */
+(function initComboboxes(){
+  // Wait for DOM to be ready in case this runs before elements exist
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', convertAll);
+  } else {
+    setTimeout(convertAll, 0);
+  }
+
+  function convertAll(){
+    // Convert every <select> inside the app
+    document.querySelectorAll('select').forEach(select => {
+      // Skip if it's already been converted
+      if(select.dataset.comboboxDone) return;
+      // Skip if the select is hidden or inside a modal we haven't opened yet
+      // (We still convert them, but conversion is safe because it re-uses value)
+      convert(select);
+    });
+  }
+
+  function convert(select){
+    select.dataset.comboboxDone = '1';
+
+    // Build the combobox wrapper
+    const wrap = document.createElement('div');
+    wrap.className = 'combobox';
+    wrap.style.display = select.style.display || '';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'combobox-input';
+    input.autocomplete = 'off';
+    input.spellcheck = false;
+    input.placeholder = getPlaceholder(select);
+    input.value = getDisplayValue(select);
+
+    const caret = document.createElement('i');
+    caret.className = 'fas fa-chevron-down combobox-caret';
+
+    const panel = document.createElement('div');
+    panel.className = 'combobox-panel';
+
+    wrap.appendChild(input);
+    wrap.appendChild(caret);
+    wrap.appendChild(panel);
+
+    // Hide the original select but keep it in the DOM (form submission etc.)
+    select.style.display = 'none';
+    select.parentNode.insertBefore(wrap, select);
+
+    // Cache the options from the select
+    let options = Array.from(select.options).map(o => ({
+      value: o.value,
+      text: o.textContent,
+      disabled: o.disabled
+    }));
+
+    // Refresh options cache from the select (called when select.innerHTML changes)
+    function refreshOptions(){
+      options = Array.from(select.options).map(o => ({
+        value: o.value,
+        text: o.textContent,
+        disabled: o.disabled
+      }));
+      if(document.activeElement === input){
+        renderPanel(input.value);
+      } else {
+        input.value = getDisplayValue(select);
+      }
+    }
+    // Poll for options changes; MutationObserver would be cleaner but this works
+    const observer = new MutationObserver(refreshOptions);
+    observer.observe(select, { childList: true, subtree: true, characterData: true });
+
+    let highlightedIndex = -1;
+
+    function open(){
+      wrap.classList.add('open');
+      renderPanel(input.value);
+    }
+    function close(){
+      wrap.classList.remove('open');
+      highlightedIndex = -1;
+      // Reset the input to show the current selection (or nothing)
+      input.value = getDisplayValue(select);
+    }
+
+    function getFiltered(query){
+      const q = (query || '').trim().toLowerCase();
+      if(!q) return options.filter(o => !o.disabled);
+      // First, options that start with the query
+      const starts = [];
+      const contains = [];
+      for(const o of options){
+        if(o.disabled) continue;
+        const t = o.text.toLowerCase();
+        if(t.startsWith(q)) starts.push(o);
+        else if(t.includes(q)) contains.push(o);
+      }
+      return starts.concat(contains);
+    }
+
+    function renderPanel(query){
+      const filtered = getFiltered(query);
+      if(filtered.length === 0){
+        panel.innerHTML = `<div class="combobox-empty">No matches</div>`;
+        highlightedIndex = -1;
+        return;
+      }
+      const currentValue = select.value;
+      panel.innerHTML = filtered.map((o, i) => {
+        const isSelected = o.value === currentValue;
+        const isHighlighted = i === highlightedIndex;
+        return `<div class="combobox-option ${isSelected?'selected':''} ${isHighlighted?'highlight':''}" data-value="${escapeAttr(o.value)}" data-index="${i}">${escapeHtml(o.text)}</div>`;
+      }).join('');
+
+      // Cache filtered list for click handlers
+      panel._filtered = filtered;
+
+      panel.querySelectorAll('.combobox-option').forEach(el => {
+        el.addEventListener('mousedown', (e) => {
+          e.preventDefault(); // prevent input blur before we handle it
+          selectOption(el.dataset.value);
+        });
+      });
+    }
+
+    function selectOption(value){
+      select.value = value;
+      // Fire the change event so existing listeners run
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      input.value = getDisplayValue(select);
+      close();
+      input.blur();
+    }
+
+    function getPlaceholder(select){
+      // Use the placeholder text of the first disabled option, or "Select…"
+      for(const o of select.options){
+        if(o.disabled && o.value === ''){
+          return o.textContent.trim();
+        }
+      }
+      return 'Select…';
+    }
+
+    function getDisplayValue(select){
+      const opt = select.options[select.selectedIndex];
+      if(!opt || !opt.value) return '';   // placeholder shows empty
+      return opt.textContent;
+    }
+
+    // -- Event wiring --
+    input.addEventListener('focus', () => {
+      // Clear input so user can start typing a filter
+      input.value = '';
+      open();
+    });
+
+    input.addEventListener('input', () => {
+      highlightedIndex = -1;
+      renderPanel(input.value);
+      if(!wrap.classList.contains('open')) open();
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if(!wrap.classList.contains('open') && (e.key === 'ArrowDown' || e.key === 'ArrowUp')){
+        e.preventDefault();
+        open();
+        return;
+      }
+      const filtered = getFiltered(input.value);
+      if(e.key === 'ArrowDown'){
+        e.preventDefault();
+        highlightedIndex = Math.min(filtered.length - 1, highlightedIndex + 1);
+        renderPanel(input.value);
+        scrollHighlightIntoView();
+      } else if(e.key === 'ArrowUp'){
+        e.preventDefault();
+        highlightedIndex = Math.max(0, highlightedIndex - 1);
+        renderPanel(input.value);
+        scrollHighlightIntoView();
+      } else if(e.key === 'Enter'){
+        e.preventDefault();   // never submit
+        if(highlightedIndex >= 0 && filtered[highlightedIndex]){
+          selectOption(filtered[highlightedIndex].value);
+        } else if(filtered.length === 1){
+          selectOption(filtered[0].value);
+        }
+        // Otherwise: do nothing, don't submit
+      } else if(e.key === 'Escape'){
+        e.preventDefault();
+        close();
+        input.blur();
+      } else if(e.key === 'Tab'){
+        close();
+      }
+    });
+
+    // Click the input again re-opens
+    caret.addEventListener('click', () => {
+      if(wrap.classList.contains('open')) close();
+      else { input.focus(); }
+    });
+
+    // Click outside closes
+    document.addEventListener('mousedown', (e) => {
+      if(!wrap.contains(e.target) && e.target !== input){
+        if(wrap.classList.contains('open')) close();
+      }
+    });
+
+    function scrollHighlightIntoView(){
+      const el = panel.querySelector('.combobox-option.highlight');
+      if(el) el.scrollIntoView({ block: 'nearest' });
+    }
+
+    // If the select's value changes externally (JS), sync the input
+    const originalDescriptor = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
+    // (no-op: the MutationObserver handles option changes; value changes via JS still work
+    //  because we read from select.value on focus/blur)
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+    }[c]));
+  }
+  function escapeAttr(s){
+    return escapeHtml(s);
+  }
+})();
