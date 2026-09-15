@@ -3609,6 +3609,10 @@ $('#runCompare').addEventListener('click', runCompare);
     // Build the combobox wrapper
     const wrap = document.createElement('div');
     wrap.className = 'combobox';
+    // Small inline selects (Games page filters) get a compact combobox
+    if(select.id === 'gameFilterQuality' || select.id === 'gameSort'){
+      wrap.classList.add('combobox-sm');
+    }
     wrap.style.display = select.style.display || '';
 
     const input = document.createElement('input');
