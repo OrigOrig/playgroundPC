@@ -2655,19 +2655,19 @@ function bapcIcon(type){
 
 /* ---------- Build-A-PC state (kept separate from My PC) ---------- */
 const bapc = {
-  case:    CASES[0],
+  case:    null,
   cpu:     null,
   gpu:     null,
   ram:     null,
   mobo:    null,
   moboIdx: 0,
-  cooler:  COOLERS[0],
-  psu:     PSUS[0],
-  storage: STORAGE_EXTENDED[0],
+  cooler:  null,
+  psu:     null,
+  storage: null,
   storageQty: 1,
-  prices:  {},           // component key -> editable price
+  prices:  {},
   lastCompat: null,
-  rotation: -12         // for later (5b-2)
+  rotation: -12
 };
 
 /* ---------- Helpers ---------- */
@@ -2677,7 +2677,7 @@ function findRamByLabel(label){
   const m = String(label).match(/^(\d+)GB\s+(DDR\d)/);
   if(!m) return null;
   const cap = parseInt(m[1],10), type = m[2];
-  return RAM_EXTENDED.find(r=>r.capacity===cap && r.type===type) || null;
+  return RAMS.find(r=>r.capacity===cap && r.type===type) || null;
 }
 function ramLabel(r){ return `${r.capacity}GB ${r.type}`; }
 
@@ -2726,7 +2726,7 @@ function populateBapcSelects(){
   if($ram && !$ram.innerHTML){
     const seen = new Set();
     const rows = [];
-    RAM_EXTENDED.forEach(r=>{
+    RAMS.forEach(r=>{
       const key = `${r.capacity}-${r.type}`;
       if(seen.has(key)) return;
       seen.add(key);
@@ -2755,7 +2755,7 @@ function populateBapcSelects(){
 
   if($stg && !$stg.innerHTML){
     $stg.innerHTML = `<option value="" disabled selected>—</option>` +
-      STORAGE_EXTENDED.map((s,i)=>
+      STORAGE_TYPES.map((s,i)=>
         `<option value="${i}">${s.name} · ${s.speed} MB/s</option>`
       ).join('');
   }
@@ -2944,13 +2944,13 @@ function renderBapcCostTable(){
   }
 
   const rows = [
-    bapc.case    ? {key:'case',    label:'Case',        price:bapc.case.price}                            : null,
-    bapc.cpu     ? {key:'cpu',     label:'CPU',         price:(bapc.cpu.price != null ? bapc.cpu.price : (CPU_PRICES[bapc.cpu.name] || 200))}  : null,
-    bapc.mobo    ? {key:'mobo',    label:'Motherboard', price:bapc.mobo.price}                            : null,
-    bapc.gpu     ? {key:'gpu',     label:'GPU',         price:(bapc.gpu.price != null ? bapc.gpu.price : (GPU_PRICES[bapc.gpu.name] || 300))}  : null,
-    bapc.ram     ? {key:'ram',     label:'RAM',         price:bapc.ram.price || 60}                       : null,
-    bapc.cooler  ? {key:'cooler',  label:'Cooler',      price:bapc.cooler.price}                          : null,
-    bapc.psu     ? {key:'psu',     label:'PSU',         price:bapc.psu.price}                             : null,
+    bapc.case    ? {key:'case',    label:'Case',        price:bapc.case.price}    : null,
+    bapc.cpu     ? {key:'cpu',     label:'CPU',         price:bapc.cpu.price}     : null,
+    bapc.mobo    ? {key:'mobo',    label:'Motherboard', price:bapc.mobo.price}    : null,
+    bapc.gpu     ? {key:'gpu',     label:'GPU',         price:bapc.gpu.price}     : null,
+    bapc.ram     ? {key:'ram',     label:'RAM',         price:bapc.ram.price}     : null,
+    bapc.cooler  ? {key:'cooler',  label:'Cooler',      price:bapc.cooler.price}  : null,
+    bapc.psu     ? {key:'psu',     label:'PSU',         price:bapc.psu.price}     : null,
     bapc.storage ? {key:'storage', label:`Storage ×${bapc.storageQty}`, price:bapc.storage.price * bapc.storageQty} : null,
   ].filter(Boolean);
 
@@ -2984,14 +2984,14 @@ function renderBapcCostTable(){
 
 function updateBapcTotals(){
   const rows = [
-    bapc.case    ? {key:'case',    price:bapc.case.price}                              : null,
-    bapc.cpu     ? {key:'cpu',     price:(bapc.cpu.price != null ? bapc.cpu.price : (CPU_PRICES[bapc.cpu.name] || 200))}  : null,
-    bapc.mobo    ? {key:'mobo',    price:bapc.mobo.price}                              : null,
-    bapc.gpu     ? {key:'gpu',     price:(bapc.gpu.price != null ? bapc.gpu.price : (GPU_PRICES[bapc.gpu.name] || 300))}  : null,
-    bapc.ram     ? {key:'ram',     price:bapc.ram.price || 60}                         : null,
-    bapc.cooler  ? {key:'cooler',  price:bapc.cooler.price}                            : null,
-    bapc.psu     ? {key:'psu',     price:bapc.psu.price}                               : null,
-    bapc.storage ? {key:'storage', price:bapc.storage.price * bapc.storageQty}         : null,
+    bapc.case    ? {key:'case',    price:bapc.case.price}                       : null,
+    bapc.cpu     ? {key:'cpu',     price:bapc.cpu.price}                        : null,
+    bapc.mobo    ? {key:'mobo',    price:bapc.mobo.price}                       : null,
+    bapc.gpu     ? {key:'gpu',     price:bapc.gpu.price}                        : null,
+    bapc.ram     ? {key:'ram',     price:bapc.ram.price}                        : null,
+    bapc.cooler  ? {key:'cooler',  price:bapc.cooler.price}                     : null,
+    bapc.psu     ? {key:'psu',     price:bapc.psu.price}                        : null,
+    bapc.storage ? {key:'storage', price:bapc.storage.price * bapc.storageQty}  : null,
   ].filter(Boolean);
 
   let subtotal = 0;
@@ -3006,7 +3006,6 @@ function updateBapcTotals(){
   const $tot = $('#bapcTotalCell');
   if($tot) $tot.textContent = '$' + subtotal.toLocaleString();
 
-  /* Performance score — needs CPU + GPU + RAM */
   let totalStr = '—';
   if(bapc.cpu && bapc.gpu && bapc.ram){
     const cpuScore = clamp(Math.round(bapc.cpu.mult * 42), 5, 100);
@@ -3017,7 +3016,6 @@ function updateBapcTotals(){
   const $score = $('#bapcScore');
   if($score) $score.textContent = totalStr;
 
-  /* FPS per dollar — needs CPU + GPU + RAM + a subtotal */
   let fpsStr = '—';
   if(bapc.cpu && bapc.gpu && bapc.ram && subtotal > 0){
     let fpsSum = 0;
@@ -3093,14 +3091,14 @@ function renderBuildAPC(){
   renderBapcWarnings();
 
   // Read current selections — do NOT auto-select anything
-  bapc.case    = ($('#bapcCase')    && $('#bapcCase').value)    ? CASES[+$('#bapcCase').value]                : null;
+  bapc.case    = ($('#bapcCase')    && $('#bapcCase').value)    ? CASES[+$('#bapcCase').value]               : null;
   bapc.cpu     = ($('#bapcCpu')     && $('#bapcCpu').value)     ? findCpu($('#bapcCpu').value)               : null;
   bapc.gpu     = ($('#bapcGpu')     && $('#bapcGpu').value)     ? findGpu($('#bapcGpu').value)               : null;
   bapc.ram     = ($('#bapcRam')     && $('#bapcRam').value)     ? findRamByLabel($('#bapcRam').value)        : null;
   bapc.mobo    = ($('#bapcMobo')    && $('#bapcMobo').value)    ? MOTHERBOARDS[+$('#bapcMobo').value]        : null;
   bapc.cooler  = ($('#bapcCooler')  && $('#bapcCooler').value)  ? COOLERS[+$('#bapcCooler').value]           : null;
   bapc.psu     = ($('#bapcPsu')     && $('#bapcPsu').value)     ? PSUS[+$('#bapcPsu').value]                 : null;
-  bapc.storage = ($('#bapcStorage') && $('#bapcStorage').value) ? STORAGE_EXTENDED[+$('#bapcStorage').value] : null;
+  bapc.storage = ($('#bapcStorage') && $('#bapcStorage').value) ? STORAGE_TYPES[+$('#bapcStorage').value]    : null;
   bapc.storageQty = +($('#bapcStorageQty') ? $('#bapcStorageQty').value : 0) || 0;
 
   renderBapcSpecList();
@@ -3142,7 +3140,7 @@ function renderBuildAPC(){
     } else if(id === 'bapcPsu'){
       bapc.psu = PSUS[+e.target.value] || PSUS[0];
     } else if(id === 'bapcStorage'){
-      bapc.storage = STORAGE_EXTENDED[+e.target.value] || STORAGE_EXTENDED[0];
+      bapc.storage = STORAGE_TYPES[+e.target.value] || STORAGE_TYPES[0];
     } else if(id === 'bapcStorageQty'){
       setBapcStorageQty(+e.target.value);
     }
@@ -3171,7 +3169,7 @@ function renderBuildAPC(){
         bapc.cpu = null; bapc.gpu = null; bapc.ram = null;
         bapc.cooler = COOLERS[0];
         bapc.psu = PSUS[0];
-        bapc.storage = STORAGE_EXTENDED[0];
+        bapc.storage = null;
         bapc.storageQty = 1;
         bapc.prices = {};
         ['bapcCase','bapcCpu','bapcGpu','bapcRam','bapcCooler','bapcPsu','bapcStorage'].forEach(id=>{
