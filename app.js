@@ -108,6 +108,14 @@ const $ = (sel, root=document)=>root.querySelector(sel);
 const $$ = (sel, root=document)=>Array.from(root.querySelectorAll(sel));
 const fmt = n => n.toLocaleString();
 const clamp = (n,min,max)=>Math.min(max,Math.max(min,n));
+/* ----------------------------------------------------------------
+   Simulator sandbox — must be declared before boot() runs.
+   ---------------------------------------------------------------- */
+const sim = {
+  build: null,       // sandbox build (null until seeded)
+  analysis: null,    // result of analyzeBuild(sim.build)
+  before: null       // baseline analysis (analyzeBuild of the ORIGINAL build)
+};
 
 /* ================================================================
    COMPONENT SORT HELPERS — auto-detect brand from name
@@ -3935,11 +3943,6 @@ $('#runCompare').addEventListener('click', runCompareWithSkeleton);
      - state is NEVER touched during simulation
      - "Save as My Build" is the only path that commits
    ================================================================ */
-const sim = {
-  build: null,       // sandbox build (null until seeded)
-  analysis: null,    // result of analyzeBuild(sim.build)
-  before: null       // baseline analysis (analyzeBuild of the ORIGINAL build)
-};
 
 /* ----------------------------------------------------------------
    Deep clone
