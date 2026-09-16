@@ -3881,10 +3881,35 @@ $('#runCompare').addEventListener('click', runCompareWithSkeleton);
       if(el) el.scrollIntoView({ block: 'nearest' });
     }
 
-    // If the select's value changes externally (JS), sync the input
-    const originalDescriptor = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
-    // (no-op: the MutationObserver handles option changes; value changes via JS still work
-    //  because we read from select.value on focus/blur)
+    // Expose a sync method so external code can force the input to
+    // re-read the select's current value (needed after programmatic
+    // innerHTML + value assignment, which don't trigger MutationObserver).
+    select._comboboxSync = function(){
+      input.value = getDisplayValue(select);
+    };
+
+    // Also patch the native .value setter so JS assignments auto-sync.
+    // This makes ANY code that does `select.value = "x"` update the visible input.
+    try {
+      const proto = HTMLSelectElement.prototype;
+      const valueDescriptor = Object.getOwnPropertyDescriptor(proto, 'value');
+      if(valueDescriptor && valueDescriptor.set && !proto._comboboxPatched){
+        proto._comboboxPatched = true;
+        Object.defineProperty(proto, 'value', {
+          configurable: true,
+          enumerable: valueDescriptor.enumerable,
+          get: valueDescriptor.get,
+          set: function(v){
+            valueDescriptor.set.call(this, v);
+            if(typeof this._comboboxSync === 'function'){
+              this._comboboxSync();
+            }
+          }
+        });
+      }
+    } catch(e){
+      // Silent — this is a nicety, not a requirement
+    }
   }
 
   function escapeHtml(s){
@@ -3929,11 +3954,12 @@ function simSeed(){
 
 /* ---------- Populate the four comboboxes with sandbox values ---------- */
 function simPopulateSelects(){
-  const $cpu = $('#simCpu');
-  const $gpu = $('#simGpu');
-  const $ram = $('#simRam');
-  const $stg = $('#simStorage');
-  if(!$cpu || !$gpu || !$ram || !$stg) return;
+  const $cpu  = $('#simCpu');
+  const $gpu  = $('#simGpu');
+  const $ram  = $('#simRam');
+  const $mobo = $('#simMobo');
+  const $stg  = $('#simStorage');
+  if(!$cpu || !$gpu || !$ram || !$mobo || !$stg) return;
 
   const b = sim.build || state.build || {};
 
@@ -3942,6 +3968,12 @@ function simPopulateSelects(){
   $cpu.innerHTML = `<option value="" disabled>—</option>` +
     allCpuList.map(c => `<option value="${c.name}">${c.name} · ${c.cores}</option>`).join('');
   if(b.cpu) $cpu.value = b.cpu;
+
+  // Motherboard
+  const allMoboList = sortMobos(MOTHERBOARDS);
+  $mobo.innerHTML = `<option value="" disabled>—</option>` +
+    allMoboList.map(m => `<option value="${m.name}">${m.name} · ${m.socket} · ${m.form}</option>`).join('');
+  if(b.mobo) $mobo.value = b.mobo;
 
   // GPU
   const allGpuList = sortGpus(allGpus());
@@ -3972,6 +4004,11 @@ function simPopulateSelects(){
     STORAGE_TYPES.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
   const firstStg = b.storages && b.storages[0];
   if(firstStg && firstStg.type) $stg.value = firstStg.type;
+
+  // Belt-and-suspenders: force the comboboxes to sync their display
+  [ $cpu, $gpu, $ram, $mobo, $stg ].forEach(sel => {
+    if(sel && typeof sel._comboboxSync === 'function') sel._comboboxSync();
+  });
 }
 
 /* ---------- Render the current build list (left column) ---------- */
@@ -4007,6 +4044,7 @@ function simReadOverrides(){
 
   sim.build.cpu = $('#simCpu').value || sim.build.cpu;
   sim.build.gpu = $('#simGpu').value || sim.build.gpu;
+  if($('#simMobo') && $('#simMobo').value) sim.build.mobo = $('#simMobo').value;
 
   const ramVal = $('#simRam').value;
   if(ramVal){
