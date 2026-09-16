@@ -2090,31 +2090,37 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
             <p>Try hypothetical upgrades. Nothing changes in your real build until you save.</p>
           </div>
           <div class="flex" style="gap:.5rem;">
-            <button class="btn btn-ghost" id="simRevertBtn"><i class="fas fa-arrow-uturn-left"></i> Revert</button>
-            <button class="btn btn-primary" id="simSaveBtn"><i class="fas fa-save"></i> Save as My Build</button>
+            <button class="btn btn-ghost" id="simRevertBtn" disabled><i class="fas fa-arrow-uturn-left"></i> Revert</button>
+            <button class="btn btn-primary" id="simSaveBtn" disabled><i class="fas fa-save"></i> Save as My Build</button>
           </div>
         </div>
 
+        <!-- State 1: no build configured -->
         <div class="card" id="simEmptyState" style="display:none;">
           <div class="empty">
-            <i class="fas fa-flask"></i>
-            <p>You need to configure a PC first before you can simulate upgrades.</p>
+            <i class="fas fa-triangle-exclamation" style="color:var(--warn);"></i>
+            <p>Configure your PC in <strong>My PC</strong> first. There's nothing to simulate until you have a build.</p>
             <button class="btn btn-primary mt-2" onclick="navigate('mypc')">
               <i class="fas fa-bolt"></i> Configure My PC
             </button>
           </div>
         </div>
 
+        <!-- State 2 & 3: simulator -->
         <div id="simMain" style="display:none;">
 
           <div class="grid grid-3 mb-3">
+
+            <!-- LEFT: current build (read-only, real build) -->
             <div class="card">
               <div class="card-header">
                 <div class="card-title"><i class="fas fa-desktop"></i> Current build</div>
+                <span class="card-sub">Your real PC</span>
               </div>
               <div id="simCurrentList" style="display:flex;flex-direction:column;gap:.55rem;"></div>
             </div>
 
+            <!-- RIGHT: what-if panel -->
             <div class="card" style="grid-column:span 2;">
               <div class="card-header">
                 <div class="card-title"><i class="fas fa-flask"></i> What if you swapped…</div>
@@ -2124,10 +2130,6 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
               <div class="bapc-field">
                 <label>CPU</label>
                 <select id="simCpu"></select>
-              </div>
-              <div class="bapc-field">
-                <label>Motherboard</label>
-                <select id="simMobo"></select>
               </div>
               <div class="bapc-field">
                 <label>GPU</label>
@@ -2144,6 +2146,7 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
             </div>
           </div>
 
+          <!-- Result card -->
           <div class="card" id="simResult">
             <div class="empty">
               <i class="fas fa-flask"></i>
