@@ -1854,6 +1854,82 @@ function runCompare(){
 }
 
 /* ----------------------------------------------------------------
+   Compare — runs the analysis with a brief skeleton phase so the
+   user perceives real compute work.
+   ---------------------------------------------------------------- */
+function runCompareWithSkeleton(){
+  const result = $('#compareResult');
+  if(!result) return;
+
+  // Basic validations first (instant, no skeleton needed)
+  const aCpu = $('#cmpACpu').value;
+  const aGpu = $('#cmpAGpu').value;
+  const aRam = $('#cmpARam').value;
+  const bCpu = $('#cmpBCpu').value;
+  const bGpu = $('#cmpBGpu').value;
+  const bRam = $('#cmpBRam').value;
+
+  if(!aCpu || !aGpu || !aRam || !bCpu || !bGpu || !bRam){
+    result.innerHTML = `
+      <div class="empty" style="padding:2.5rem 1rem;">
+        <i class="fas fa-triangle-exclamation" style="color:var(--warn);"></i>
+        <p>Fill in all six fields — CPU, GPU, and RAM for both Build A and Build B — then hit Compare.</p>
+      </div>`;
+    return;
+  }
+  if(aCpu === bCpu && aGpu === bGpu && aRam === bRam){
+    result.innerHTML = `
+      <div class="empty" style="padding:2.5rem 1rem;">
+        <i class="fas fa-equals" style="color:var(--warn);"></i>
+        <p>Build A and Build B are identical. Change at least one component to see a comparison.</p>
+      </div>`;
+    return;
+  }
+
+  // --- Skeleton phase ---
+  result.innerHTML = `
+    <div class="compare-skeleton">
+      <div class="grid grid-2 mb-3">
+        <div style="background:var(--surface-2);padding:1.25rem;border-radius:var(--radius-sm);">
+          <div class="skeleton skeleton-line w-40 mb-2"></div>
+          <div class="skeleton skeleton-line w-80"></div>
+          <div class="skeleton skeleton-line w-60"></div>
+          <div class="skeleton skeleton-line w-80 mb-2"></div>
+          <div class="skeleton" style="height:44px;width:80px;border-radius:8px;"></div>
+        </div>
+        <div style="background:var(--surface-2);padding:1.25rem;border-radius:var(--radius-sm);">
+          <div class="skeleton skeleton-line w-40 mb-2"></div>
+          <div class="skeleton skeleton-line w-80"></div>
+          <div class="skeleton skeleton-line w-60"></div>
+          <div class="skeleton skeleton-line w-80 mb-2"></div>
+          <div class="skeleton" style="height:44px;width:80px;border-radius:8px;"></div>
+        </div>
+      </div>
+
+      <div style="background:var(--surface-2);padding:1.5rem;border-radius:var(--radius-sm);margin-bottom:1.5rem;">
+        <div class="skeleton skeleton-line w-40" style="margin-bottom:1rem;"></div>
+        <div class="skeleton skeleton-bar" style="margin-bottom:1rem;"></div>
+        <div class="skeleton skeleton-bar" style="margin-bottom:1rem;"></div>
+        <div class="skeleton skeleton-bar"></div>
+      </div>
+
+      <div class="skeleton skeleton-block"></div>
+    </div>
+  `;
+
+  // --- Compute + render after a brief delay ---
+  setTimeout(() => {
+    runCompare();
+    // Add a fade-in class so the swap is smooth
+    const fresh = $('#compareResult');
+    if(fresh){
+      fresh.classList.add('compare-result-fadein');
+      setTimeout(() => fresh.classList.remove('compare-result-fadein'), 500);
+    }
+  }, 420);
+}
+
+/* ----------------------------------------------------------------
    ADVISOR
    ---------------------------------------------------------------- */
 $$('#advisorGoals button').forEach(btn=>btn.addEventListener('click', ()=>{
@@ -3578,7 +3654,7 @@ function stopRecentTimer(){
   if(recentTimer){ clearInterval(recentTimer); recentTimer = null; }
 }
 
-$('#runCompare').addEventListener('click', runCompare);
+$('#runCompare').addEventListener('click', runCompareWithSkeleton);
 
 /* ================================================================
    COMBOBOX — typable dropdown component
