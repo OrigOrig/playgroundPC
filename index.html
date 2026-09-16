@@ -1617,6 +1617,7 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
       <div class="nav-section" data-section="tools">Tools <i class="fas fa-chevron-down nav-chevron"></i></div>
       <div class="nav-group" data-group="tools">
         <div class="nav-item" data-page="buildapc"><i class="fas fa-screwdriver-wrench"></i> Build A PC</div>
+        <div class="nav-item" data-page="simulator"><i class="fas fa-flask"></i> Simulator</div>
         <div class="nav-item" data-page="upgrade"><i class="fas fa-arrow-up"></i> Upgrade Path</div>
         <div class="nav-item" data-page="benchmarks"><i class="fas fa-chart-line"></i> Benchmarks</div>
         <div class="nav-item" data-page="advisor"><i class="fas fa-wand-magic-sparkles"></i> PC Advisor</div>
@@ -2078,6 +2079,74 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
         <div class="card">
           <div class="card-header"><div class="card-title"><i class="fas fa-list-check"></i> What to Upgrade First?</div></div>
           <div id="priorityList"><div class="empty"><i class="fas fa-list-check"></i><p>Awaiting analysis.</p></div></div>
+        </div>
+      </section>
+
+      <!-- ============================ SIMULATOR ============================ -->
+      <section class="page" id="page-simulator">
+        <div class="page-header">
+          <div>
+            <h1>Upgrade Simulator</h1>
+            <p>Try hypothetical upgrades. Nothing changes in your real build until you save.</p>
+          </div>
+          <div class="flex" style="gap:.5rem;">
+            <button class="btn btn-ghost" id="simRevertBtn"><i class="fas fa-arrow-uturn-left"></i> Revert</button>
+            <button class="btn btn-primary" id="simSaveBtn"><i class="fas fa-save"></i> Save as My Build</button>
+          </div>
+        </div>
+
+        <div class="card" id="simEmptyState" style="display:none;">
+          <div class="empty">
+            <i class="fas fa-flask"></i>
+            <p>You need to configure a PC first before you can simulate upgrades.</p>
+            <button class="btn btn-primary mt-2" onclick="navigate('mypc')">
+              <i class="fas fa-bolt"></i> Configure My PC
+            </button>
+          </div>
+        </div>
+
+        <div id="simMain" style="display:none;">
+
+          <div class="grid grid-3 mb-3">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><i class="fas fa-desktop"></i> Current build</div>
+              </div>
+              <div id="simCurrentList" style="display:flex;flex-direction:column;gap:.55rem;"></div>
+            </div>
+
+            <div class="card" style="grid-column:span 2;">
+              <div class="card-header">
+                <div class="card-title"><i class="fas fa-flask"></i> What if you swapped…</div>
+                <button class="btn btn-sm btn-primary" id="simApplyBtn"><i class="fas fa-bolt"></i> Simulate</button>
+              </div>
+
+              <div class="bapc-field">
+                <label>CPU</label>
+                <select id="simCpu"></select>
+              </div>
+              <div class="bapc-field">
+                <label>GPU</label>
+                <select id="simGpu"></select>
+              </div>
+              <div class="bapc-field">
+                <label>RAM</label>
+                <select id="simRam"></select>
+              </div>
+              <div class="bapc-field">
+                <label>Storage (main drive)</label>
+                <select id="simStorage"></select>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" id="simResult">
+            <div class="empty">
+              <i class="fas fa-flask"></i>
+              <p>Pick a part above and hit Simulate to see the impact.</p>
+            </div>
+          </div>
+
         </div>
       </section>
 
