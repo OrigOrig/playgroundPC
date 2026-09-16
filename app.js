@@ -3925,3 +3925,617 @@ $('#runCompare').addEventListener('click', runCompareWithSkeleton);
     return escapeHtml(s);
   }
 })();
+
+/* ================================================================
+   UPGRADE SIMULATOR — clean rebuild
+   Sandbox model:
+     - sim.build  is a deep clone of state.build (or null)
+     - sim.analysis is the result of analyzeBuild(sim.build)
+     - state is NEVER touched during simulation
+     - "Save as My Build" is the only path that commits
+   ================================================================ */
+const sim = {
+  build: null,       // sandbox build (null until seeded)
+  analysis: null,    // result of analyzeBuild(sim.build)
+  before: null       // baseline analysis (analyzeBuild of the ORIGINAL build)
+};
+
+/* ----------------------------------------------------------------
+   Deep clone
+   ---------------------------------------------------------------- */
+function simClone(o){
+  return JSON.parse(JSON.stringify(o));
+}
+
+/* ----------------------------------------------------------------
+   Seed the sandbox from the current real build
+   ---------------------------------------------------------------- */
+function simSeed(){
+  const real = state.build || {};
+  if(!real.cpu || !real.gpu){
+    // No real build → sandbox stays null
+    sim.build = null;
+    sim.analysis = null;
+    sim.before = null;
+    return;
+  }
+  sim.build = simClone(real);
+  sim.before = analyzeBuild(real);
+  sim.analysis = null;
+}
+
+/* ----------------------------------------------------------------
+   Populate the four comboboxes with sandbox values
+   ---------------------------------------------------------------- */
+function simPopulateSelects(){
+  const $cpu = $('#simCpu');
+  const $gpu = $('#simGpu');
+  const $ram = $('#simRam');
+  const $stg = $('#simStorage');
+  if(!$cpu || !$gpu || !$ram || !$stg) return;
+
+  const b = sim.build || {};
+
+  // CPU
+  const cpus = sortCpus(allCpus());
+  $cpu.innerHTML = `<option value="" disabled>—</option>` +
+    cpus.map(c => `<option value="${c.name}">${c.name} · ${c.cores}</option>`).join('');
+  if(b.cpu) $cpu.value = b.cpu;
+
+  // GPU
+  const gpus = sortGpus(allGpus());
+  $gpu.innerHTML = `<option value="" disabled>—</option>` +
+    gpus.map(g => `<option value="${g.name}">${g.name} · ${g.vram}GB</option>`).join('');
+  if(b.gpu) $gpu.value = b.gpu;
+
+  // RAM
+  const seen = new Set();
+  const ramRows = [];
+  RAMS.forEach(r => {
+    const key = `${r.capacity}-${r.type}`;
+    if(seen.has(key)) return;
+    seen.add(key);
+    ramRows.push(r);
+  });
+  $ram.innerHTML = `<option value="" disabled>—</option>` +
+    ramRows.map(r => `<option value="${r.capacity}GB ${r.type}">${r.capacity}GB ${r.type}</option>`).join('');
+  if(b.ramCapacity && b.ramType){
+    $ram.value = `${b.ramCapacity}GB ${b.ramType}`;
+  }
+
+  // Storage
+  $stg.innerHTML = `<option value="" disabled>—</option>` +
+    STORAGE_TYPES.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+  const firstStg = b.storages && b.storages[0];
+  if(firstStg && firstStg.type) $stg.value = firstStg.type;
+
+  // Belt-and-suspenders: sync combobox display
+  [$cpu, $gpu, $ram, $stg].forEach(sel => {
+    if(sel && typeof sel._comboboxSync === 'function') sel._comboboxSync();
+  });
+}
+
+/* ----------------------------------------------------------------
+   Left column: render current (real) build
+   ---------------------------------------------------------------- */
+function simRenderCurrentList(){
+  const el = $('#simCurrentList');
+  if(!el) return;
+
+  const b = state.build || {};
+  const ramLabel = (b.ramCapacity && b.ramType) ? `${b.ramCapacity}GB ${b.ramType}` : '—';
+  const stgLabel = (b.storages && b.storages[0] && b.storages[0].type) || '—';
+
+  const rows = [
+    { icon:'fa-microchip',           label:'CPU',     value: b.cpu || '—' },
+    { icon:'fa-display',             label:'GPU',     value: b.gpu || '—' },
+    { icon:'fa-memory',              label:'RAM',     value: ramLabel },
+    { icon:'fa-square-poll-vertical',label:'Mobo',    value: b.mobo || '—' },
+    { icon:'fa-hard-drive',          label:'Storage', value: stgLabel }
+  ];
+
+  el.innerHTML = rows.map(r => `
+    <div class="spec-row">
+      <div class="spec-icon"><i class="fas ${r.icon}"></i></div>
+      <div class="spec-info">
+        <div class="label">${r.label}</div>
+        <div class="value">${r.value}</div>
+      </div>
+    </div>`).join('');
+}
+
+/* ----------------------------------------------------------------
+   Read comboboxes into sim.build
+   ---------------------------------------------------------------- */
+function simReadOverrides(){
+  if(!sim.build) return;
+
+  const cpuVal = $('#simCpu').value;
+  if(cpuVal) sim.build.cpu = cpuVal;
+
+  const gpuVal = $('#simGpu').value;
+  if(gpuVal) sim.build.gpu = gpuVal;
+
+  const ramVal = $('#simRam').value;
+  if(ramVal){
+    const m = ramVal.match(/^(\d+)GB\s+(DDR\d)/);
+    if(m){
+      sim.build.ramCapacity = m[1];
+      sim.build.ramType = m[2];
+      sim.build.ram = ramVal;
+    }
+  }
+
+  const stgVal = $('#simStorage').value;
+  if(stgVal){
+    sim.build.storages = sim.build.storages && sim.build.storages.length
+      ? sim.build.storages
+      : [{ type: stgVal, capacity: '1TB' }];
+    sim.build.storages[0].type = stgVal;
+  }
+}
+
+/* ----------------------------------------------------------------
+   Skeleton loader for the result area
+   ---------------------------------------------------------------- */
+function simRenderSkeleton(){
+  const wrap = $('#simResult');
+  if(!wrap) return;
+  wrap.innerHTML = `
+    <div class="compare-skeleton">
+      <div class="card-header">
+        <div class="skeleton skeleton-line w-40"></div>
+      </div>
+      <div class="grid grid-2 mb-3" style="gap:1.5rem;align-items:center;">
+        <div class="skeleton" style="height:180px;border-radius:var(--radius-sm);"></div>
+        <div class="grid grid-2" style="gap:1rem;">
+          <div class="skeleton skeleton-block"></div>
+          <div class="skeleton skeleton-block"></div>
+        </div>
+      </div>
+      <div class="skeleton skeleton-line w-40 mb-2"></div>
+      <div class="skeleton skeleton-bar" style="margin-bottom:1rem;"></div>
+      <div class="skeleton skeleton-bar" style="margin-bottom:1rem;"></div>
+      <div class="skeleton skeleton-bar"></div>
+    </div>`;
+}
+
+/* ----------------------------------------------------------------
+   Render the result card
+   ---------------------------------------------------------------- */
+let simGameSearch = '';
+
+function simRenderResult(before, after){
+  const wrap = $('#simResult');
+  if(!wrap) return;
+  if(!before || !after){
+    wrap.innerHTML = `<div class="empty"><i class="fas fa-flask"></i><p>Pick a part above and hit Simulate to see the impact.</p></div>`;
+    return;
+  }
+
+  const scoreDelta = after.totalScore - before.totalScore;
+  const deltaSign = scoreDelta > 0 ? '+' : '';
+  const deltaClass = scoreDelta > 0 ? 'var(--success)'
+                   : scoreDelta < 0 ? 'var(--danger)'
+                   : 'var(--text-3)';
+
+  const avgOld = before.gameResults.reduce((s,g)=>s+g.fps,0) / before.gameResults.length;
+  const avgNew = after.gameResults.reduce((s,g)=>s+g.fps,0) / after.gameResults.length;
+  const avgDelta = avgNew - avgOld;
+
+  // Cost delta (CPU + GPU only)
+  let costDelta = 0;
+  const oldCpu = getCpuData(state.build.cpu);
+  const newCpu = getCpuData(sim.build.cpu);
+  const oldGpu = getGpuData(state.build.gpu);
+  const newGpu = getGpuData(sim.build.gpu);
+  if(oldCpu && newCpu && oldCpu.name !== newCpu.name) costDelta += (newCpu.price || 0) - (oldCpu.price || 0);
+  if(oldGpu && newGpu && oldGpu.name !== newGpu.name) costDelta += (newGpu.price || 0) - (oldGpu.price || 0);
+
+  // Score ring math
+  const beforePct = before.totalScore / 100;
+  const afterPct  = after.totalScore  / 100;
+  const R = 62;
+  const C = 2 * Math.PI * R;
+
+  // Per-game delta rows (filtered by search)
+  const gameRows = after.gameResults.map(g => {
+    const oldG = before.gameResults.find(x => x.name === g.name);
+    const oldFps = oldG ? oldG.fps : g.fps;
+    return { name: g.name, oldFps, newFps: g.fps, delta: g.fps - oldFps };
+  }).filter(g => g.delta !== 0);
+
+  gameRows.sort((a,b) => Math.abs(b.delta) - Math.abs(a.delta));
+
+  const search = (simGameSearch || '').trim().toLowerCase();
+  const filtered = search
+    ? gameRows.filter(g => g.name.toLowerCase().includes(search))
+    : gameRows.slice(0, 15);
+
+  // Line chart — Before vs After across CPU / GPU / RAM / Storage
+  const chartPoints = [
+    { label:'CPU',     before: before.cpuScore,     after: after.cpuScore },
+    { label:'GPU',     before: before.gpuScore,     after: after.gpuScore },
+    { label:'RAM',     before: before.ramScore,     after: after.ramScore },
+    { label:'Storage', before: before.storageScore, after: after.storageScore }
+  ];
+  const chartSvg = simLineChartSvg(chartPoints);
+
+  wrap.innerHTML = `
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-chart-line"></i> Simulated result</div>
+      <span class="card-sub">Sandboxed — nothing saved yet</span>
+    </div>
+
+    <div class="grid grid-2 mb-3" style="gap:1.5rem;align-items:center;">
+
+      <div style="display:flex;align-items:center;justify-content:center;gap:1.75rem;">
+        <div style="position:relative;width:150px;height:150px;">
+          <svg width="150" height="150" viewBox="0 0 150 150" style="transform:rotate(-90deg);">
+            <defs>
+              <linearGradient id="simScoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="var(--primary)"/>
+                <stop offset="100%" stop-color="var(--accent)"/>
+              </linearGradient>
+            </defs>
+            <circle cx="75" cy="75" r="${R}" fill="none" stroke="var(--surface-3)" stroke-width="12"/>
+            <circle cx="75" cy="75" r="${R}" fill="none"
+                    stroke="var(--text-3)" stroke-width="12" opacity="0.35"
+                    stroke-dasharray="${C.toFixed(1)}"
+                    stroke-dashoffset="${(C * (1 - beforePct)).toFixed(1)}"
+                    stroke-linecap="round"/>
+            <circle cx="75" cy="75" r="${R}" fill="none"
+                    stroke="url(#simScoreGrad)" stroke-width="12"
+                    stroke-dasharray="${C.toFixed(1)}"
+                    stroke-dashoffset="${(C * (1 - afterPct)).toFixed(1)}"
+                    stroke-linecap="round"/>
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+            <div style="font-size:2.4rem;font-weight:800;letter-spacing:-.03em;line-height:1;">${after.totalScore}</div>
+            <div style="font-size:.7rem;color:var(--text-3);font-weight:600;">/ 100</div>
+            <div style="font-size:.75rem;font-weight:700;color:${deltaClass};margin-top:.3rem;">
+              ${scoreDelta === 0 ? '—' : deltaSign + scoreDelta}
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.3rem;">
+          <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">Before</div>
+          <div style="font-size:1.3rem;font-weight:800;color:var(--text-2);">${before.totalScore}</div>
+          <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-top:.6rem;">After</div>
+          <div style="font-size:1.3rem;font-weight:800;">${after.totalScore}</div>
+        </div>
+      </div>
+
+      <div class="grid grid-2" style="gap:1rem;">
+        <div class="card-soft" style="background:var(--surface-2);padding:1rem;border-radius:var(--radius-sm);">
+          <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700;">Avg FPS</div>
+          <div style="font-size:1.6rem;font-weight:800;line-height:1;color:${avgDelta>=0?'var(--success)':'var(--danger)'};">
+            ${avgDelta >= 0 ? '+' : ''}${avgDelta.toFixed(1)}
+          </div>
+          <div style="font-size:.78rem;font-weight:600;color:var(--text-3);margin-top:.3rem;">
+            ${avgOld.toFixed(0)} → ${avgNew.toFixed(0)} across ${after.gameResults.length} games
+          </div>
+        </div>
+        <div class="card-soft" style="background:var(--surface-2);padding:1rem;border-radius:var(--radius-sm);">
+          <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700;">Cost to upgrade</div>
+          <div style="font-size:1.6rem;font-weight:800;line-height:1;">
+            ${costDelta === 0 ? '—' : (costDelta > 0 ? '+$' : '-$') + Math.abs(costDelta)}
+          </div>
+          <div style="font-size:.78rem;font-weight:600;color:var(--text-3);margin-top:.3rem;">
+            ${costDelta === 0 ? 'no new cost' : 'CPU + GPU only'}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Line chart -->
+    <div class="card-soft" style="background:var(--surface-2);padding:1.5rem;border-radius:var(--radius-sm);margin-bottom:1.5rem;">
+      <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:1rem;">
+        Component score profile
+      </div>
+      ${chartSvg}
+      <div style="display:flex;gap:1.5rem;justify-content:center;margin-top:.75rem;font-size:.72rem;color:var(--text-3);">
+        <span><span style="display:inline-block;width:14px;height:2px;background:var(--text-3);opacity:.6;vertical-align:middle;margin-right:.4rem;"></span>Before</span>
+        <span><span style="display:inline-block;width:14px;height:2px;background:var(--primary);vertical-align:middle;margin-right:.4rem;"></span>After</span>
+      </div>
+    </div>
+
+    <!-- Per-game table with search -->
+    <div class="card-soft" style="background:var(--surface-2);padding:1.25rem;border-radius:var(--radius-sm);">
+      <div class="flex-between mb-2" style="align-items:center;gap:1rem;flex-wrap:wrap;">
+        <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">
+          FPS changes per game
+        </div>
+        <input type="text" id="simGameSearch" placeholder="Search a game…" autocomplete="off"
+               value="${simGameSearch.replace(/"/g,'&quot;')}"
+               style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.45rem .75rem;color:var(--text);font-family:inherit;font-size:.82rem;font-weight:500;min-width:200px;">
+      </div>
+      ${filtered.length === 0 ? `
+        <div class="empty" style="padding:1rem;">
+          <i class="fas fa-search"></i>
+          <p>${search ? `No game matches "${simGameSearch}".` : 'No FPS changes from this swap.'}</p>
+        </div>
+      ` : `
+        <table class="data">
+          <thead>
+            <tr>
+              <th>Game</th>
+              <th style="text-align:right;">Before</th>
+              <th style="text-align:right;">After</th>
+              <th style="text-align:right;">Δ</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filtered.map(g => {
+              const pct = g.oldFps > 0 ? (g.delta / g.oldFps * 100) : 0;
+              const c = g.delta > 0 ? 'var(--success)' : g.delta < 0 ? 'var(--danger)' : 'var(--text-3)';
+              return `
+                <tr>
+                  <td>${g.name}</td>
+                  <td style="text-align:right;color:var(--text-2);">${g.oldFps}</td>
+                  <td style="text-align:right;font-weight:700;">${g.newFps}</td>
+                  <td style="text-align:right;font-weight:700;color:${c};">
+                    ${g.delta > 0 ? '+' : ''}${g.delta}
+                    <span style="font-size:.72rem;opacity:.7;margin-left:.35rem;">(${pct>0?'+':''}${pct.toFixed(0)}%)</span>
+                  </td>
+                </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      `}
+    </div>
+  `;
+
+  // Wire the search input
+  const searchInput = $('#simGameSearch');
+  if(searchInput){
+    searchInput.addEventListener('input', (e) => {
+      simGameSearch = e.target.value;
+      // Re-render just the table body without losing focus
+      const before_ = sim.before;
+      const after_ = sim.analysis;
+      if(before_ && after_){
+        // Capture the current table wrapper and re-render only the table area
+        const tableWrap = searchInput.closest('.card-soft');
+        if(tableWrap){
+          const fresh = simRenderGamesTable(before_, after_, simGameSearch);
+          // Replace the table portion only, keep the header + input
+          const oldTable = tableWrap.querySelector('table, .empty');
+          if(oldTable) oldTable.outerHTML = fresh;
+        }
+      }
+    });
+    // Preserve caret position on re-render
+    searchInput.focus();
+    const v = searchInput.value;
+    searchInput.setSelectionRange(v.length, v.length);
+  }
+}
+
+/* ----------------------------------------------------------------
+   Render ONLY the games table (used by search re-render)
+   ---------------------------------------------------------------- */
+function simRenderGamesTable(before, after, search){
+  const gameRows = after.gameResults.map(g => {
+    const oldG = before.gameResults.find(x => x.name === g.name);
+    const oldFps = oldG ? oldG.fps : g.fps;
+    return { name: g.name, oldFps, newFps: g.fps, delta: g.fps - oldFps };
+  }).filter(g => g.delta !== 0);
+
+  gameRows.sort((a,b) => Math.abs(b.delta) - Math.abs(a.delta));
+
+  const q = (search || '').trim().toLowerCase();
+  const filtered = q ? gameRows.filter(g => g.name.toLowerCase().includes(q)) : gameRows.slice(0, 15);
+
+  if(filtered.length === 0){
+    return `<div class="empty" style="padding:1rem;"><i class="fas fa-search"></i><p>${q ? `No game matches "${search}".` : 'No FPS changes from this swap.'}</p></div>`;
+  }
+
+  return `
+    <table class="data">
+      <thead>
+        <tr>
+          <th>Game</th>
+          <th style="text-align:right;">Before</th>
+          <th style="text-align:right;">After</th>
+          <th style="text-align:right;">Δ</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filtered.map(g => {
+          const pct = g.oldFps > 0 ? (g.delta / g.oldFps * 100) : 0;
+          const c = g.delta > 0 ? 'var(--success)' : g.delta < 0 ? 'var(--danger)' : 'var(--text-3)';
+          return `
+            <tr>
+              <td>${g.name}</td>
+              <td style="text-align:right;color:var(--text-2);">${g.oldFps}</td>
+              <td style="text-align:right;font-weight:700;">${g.newFps}</td>
+              <td style="text-align:right;font-weight:700;color:${c};">
+                ${g.delta > 0 ? '+' : ''}${g.delta}
+                <span style="font-size:.72rem;opacity:.7;margin-left:.35rem;">(${pct>0?'+':''}${pct.toFixed(0)}%)</span>
+              </td>
+            </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+/* ----------------------------------------------------------------
+   SVG line chart — Before vs After
+   ---------------------------------------------------------------- */
+function simLineChartSvg(points){
+  const W = 900, H = 240;
+  const padL = 40, padR = 24, padT = 26, padB = 40;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+  const maxV = 100;
+  const stepX = chartW / (points.length - 1);
+
+  const coordsBefore = points.map((p,i)=>({
+    x: padL + i*stepX,
+    y: padT + (1 - p.before/maxV) * chartH,
+    value: p.before,
+    label: p.label
+  }));
+  const coordsAfter = points.map((p,i)=>({
+    x: padL + i*stepX,
+    y: padT + (1 - p.after/maxV) * chartH,
+    value: p.after
+  }));
+
+  const lineBefore = coordsBefore.map((c,i)=> `${i===0?'M':'L'} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`).join(' ');
+  const lineAfter  = coordsAfter.map((c,i)=>  `${i===0?'M':'L'} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`).join(' ');
+  const areaAfter  = `${lineAfter} L ${coordsAfter[coordsAfter.length-1].x.toFixed(1)} ${(padT+chartH).toFixed(1)} L ${coordsAfter[0].x.toFixed(1)} ${(padT+chartH).toFixed(1)} Z`;
+
+  const grid = [0,25,50,75,100].map(v => {
+    const y = padT + (1 - v/maxV) * chartH;
+    return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="var(--border)" stroke-dasharray="2 3" stroke-width="1"/>`;
+  }).join('');
+
+  const glabels = [0,25,50,75,100].map(v => {
+    const y = padT + (1 - v/maxV) * chartH;
+    return `<text x="${padL-6}" y="${(y+3).toFixed(1)}" text-anchor="end" fill="var(--text-3)" font-size="9" font-weight="600" font-family="Inter,sans-serif">${v}</text>`;
+  }).join('');
+
+  const alabels = coordsBefore.map(c =>
+    `<text x="${c.x.toFixed(1)}" y="${(H-10).toFixed(1)}" text-anchor="middle" fill="var(--text-3)" font-size="10" font-weight="700" font-family="Inter,sans-serif" letter-spacing=".05em">${c.label.toUpperCase()}</text>`
+  ).join('');
+
+  const dotsBefore = coordsBefore.map(c =>
+    `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4" fill="var(--surface)" stroke="var(--text-3)" stroke-width="2" opacity="0.7"/>
+     <text x="${c.x.toFixed(1)}" y="${(c.y-10).toFixed(1)}" text-anchor="middle" fill="var(--text-3)" font-size="10" font-weight="700" font-family="Inter,sans-serif">${c.value}</text>`
+  ).join('');
+
+  const dotsAfter = coordsAfter.map(c =>
+    `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4" fill="var(--surface)" stroke="var(--primary)" stroke-width="2.5"/>
+     <text x="${c.x.toFixed(1)}" y="${(c.y+16).toFixed(1)}" text-anchor="middle" fill="var(--text)" font-size="10" font-weight="800" font-family="Inter,sans-serif">${c.value}</text>`
+  ).join('');
+
+  return `
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;display:block;">
+      <defs>
+        <linearGradient id="simChartGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--primary)" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="var(--primary)" stop-opacity="0.02"/>
+        </linearGradient>
+      </defs>
+      ${grid}
+      ${glabels}
+      <path d="${areaAfter}" fill="url(#simChartGrad)"/>
+      <path d="${lineBefore}" fill="none" stroke="var(--text-3)" stroke-width="2" stroke-dasharray="6 4" opacity="0.7" stroke-linejoin="round"/>
+      <path d="${lineAfter}" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      ${dotsBefore}
+      ${dotsAfter}
+      ${alabels}
+    </svg>`;
+}
+
+/* ----------------------------------------------------------------
+   Simulate action
+   ---------------------------------------------------------------- */
+function simSimulate(){
+  if(!sim.build){ toast('Configure your PC first', 'fa-triangle-exclamation'); return; }
+
+  simReadOverrides();
+
+  // Show skeleton, then compute after a short delay
+  simRenderSkeleton();
+  setTimeout(() => {
+    // Pure — no state touched
+    sim.analysis = analyzeBuild(sim.build);
+    simRenderResult(sim.before, sim.analysis);
+
+    // Enable buttons
+    const r = $('#simRevertBtn'); if(r) r.disabled = false;
+    const s = $('#simSaveBtn');   if(s) s.disabled = false;
+  }, 400);
+}
+
+/* ----------------------------------------------------------------
+   Revert — reset sandbox to real build
+   ---------------------------------------------------------------- */
+function simRevert(){
+  simSeed();
+  simGameSearch = '';
+  simPopulateSelects();
+  simRenderCurrentList();
+  $('#simResult').innerHTML = `<div class="empty"><i class="fas fa-flask"></i><p>Reverted. Pick a part above and hit Simulate to try again.</p></div>`;
+  const r = $('#simRevertBtn'); if(r) r.disabled = true;
+  const s = $('#simSaveBtn');   if(s) s.disabled = true;
+  toast('Reverted to your real build', 'fa-arrow-uturn-left');
+}
+
+/* ----------------------------------------------------------------
+   Save as My Build — the ONLY commit path
+   ---------------------------------------------------------------- */
+function simSave(){
+  if(!sim.build || !sim.analysis){
+    toast('Simulate first, then save', 'fa-triangle-exclamation');
+    return;
+  }
+
+  confirmDialog('Replace your current build with this simulated one? Your My Builds list will not be changed.', () => {
+    // Commit the sandbox to the real build
+    state.build = simClone(sim.build);
+
+    // Persist
+    CK.set('pcp_build', state.build);
+
+    // Re-analyze against the real state (this repopulates state.analysis
+    // and re-renders Home, Build Health, Benchmarks, etc.)
+    analyze();
+
+    // Re-seed the sandbox from the new build
+    simSeed();
+    simGameSearch = '';
+    simPopulateSelects();
+    simRenderCurrentList();
+    $('#simResult').innerHTML = `<div class="empty"><i class="fas fa-circle-check" style="color:var(--success);"></i><p>Saved. Your real build now matches the simulation.</p></div>`;
+
+    const r = $('#simRevertBtn'); if(r) r.disabled = true;
+    const s = $('#simSaveBtn');   if(s) s.disabled = true;
+
+    toast('Build saved', 'fa-save');
+  });
+}
+
+/* ----------------------------------------------------------------
+   Page entry point
+   ---------------------------------------------------------------- */
+function renderSimulatorPage(){
+  // State 1: no real build
+  if(!state.build || !state.build.cpu || !state.build.gpu){
+    $('#simEmptyState').style.display = '';
+    $('#simMain').style.display = 'none';
+    return;
+  }
+  $('#simEmptyState').style.display = 'none';
+  $('#simMain').style.display = '';
+
+  // Seed if the real build has changed since last entry
+  if(!sim.build || !sim.before){
+    simSeed();
+  }
+
+  simPopulateSelects();
+  simRenderCurrentList();
+
+  // Reset the result area if no active simulation
+  if(!sim.analysis){
+    $('#simResult').innerHTML = `<div class="empty"><i class="fas fa-flask"></i><p>Pick a part above and hit Simulate to see the impact.</p></div>`;
+    const r = $('#simRevertBtn'); if(r) r.disabled = true;
+    const s = $('#simSaveBtn');   if(s) s.disabled = true;
+  }
+}
+
+/* ----------------------------------------------------------------
+   Wire the buttons
+   ---------------------------------------------------------------- */
+document.addEventListener('click', (e) => {
+  const t = e.target;
+  if(!t || !t.closest) return;
+  if(t.closest('#simApplyBtn'))  simSimulate();
+  if(t.closest('#simRevertBtn')) simRevert();
+  if(t.closest('#simSaveBtn'))   simSave();
+});
