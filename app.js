@@ -4083,6 +4083,14 @@ function simRunAnalysis(){
   // (analyze() calls CK.set('pcp_build', state.build) — we must not let that stick.)
   const realCookie = CK.get('pcp_build');
 
+  // Intercept CK.set for the duration of the sim so nothing ever writes
+  // a sandbox build to the cookie, even if analyze() is called elsewhere.
+  const originalCKSet = CK.set;
+  CK.set = function(name, value, days){
+    if(name === 'pcp_build') return;   // drop writes during sim
+    return originalCKSet.call(CK, name, value, days);
+  };
+
   // Silence toasts during the run
   const origToast = window.toast;
   window.toast = () => {};
@@ -4101,8 +4109,11 @@ function simRunAnalysis(){
   state.build    = realBuild;
   state.analysis = realAnalysis;
   window.toast   = origToast;
+
+  // Un-patch CK.set BEFORE restoring the cookie, so the restore actually sticks
+  CK.set = originalCKSet;
   if(realCookie){
-    CK.set('pcp_build', realCookie);
+    originalCKSet.call(CK, 'pcp_build', realCookie);
   }
 
   // Also refresh the UI so nothing on the page reflects the sandbox
@@ -4355,14 +4366,31 @@ function simSimulate(){
 function simRunAnalysisForBuild(build){
   const realBuild = state.build;
   const realAnalysis = state.analysis;
+  const realCookie = CK.get('pcp_build');
+
+  // Block any cookie writes during the baseline analyze
+  const originalCKSet = CK.set;
+  CK.set = function(name, value, days){
+    if(name === 'pcp_build') return;
+    return originalCKSet.call(CK, name, value, days);
+  };
+
   state.build = deepClone(build);
   const origToast = window.toast;
   window.toast = () => {};
   try { analyze(); } catch(e){ console.error(e); }
   window.toast = origToast;
+
   const result = state.analysis;
+
+  // Restore everything
   state.build = realBuild;
   state.analysis = realAnalysis;
+  CK.set = originalCKSet;
+  if(realCookie){
+    originalCKSet.call(CK, 'pcp_build', realCookie);
+  }
+
   syncBuildUI();
   renderHome();
   return result;
