@@ -595,36 +595,35 @@ function updateTower(){
   if(labelGpu) labelGpu.textContent = gpuName || '—';
 }
 
-/* ----------------------------------------------------------------
-   ANALYSIS ENGINE
-   ---------------------------------------------------------------- */
-function analyze(){
-  state.build.cpu = $('#cpuSelect').value;
-  state.build.gpu = $('#gpuSelect').value;
-  state.build.ramCapacity = $('#ramCapacity').value;
-  state.build.ramType = $('#ramType').value;
-  state.build.ramSpeed = $('#ramSpeed').value;
-  updateRamString();
-  state.build.psuWatt = $('#psuWatt').value;
-  state.build.psuEff = $('#psuEff').value;
-  state.build.coolerType = $('#coolerType').value;
-  state.build.moboSocket = $('#moboSocket') ? $('#moboSocket').value : state.build.moboSocket;
-  state.build.moboChipset = $('#moboChipset') ? $('#moboChipset').value : state.build.moboChipset;
-  state.build.mobo = $('#moboSelect') ? $('#moboSelect').value : state.build.mobo;
+/* ================================================================
+   ANALYZE BUILD — pure function
+   Takes a build object, returns an analysis object.
+   Has zero side effects: no state writes, no cookie writes,
+   no DOM reads, no rendering.
+   ================================================================ */
+function analyzeBuild(build){
+  // Resolve component data from the build
+  const cpu = getCpuData(build.cpu);
+  const gpu = getGpuData(build.gpu);
 
-  const cpu = getCpuData(state.build.cpu);
-  const gpu = getGpuData(state.build.gpu);
-  const ram = getRamData();
-  const mobo = getMoboData(state.build.mobo);
+  // RAM lookup by capacity + type (the build carries these as strings)
+  const cap = parseInt(build.ramCapacity || '0', 10);
+  const type = build.ramType || '';
+  let ram = RAMS.find(r => r.capacity === cap && r.type === type);
+  if(!ram) ram = RAMS.find(r => r.capacity === 16 && r.type === 'DDR4') || RAMS[0];
+
+  const mobo = getMoboData(build.mobo);
 
   const cpuScore = clamp(Math.round(cpu.mult * 42), 5, 100);
   const gpuScore = clamp(Math.round(gpu.mult * 30), 5, 100);
   const ramScore = clamp(Math.round(ram.mult * 78), 5, 100);
+
+  const storageList = build.storages && build.storages.length ? build.storages : [{ type:'SATA SSD', capacity:'500GB' }];
   const storageScore = (()=>{
-    if(state.build.storages.some(s=>s.type.includes('NVMe Gen5'))) return 100;
-    if(state.build.storages.some(s=>s.type.includes('NVMe Gen4'))) return 92;
-    if(state.build.storages.some(s=>s.type.includes('NVMe'))) return 80;
-    if(state.build.storages.some(s=>s.type.includes('SATA'))) return 65;
+    if(storageList.some(s=>s.type.includes('NVMe Gen5'))) return 100;
+    if(storageList.some(s=>s.type.includes('NVMe Gen4'))) return 92;
+    if(storageList.some(s=>s.type.includes('NVMe')))      return 80;
+    if(storageList.some(s=>s.type.includes('SATA')))      return 65;
     return 40;
   })();
 
@@ -632,9 +631,9 @@ function analyze(){
 
   const moboPower = mobo ? (mobo.chipset.startsWith('X') || mobo.chipset.startsWith('Z') ? 25 : 15) : 0;
   const power = cpu.tdp + gpu.tdp + ram.tdp + moboPower
-              + state.build.storages.reduce((sum,s)=>sum + (STORAGE_TYPES.find(t=>t.name===s.type)?.tdp || 5), 0)
+              + storageList.reduce((sum,s)=>sum + (STORAGE_TYPES.find(t=>t.name===s.type)?.tdp || 5), 0)
               + 75;
-  const psuWatt = +state.build.psuWatt || 0;
+  const psuWatt = +build.psuWatt || 0;
   const psuHeadroom = psuWatt - power;
 
   const cw = cpu.mult, gw = gpu.mult, rw = ram.mult;
@@ -644,15 +643,18 @@ function analyze(){
 
   if(cw < idealCpuForGpu * 0.75) bottlenecks.push({
     component:'CPU', icon:'cpu', severity: cw/idealCpuForGpu < 0.6 ? 'high':'medium',
-    pct: Math.round((1 - cw/idealCpuForGpu)*100), desc:`Your CPU (${cpu.name}) is holding back your GPU (${gpu.name}). Consider a CPU upgrade.`
+    pct: Math.round((1 - cw/idealCpuForGpu)*100),
+    desc:`Your CPU (${cpu.name}) is holding back your GPU (${gpu.name}). Consider a CPU upgrade.`
   });
   if(gw < idealGpuForCpu * 0.75) bottlenecks.push({
     component:'GPU', icon:'gpu', severity: gw/idealGpuForCpu < 0.6 ? 'high':'medium',
-    pct: Math.round((1 - gw/idealGpuForCpu)*100), desc:`Your GPU (${gpu.name}) is the main limiter in most games.`
+    pct: Math.round((1 - gw/idealGpuForCpu)*100),
+    desc:`Your GPU (${gpu.name}) is the main limiter in most games.`
   });
   if(rw < 0.95) bottlenecks.push({
     component:'RAM', icon:'ram', severity: rw < 0.85 ? 'high':'medium',
-    pct: Math.round((1 - rw)*100), desc:`${ram.capacity}GB is limited for modern titles. 16GB+ recommended.`
+    pct: Math.round((1 - rw)*100),
+    desc:`${ram.capacity}GB is limited for modern titles. 16GB+ recommended.`
   });
 
   const gameResults = GAMES.map(g=>{
@@ -671,21 +673,47 @@ function analyze(){
     return {...g, fps:finalFps, low, high, quality, qclass, confidence: ci<0.08?'High':ci<0.11?'Medium':'Low'};
   });
 
-  state.analysis = {
+  return {
     cpu, gpu, ram, mobo, cpuScore, gpuScore, ramScore, storageScore, totalScore,
     power, psuWatt, psuHeadroom,
     bottlenecks, gameResults
   };
+}
 
+/* ================================================================
+   ANALYZE — state wrapper
+   Reads from the DOM, updates state.build, calls analyzeBuild(),
+   writes state.analysis, persists to cookie, renders everything.
+   ================================================================ */
+function analyze(){
+  // Read current selections from My PC dropdowns
+  state.build.cpu        = $('#cpuSelect').value;
+  state.build.gpu        = $('#gpuSelect').value;
+  state.build.ramCapacity= $('#ramCapacity').value;
+  state.build.ramType    = $('#ramType').value;
+  state.build.ramSpeed   = $('#ramSpeed').value;
+  updateRamString();
+  state.build.psuWatt    = $('#psuWatt').value;
+  state.build.psuEff     = $('#psuEff').value;
+  state.build.coolerType = $('#coolerType').value;
+  state.build.moboSocket = $('#moboSocket') ? $('#moboSocket').value : state.build.moboSocket;
+  state.build.moboChipset= $('#moboChipset') ? $('#moboChipset').value : state.build.moboChipset;
+  state.build.mobo       = $('#moboSelect') ? $('#moboSelect').value : state.build.mobo;
+
+  // Compute
+  state.analysis = analyzeBuild(state.build);
+
+  // Persist
   CK.set('pcp_build', state.build);
 
+  // Render everything
   updateTower();
   renderHome();
   renderBuildHealth();
   renderBenchmarksPage();
   if($('#page-upgrade').classList.contains('active')) renderUpgradePage();
   if($('#page-compare').classList.contains('active')) runCompare();
-  toast('Analysis complete — '+totalScore+'/100','fa-bolt');
+  toast('Analysis complete — ' + state.analysis.totalScore + '/100', 'fa-bolt');
 }
 $('#analyzeBtn').addEventListener('click', analyze);
 $('#resetBuildBtn').addEventListener('click', ()=>{
