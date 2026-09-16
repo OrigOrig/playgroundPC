@@ -1551,6 +1551,45 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
   position:relative;
   z-index:100;
 }
+/* ============================================================
+   SKELETON LOADER — for Compare
+   ============================================================ */
+.skeleton{
+  background:linear-gradient(
+    90deg,
+    var(--surface-2) 0%,
+    var(--surface-3) 40%,
+    var(--surface-2) 80%
+  );
+  background-size:200% 100%;
+  animation:skeletonShimmer 1.4s ease-in-out infinite;
+  border-radius:6px;
+}
+@keyframes skeletonShimmer{
+  0%   { background-position:200% 0; }
+  100% { background-position:-200% 0; }
+}
+.skeleton-line{
+  height:12px;
+  margin-bottom:.5rem;
+}
+.skeleton-line.w-60{ width:60%; }
+.skeleton-line.w-40{ width:40%; }
+.skeleton-line.w-80{ width:80%; }
+.skeleton-block{
+  height:90px;
+  border-radius:var(--radius-sm);
+}
+.skeleton-bar{
+  height:8px;
+  border-radius:4px;
+}
+.compare-skeleton{
+  animation:fadeIn 200ms ease;
+}
+.compare-result-fadein{
+  animation:fadeIn 400ms ease;
+}
 </style>
 </head>
 <body>
