@@ -323,7 +323,7 @@ function hexToRgba(hex, a){
 /* ----------------------------------------------------------------
    ROUTER
    ---------------------------------------------------------------- */
-const VALID_PAGES = ['home','mypc','games','compare','buildapc','upgrade','benchmarks','advisor','builds','settings'];
+const VALID_PAGES = ['home','mypc','games','compare','buildapc','upgrade','simulator','benchmarks','advisor','builds','settings'];
 
 function renderPage(page){
   $$('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.page===page));
@@ -335,6 +335,7 @@ function renderPage(page){
   if(page==='upgrade') renderUpgradePage();
   if(page==='compare') populateCompareSelects();
   if(page==='buildapc') renderBuildAPC();
+  if(page==='simulator') renderSimulatorPage();
 }
 
 function navigate(page, push){
