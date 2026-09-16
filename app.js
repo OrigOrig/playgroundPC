@@ -4071,37 +4071,41 @@ function simReadOverrides(){
 function simRunAnalysis(){
   if(!sim.build || !sim.build.cpu || !sim.build.gpu) return null;
 
-  // Save the real state
-  const realBuild = state.build;
+  // Save pristine copies of the real state
+  const realBuild    = state.build;
   const realAnalysis = state.analysis;
 
-  // Swap in the sandbox
-  state.build = sim.build;
+  // Deep-clone the sandbox so analyze()'s mutations to state.build
+  // don't corrupt sim.build.
+  const sandboxCopy = deepClone(sim.build);
 
-  // Silence any toasts that analyze() might fire
+  // Save the current cookie value so we can restore it after analyze()
+  // (analyze() calls CK.set('pcp_build', state.build) — we must not let that stick.)
+  const realCookie = CK.get('pcp_build');
+
+  // Silence toasts during the run
   const origToast = window.toast;
   window.toast = () => {};
 
+  let result = null;
   try {
+    // Swap in the sandbox clone
+    state.build = sandboxCopy;
     analyze();
+    result = state.analysis;
   } catch(e){
     console.error('Sim analyze failed:', e);
-    window.toast = origToast;
-    state.build = realBuild;
-    state.analysis = realAnalysis;
-    return null;
   }
 
-  window.toast = origToast;
-
-  // Capture the result
-  const result = state.analysis;
-
-  // Restore the real state
-  state.build = realBuild;
+  // Restore the real state — both reference and cookie
+  state.build    = realBuild;
   state.analysis = realAnalysis;
+  window.toast   = origToast;
+  if(realCookie){
+    CK.set('pcp_build', realCookie);
+  }
 
-  // Also restore the My PC / Home UI to the real build so nothing leaks
+  // Also refresh the UI so nothing on the page reflects the sandbox
   syncBuildUI();
   renderHome();
   renderBuildHealth();
