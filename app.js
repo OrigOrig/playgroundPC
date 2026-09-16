@@ -3886,6 +3886,7 @@ $('#runCompare').addEventListener('click', runCompareWithSkeleton);
     select._comboboxSync = function(){
       input.value = getDisplayValue(select);
     };
+  }
 
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, c => ({
