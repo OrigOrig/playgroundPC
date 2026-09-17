@@ -607,6 +607,30 @@ body::before{
 .meter-value{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;}
 
 /* ============================================================
+   GAMES PAGINATION
+   ============================================================ */
+.games-pagination{
+  animation:fadeIn 200ms ease;
+}
+.games-pagination button:disabled{
+  opacity:.4;
+  cursor:not-allowed;
+}
+.games-pagination button:disabled:hover{
+  background:var(--surface-2);
+  border-color:var(--border);
+  transform:none;
+}
+.games-pagination input[type="number"]::-webkit-outer-spin-button,
+.games-pagination input[type="number"]::-webkit-inner-spin-button{
+  -webkit-appearance:none;
+  margin:0;
+}
+.games-pagination input[type="number"]{
+  -moz-appearance:textfield;
+}
+
+/* ============================================================
    GAME CARDS
    ============================================================ */
 .game-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;}
