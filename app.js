@@ -1450,6 +1450,41 @@ function renderBuildHealth(){
         <div class="spec-info"><div class="value">${c.label}</div><div class="label" style="text-transform:none;letter-spacing:0;font-size:.72rem;">${c.desc}</div></div>
       </div>`).join('')}
   `;
+     renderMyPcUpgradePreview();
+}
+
+function renderMyPcUpgradePreview(){
+  const wrap = $('#myPcUpgradePreview');
+  if(!wrap) return;
+
+  if(!state.analysis){
+    wrap.innerHTML = `<div class="empty"><i class="fas fa-arrow-up"></i><p>Analyze your build to see upgrade suggestions.</p></div>`;
+    return;
+  }
+
+  const suggestions = computeUpgradeSuggestions().slice(0, 3);
+  if(suggestions.length === 0){
+    wrap.innerHTML = `<div class="empty"><i class="fas fa-circle-check" style="color:var(--success);"></i><p>No obvious upgrades. Your build is well-balanced.</p></div>`;
+    return;
+  }
+
+  wrap.innerHTML = suggestions.map(s => `
+    <div class="bn-item" style="margin-bottom:.5rem;">
+      <div class="bn-icon" style="background:color-mix(in srgb,var(--primary) 15%,transparent);color:var(--primary);">
+        <i class="fas fa-${s.icon}"></i>
+      </div>
+      <div class="bn-body">
+        <div class="bn-head">
+          <strong>${s.component} → ${s.candidate}</strong>
+          <span>${s.price > 0 ? '$' + s.price : ''}</span>
+        </div>
+        <div class="bn-desc">
+          ${s.scoreDelta > 0 ? '+' + s.scoreDelta + ' score' : ''}
+          ${s.fpsDelta > 0 ? ' · +' + s.fpsDelta.toFixed(0) + ' avg FPS' : ''}
+        </div>
+      </div>
+    </div>
+  `).join('');
 }
 
 /* ----------------------------------------------------------------
@@ -1457,18 +1492,145 @@ function renderBuildHealth(){
    ---------------------------------------------------------------- */
 function renderUpgradePage(){
   const a = state.analysis;
-  if(!a){ $('#fullUpgrade').innerHTML = `<div class="empty"><i class="fas fa-route"></i><p>Analyze your PC first.</p></div>`; return; }
-  $('#fullUpgrade').innerHTML = upgradeTeaserHtml(a, true);
+  if(!a){
+    $('#fullUpgrade').innerHTML = `<div class="empty"><i class="fas fa-route"></i><p>Analyze your PC first.</p></div>`;
+    $('#priorityList').innerHTML = `<div class="empty"><i class="fas fa-list-check"></i><p>Awaiting analysis.</p></div>`;
+    return;
+  }
+
+  // --- Top card: best overall upgrade ---
+  const suggestions = computeUpgradeSuggestions();
+
+  if(suggestions.length === 0){
+    $('#fullUpgrade').innerHTML = `
+      <div class="empty">
+        <i class="fas fa-circle-check" style="color:var(--success);"></i>
+        <p>Your build is already at the top of the range we track. Nothing obvious to upgrade.</p>
+      </div>`;
+    $('#priorityList').innerHTML = `<div class="empty"><i class="fas fa-check"></i><p>No urgent upgrades needed.</p></div>`;
+    return;
+  }
+
+  const best = suggestions[0];
+
+  $('#fullUpgrade').innerHTML = `
+    <!-- Best upgrade callout -->
+    <div style="padding:1.25rem;background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 12%,transparent),color-mix(in srgb,var(--accent) 8%,transparent));border-radius:var(--radius-sm);border-left:3px solid var(--primary);margin-bottom:1.5rem;">
+      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+        <div style="width:48px;height:48px;border-radius:12px;background:var(--surface);display:grid;place-items:center;color:var(--primary);font-size:1.25rem;flex-shrink:0;">
+          <i class="fas fa-${best.icon}"></i>
+        </div>
+        <div style="flex:1;min-width:180px;">
+          <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">Best upgrade for you</div>
+          <div style="font-size:1.15rem;font-weight:800;letter-spacing:-.02em;margin-top:.15rem;">
+            Swap your ${best.component} to <span style="color:var(--primary);">${best.candidate}</span>
+          </div>
+          <div class="text-muted" style="font-size:.82rem;margin-top:.2rem;">
+            ${best.scoreDelta > 0 ? '+' + best.scoreDelta + ' score' : ''}
+            ${best.fpsDelta > 0 ? ' · +' + best.fpsDelta.toFixed(0) + ' avg FPS (' + (best.fpsPercent >= 0 ? '+' : '') + best.fpsPercent.toFixed(0) + '%)' : ''}
+            ${best.price > 0 ? ' · $' + best.price : ''}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Full table -->
+    <table class="data">
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th>Recommended part</th>
+          <th style="text-align:right;">Price</th>
+          <th style="text-align:right;">Score</th>
+          <th style="text-align:right;">Avg FPS</th>
+          <th>Bottleneck after</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${suggestions.map(s => {
+          const scoreClass = s.scoreDelta > 0 ? 'var(--success)' : s.scoreDelta < 0 ? 'var(--danger)' : 'var(--text-3)';
+          const fpsClass = s.fpsDelta > 0 ? 'var(--success)' : s.fpsDelta < 0 ? 'var(--danger)' : 'var(--text-3)';
+          return `
+            <tr>
+              <td><i class="fas fa-${s.icon}" style="color:var(--text-3);margin-right:.5rem;width:14px;"></i>${s.component}</td>
+              <td>
+                <div style="font-weight:600;">${s.candidate}</div>
+                <div class="text-muted" style="font-size:.72rem;">from: ${s.current}</div>
+              </td>
+              <td style="text-align:right;font-weight:600;">${s.price > 0 ? '$' + s.price : '—'}</td>
+              <td style="text-align:right;font-weight:700;color:${scoreClass};">
+                ${s.scoreDelta > 0 ? '+' : ''}${s.scoreDelta}
+              </td>
+              <td style="text-align:right;font-weight:700;color:${fpsClass};">
+                ${s.fpsDelta > 0 ? '+' : ''}${s.fpsDelta.toFixed(1)}
+                <span style="font-size:.72rem;opacity:.7;margin-left:.35rem;">(${s.fpsPercent >= 0 ? '+' : ''}${s.fpsPercent.toFixed(0)}%)</span>
+              </td>
+              <td><span class="pill ${s.bottleneckAfter === '—' ? 'pill-green' : 'pill-gray'}">${s.bottleneckAfter === '—' ? 'Balanced' : s.bottleneckAfter + ' bound'}</span></td>
+            </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+
+  // --- Priority list (bottom card) ---
   const priorities = [];
-  if(a.cpuScore < a.gpuScore - 15) priorities.push({icon:'microchip', label:'CPU upgrade', impact:'High', detail:`Your ${a.cpu.name} is limiting your GPU.`});
-  if(a.gpuScore < 70) priorities.push({icon:'display', label:'GPU upgrade', impact:'High', detail:`Your ${a.gpu.name} is the primary bottleneck in most games.`});
-  if(a.ramScore < 70) priorities.push({icon:'memory', label:'RAM upgrade', impact:'Medium', detail:`${a.ram.capacity}GB is limited for modern titles.`});
-  if(a.storageScore < 70) priorities.push({icon:'hard-drive', label:'Storage upgrade', impact:'Medium', detail:'Upgrading to NVMe will improve loading times.'});
-  if(a.psuHeadroom < 100) priorities.push({icon:'plug', label:'PSU upgrade', impact:'High', detail:'PSU headroom is under 100W. Consider a higher-wattage unit.'});
-  if(priorities.length===0) priorities.push({icon:'circle-check', label:'System is balanced', impact:'—', detail:'No urgent upgrades needed.'});
-  $('#priorityList').innerHTML = priorities.map(p=>`
+
+  // Bottleneck priority
+  if(a.bottlenecks.length > 0){
+    const worst = a.bottlenecks.reduce((x,y) => (x.pct||0) > (y.pct||0) ? x : y);
+    priorities.push({
+      icon: worst.component === 'CPU' ? 'microchip' : worst.component === 'GPU' ? 'display' : 'memory',
+      label: `Fix ${worst.component} bottleneck`,
+      impact: worst.pct > 25 ? 'High' : 'Medium',
+      detail: worst.desc
+    });
+  }
+
+  // PSU priority
+  if(a.psuHeadroom < 100){
+    priorities.push({
+      icon: 'plug',
+      label: 'Upgrade PSU',
+      impact: a.psuHeadroom < 0 ? 'Critical' : 'High',
+      detail: `Only ${a.psuHeadroom}W headroom. Recommend 100W+ for stability.`
+    });
+  }
+
+  // Storage priority
+  if(a.storageScore < 70){
+    priorities.push({
+      icon: 'hard-drive',
+      label: 'Upgrade storage',
+      impact: 'Medium',
+      detail: 'A modern NVMe drive would speed up loading times and free up bandwidth.'
+    });
+  }
+
+  // Cooling priority
+  const coolerOK = !(a.cpu.tdp > 120 && state.build.coolerType === 'Stock cooler');
+  if(!coolerOK){
+    priorities.push({
+      icon: 'fan',
+      label: 'Upgrade cooling',
+      impact: 'High',
+      detail: `${a.cpu.name} runs at ${a.cpu.tdp}W TDP — a stock cooler will throttle.`
+    });
+  }
+
+  if(priorities.length === 0){
+    priorities.push({
+      icon: 'circle-check',
+      label: 'System is balanced',
+      impact: '—',
+      detail: 'No urgent upgrades needed. Any change would be incremental.'
+    });
+  }
+
+  $('#priorityList').innerHTML = priorities.map(p => `
     <div class="bn-item">
-      <div class="bn-icon" style="background:color-mix(in srgb,var(--primary) 15%,transparent);color:var(--primary);"><i class="fas fa-${p.icon}"></i></div>
+      <div class="bn-icon" style="background:color-mix(in srgb,var(--primary) 15%,transparent);color:var(--primary);">
+        <i class="fas fa-${p.icon}"></i>
+      </div>
       <div class="bn-body">
         <div class="bn-head"><strong>${p.label}</strong><span>${p.impact} impact</span></div>
         <div class="bn-desc">${p.detail}</div>
@@ -1476,34 +1638,22 @@ function renderUpgradePage(){
     </div>`).join('');
 }
 function upgradeTeaserHtml(a, full=false){
-  const gpuTier = a.gpu.tier;
-  const paths = {
-    'entry':       {value:'RX 7600', high:'RTX 4070', enthusiast:'RTX 5080'},
-    'mainstream':  {value:'RX 7700 XT', high:'RTX 4070 Super', enthusiast:'RTX 5080'},
-    'performance': {value:'RX 7800 XT', high:'RTX 4080', enthusiast:'RTX 5090'},
-    'enthusiast':  {value:'RTX 4080', high:'RTX 5090', enthusiast:'RTX 5090'},
-    'flagship':    {value:'RTX 5090', high:'RTX 5090', enthusiast:'RTX 5090'}
-  };
-  const p = paths[gpuTier] || paths.mainstream;
+  const suggestions = computeUpgradeSuggestions();
+  if(suggestions.length === 0){
+    return `<div class="empty" style="padding:1rem;"><i class="fas fa-circle-check" style="color:var(--success);"></i><p>Your build is already at the top of the range we track.</p></div>`;
+  }
+  const best = suggestions[0];
   return `
-    <div class="upgrade-path">
-      <div class="up-step current"><i class="fas fa-circle" style="font-size:6px;"></i> Current: ${a.gpu.name}</div>
+    <div class="upgrade-path" style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;">
+      <div class="up-step current"><i class="fas fa-circle" style="font-size:6px;"></i> ${best.current}</div>
       <i class="fas fa-arrow-right up-arrow"></i>
-      <div class="up-step best"><i class="fas fa-star" style="font-size:9px;"></i> Best value: ${p.value}</div>
-      <i class="fas fa-arrow-right up-arrow"></i>
-      <div class="up-step">High-end: ${p.high}</div>
-      <i class="fas fa-arrow-right up-arrow"></i>
-      <div class="up-step">Enthusiast: ${p.enthusiast}</div>
+      <div class="up-step best"><i class="fas fa-star" style="font-size:9px;"></i> ${best.candidate}</div>
+      <span class="text-muted" style="font-size:.8rem;margin-left:.5rem;">
+        ${best.scoreDelta > 0 ? '+' + best.scoreDelta + ' score' : ''}
+        ${best.fpsDelta > 0 ? ' · +' + best.fpsDelta.toFixed(0) + ' avg FPS' : ''}
+        ${best.price > 0 ? ' · $' + best.price : ''}
+      </span>
     </div>
-    <table class="data">
-      <thead><tr><th>Upgrade</th><th>Est. FPS gain</th><th>Cost</th><th>Value</th></tr></thead>
-      <tbody>
-        <tr><td>${p.value}</td><td>+42%</td><td>$</td><td class="stars">★★★★★</td></tr>
-        <tr><td>${p.high}</td><td>+86%</td><td>$$</td><td class="stars">★★★★</td></tr>
-        <tr><td>${p.enthusiast}</td><td>+145%</td><td>$$$$</td><td class="stars">★★★</td></tr>
-      </tbody>
-    </table>
-    ${full?`<p class="text-muted mt-2">Best upgrade per dollar: <strong>GPU — ${p.value} class</strong></p>`:''}
   `;
 }
 
@@ -4543,3 +4693,177 @@ document.addEventListener('click', (e) => {
   if(t.closest('#simRevertBtn')) simRevert();
   if(t.closest('#simSaveBtn'))   simSave();
 });
+
+/* ================================================================
+   UPGRADE SUGGESTIONS
+   Reads the current build, finds real upgrade candidates,
+   and computes the actual delta by running analyzeBuild() on
+   hypothetical swapped builds. Pure — no state writes.
+   ================================================================ */
+
+/* ---------- find the cheapest candidate in a category that beats a threshold ---------- */
+
+function findCpuUpgrade(currentCpu){
+  const current = getCpuData(currentCpu);
+  const currentScore = clamp(Math.round(current.mult * 42), 5, 100);
+  const threshold = currentScore * 1.15;   // +15%
+  const candidates = sortCpus(allCpus())
+    .filter(c => {
+      const s = clamp(Math.round(c.mult * 42), 5, 100);
+      return s >= threshold && c.name !== current.name;
+    })
+    .sort((a, b) => a.price - b.price);
+  return candidates[0] || null;
+}
+
+function findGpuUpgrade(currentGpu){
+  const current = getGpuData(currentGpu);
+  const currentScore = clamp(Math.round(current.mult * 30), 5, 100);
+  const threshold = currentScore * 1.15;
+  const candidates = sortGpus(allGpus())
+    .filter(g => {
+      const s = clamp(Math.round(g.mult * 30), 5, 100);
+      return s >= threshold && g.name !== current.name;
+    })
+    .sort((a, b) => a.price - b.price);
+  return candidates[0] || null;
+}
+
+function findRamUpgrade(currentRam){
+  const cap = parseInt(state.build.ramCapacity || '0', 10);
+  const type = state.build.ramType || '';
+  const current = RAMS.find(r => r.capacity === cap && r.type === type);
+  if(!current) return null;
+  const currentScore = clamp(Math.round(current.mult * 78), 5, 100);
+  const threshold = currentScore * 1.15;
+  const candidates = RAMS
+    .filter(r => {
+      const s = clamp(Math.round(r.mult * 78), 5, 100);
+      const isBigger = (r.capacity > cap) || (r.type > type);
+      return s >= threshold && isBigger;
+    })
+    .sort((a, b) => a.price - b.price);
+  return candidates[0] || null;
+}
+
+function findStorageUpgrade(currentStorageName){
+  const current = STORAGE_TYPES.find(s => s.name === currentStorageName);
+  if(!current) return null;
+  const currentScore = Math.round(current.mult * 100);
+  const threshold = currentScore * 1.15;
+  const candidates = STORAGE_TYPES
+    .filter(s => Math.round(s.mult * 100) >= threshold && s.name !== current.name)
+    .sort((a, b) => a.price - b.price);
+  return candidates[0] || null;
+}
+
+/* ---------- compute the full suggestion list ---------- */
+function computeUpgradeSuggestions(){
+  if(!state.build || !state.build.cpu || !state.build.gpu) return [];
+
+  const baseAnalysis = analyzeBuild(state.build);
+  const baseScore = baseAnalysis.totalScore;
+  const baseAvgFps = baseAnalysis.gameResults.reduce((s,g) => s + g.fps, 0) / baseAnalysis.gameResults.length;
+
+  const suggestions = [];
+
+  // --- CPU candidate ---
+  const cpuUp = findCpuUpgrade(state.build.cpu);
+  if(cpuUp){
+    const hypothetical = { ...state.build, cpu: cpuUp.name, cpuBrand: cpuUp.name.startsWith('Ryzen') ? 'AMD' : 'Intel' };
+    const next = analyzeBuild(hypothetical);
+    const nextAvgFps = next.gameResults.reduce((s,g) => s + g.fps, 0) / next.gameResults.length;
+    const nextBottleneck = next.bottlenecks.length > 0
+      ? next.bottlenecks.reduce((x,y) => (x.pct||0) > (y.pct||0) ? x : y).component
+      : '—';
+    suggestions.push({
+      component: 'CPU',
+      icon: 'microchip',
+      current: state.build.cpu,
+      candidate: cpuUp.name,
+      price: cpuUp.price || 0,
+      scoreDelta: next.totalScore - baseScore,
+      fpsDelta: nextAvgFps - baseAvgFps,
+      fpsPercent: (nextAvgFps - baseAvgFps) / baseAvgFps * 100,
+      bottleneckAfter: nextBottleneck
+    });
+  }
+
+  // --- GPU candidate ---
+  const gpuUp = findGpuUpgrade(state.build.gpu);
+  if(gpuUp){
+    const hypothetical = { ...state.build, gpu: gpuUp.name, gpuBrand: gpuUp.name.startsWith('RTX')||gpuUp.name.startsWith('GTX') ? 'NVIDIA' : gpuUp.name.startsWith('RX')||gpuUp.name.startsWith('Radeon') ? 'AMD' : 'Intel' };
+    const next = analyzeBuild(hypothetical);
+    const nextAvgFps = next.gameResults.reduce((s,g) => s + g.fps, 0) / next.gameResults.length;
+    const nextBottleneck = next.bottlenecks.length > 0
+      ? next.bottlenecks.reduce((x,y) => (x.pct||0) > (y.pct||0) ? x : y).component
+      : '—';
+    suggestions.push({
+      component: 'GPU',
+      icon: 'display',
+      current: state.build.gpu,
+      candidate: gpuUp.name,
+      price: gpuUp.price || 0,
+      scoreDelta: next.totalScore - baseScore,
+      fpsDelta: nextAvgFps - baseAvgFps,
+      fpsPercent: (nextAvgFps - baseAvgFps) / baseAvgFps * 100,
+      bottleneckAfter: nextBottleneck
+    });
+  }
+
+  // --- RAM candidate ---
+  const ramUp = findRamUpgrade(state.build);
+  if(ramUp){
+    const hypothetical = { ...state.build, ramCapacity: String(ramUp.capacity), ramType: ramUp.type };
+    const next = analyzeBuild(hypothetical);
+    const nextAvgFps = next.gameResults.reduce((s,g) => s + g.fps, 0) / next.gameResults.length;
+    const nextBottleneck = next.bottlenecks.length > 0
+      ? next.bottlenecks.reduce((x,y) => (x.pct||0) > (y.pct||0) ? x : y).component
+      : '—';
+    suggestions.push({
+      component: 'RAM',
+      icon: 'memory',
+      current: `${state.build.ramCapacity}GB ${state.build.ramType}`,
+      candidate: `${ramUp.capacity}GB ${ramUp.type}`,
+      price: ramUp.price || 0,
+      scoreDelta: next.totalScore - baseScore,
+      fpsDelta: nextAvgFps - baseAvgFps,
+      fpsPercent: (nextAvgFps - baseAvgFps) / baseAvgFps * 100,
+      bottleneckAfter: nextBottleneck
+    });
+  }
+
+  // --- Storage candidate ---
+  const currentStg = state.build.storages && state.build.storages[0] ? state.build.storages[0].type : null;
+  if(currentStg){
+    const stgUp = findStorageUpgrade(currentStg);
+    if(stgUp){
+      const hypothetical = JSON.parse(JSON.stringify(state.build));
+      hypothetical.storages = [{ type: stgUp.name, capacity: '1TB' }];
+      const next = analyzeBuild(hypothetical);
+      const nextAvgFps = next.gameResults.reduce((s,g) => s + g.fps, 0) / next.gameResults.length;
+      const nextBottleneck = next.bottlenecks.length > 0
+        ? next.bottlenecks.reduce((x,y) => (x.pct||0) > (y.pct||0) ? x : y).component
+        : '—';
+      suggestions.push({
+        component: 'Storage',
+        icon: 'hard-drive',
+        current: currentStg,
+        candidate: stgUp.name,
+        price: stgUp.price || 0,
+        scoreDelta: next.totalScore - baseScore,
+        fpsDelta: nextAvgFps - baseAvgFps,
+        fpsPercent: (nextAvgFps - baseAvgFps) / baseAvgFps * 100,
+        bottleneckAfter: nextBottleneck
+      });
+    }
+  }
+
+  // Compute value ratio and sort best-first
+  suggestions.forEach(s => {
+    s.value = s.price > 0 && s.scoreDelta > 0 ? s.scoreDelta / s.price : 0;
+  });
+  suggestions.sort((a, b) => b.value - a.value);
+
+  return suggestions;
+}
