@@ -798,7 +798,7 @@ const GAMES = [
     banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1064220/header.jpg',
     store:'https://store.steampowered.com/app/1064220/', color:'#0ea5e9'},
   {name:'Halo 4',              genre:'FPS',      base:162, cw:0.42, gw:0.48, rw:0.10, preset:'High', rt:false,
-    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1064280/header.jpg',
+    banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1064273/header.jpg',
     store:'https://store.steampowered.com/app/1064280/', color:'#0ea5e9'},
   {name:'Halo Wars 2',         genre:'Strategy', base:88,  cw:0.50, gw:0.40, rw:0.10, preset:'High', rt:false,
     banner:'https://cdn.cloudflare.steamstatic.com/steam/apps/1000420/header.jpg',
