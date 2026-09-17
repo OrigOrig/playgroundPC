@@ -1283,6 +1283,12 @@ function renderPaginationControls(totalGames, currentPage){
   gamesList.insertAdjacentHTML('beforebegin', html);
   gamesList.insertAdjacentHTML('afterend', html);
 
+  // Give the second (bottom) instance an extra class for spacing
+  const allControls = $$('.games-pagination');
+  if(allControls.length >= 2){
+    allControls[allControls.length - 1].classList.add('bottom');
+  }
+
   // Wire buttons
   $$('.games-pagination').forEach(container => {
     container.querySelectorAll('button[data-page]').forEach(btn => {
