@@ -7,7 +7,7 @@
 
 /* ----------------------------------------------------------------
    COOKIE HELPERS
-   ---------------------------------------------------------------- */
+   ---------------------------------------------------------------- */let state = {
 const CK = {
   set(name, value, days=365){
     const d = new Date();
@@ -91,7 +91,8 @@ let state = {
     defaultQuality:'High'
   },
   savedBuilds: [],
-  analysis: null
+  analysis: null,
+  gamepage: 1
 };
 
 const savedBuild = CK.get('pcp_build');
@@ -337,7 +338,10 @@ function renderPage(page){
   $$('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.page===page));
   $$('.page').forEach(p=>p.classList.toggle('active', p.id === 'page-'+page));
   $('#pages').scrollTop = 0;
-  if(page==='games') renderGamesPage();
+  if(page==='games'){
+    readGamesHashPage();
+    renderGamesPage();
+  }
   if(page==='benchmarks') renderBenchmarksPage();
   if(page==='builds') renderSavedBuilds();
   if(page==='upgrade') renderUpgradePage();
@@ -1157,18 +1161,22 @@ function explainBn(component){
 /* ----------------------------------------------------------------
    RENDER: GAMES PAGE
    ---------------------------------------------------------------- */
+const GAMES_PER_PAGE = 100;
+
 function renderGamesPage(){
   const a = state.analysis;
   if(!a){
     $('#gamesList').innerHTML = `<div class="empty"><i class="fas fa-gamepad"></i><p>Configure your PC first.</p></div>`;
+    renderPaginationControls(0, 1);
     return;
   }
   $('#gamesCountBadge').textContent = a.gameResults.length;
 
   const filter = $('#gameFilterQuality').value;
-  const sort = $('#gameSort').value;
+  const sort   = $('#gameSort').value;
   const target = parseInt(($('#targetFps') && $('#targetFps').value) || '60', 10) || 60;
 
+  // Build the full sorted list
   let list = [...a.gameResults];
   if(filter==='excellent') list = list.filter(g=>g.fps>=144);
   else if(filter==='playable') list = list.filter(g=>g.fps>=30);
@@ -1178,31 +1186,162 @@ function renderGamesPage(){
   else if(sort==='fps-asc') list.sort((x,y)=>x.fps-y.fps);
   else list.sort((x,y)=>x.name.localeCompare(y.name));
 
-  // Favorites float to the top, keeping their relative order within each group
+  // Favorites float to the top
   list.sort((x,y)=>{
     const fx = isFavorite(x.name) ? 0 : 1;
     const fy = isFavorite(y.name) ? 0 : 1;
     return fx - fy;
   });
 
+  // --- Pagination ---
+  const totalPages = Math.max(1, Math.ceil(list.length / GAMES_PER_PAGE));
+  let page = state.gamePage || 1;
+  if(page > totalPages) page = totalPages;
+  if(page < 1) page = 1;
+  state.gamePage = page;
+
+  const start = (page - 1) * GAMES_PER_PAGE;
+  const end   = start + GAMES_PER_PAGE;
+  const pageSlice = list.slice(start, end);
+
+  // --- Render grid ---
+  let bannerHtml = '';
   if(filter==='hits-target'){
     const hits = list.length;
     const total = a.gameResults.length;
-    const banner = `
-      <div style="grid-column:1/-1;background:color-mix(in srgb,var(--success) 10%,transparent);border:1px solid color-mix(in srgb,var(--success) 30%,transparent);border-radius:var(--radius-sm);padding:.75rem 1rem;margin-bottom:.25rem;display:flex;align-items:center;gap:.65rem;font-size:.85rem;">
+    bannerHtml = `
+      <div style="grid-column:1/-1;background:color-mix(in srgb,var(--success) 10%,transparent);border:1px solid color-mix(in srgb,var(--success) 30%,transparent);border-radius:var(--radius-sm);padding:.75rem 1rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.65rem;font-size:.85rem;">
         <i class="fas fa-bullseye" style="color:var(--success);"></i>
         <span>Your PC hits <strong>${target} FPS</strong> in <strong>${hits} of ${total}</strong> games.</span>
       </div>`;
-    $('#gamesList').innerHTML = banner + list.map(g=>gameCardHtml(g)).join('');
-  } else {
-    $('#gamesList').innerHTML = list.map(g=>gameCardHtml(g)).join('');
   }
-  $$('#gamesList .game-card').forEach((el,i)=>el.addEventListener('click',(e)=>{
-    if(e.target.closest('.game-card-fav')) return;
-    openGameModal(list[i]);
-  }));
+
+  $('#gamesList').innerHTML = bannerHtml + pageSlice.map(g=>gameCardHtml(g)).join('');
+
+  // Wire card clicks
+  const cards = $$('#gamesList .game-card');
+  cards.forEach((el, i) => {
+    el.addEventListener('click', (e)=>{
+      if(e.target.closest('.game-card-fav')) return;
+      openGameModal(pageSlice[i]);
+    });
+  });
   wireFavButtons();
   renderRecentSlideshow();
+
+  // --- Pagination controls (top + bottom) ---
+  renderPaginationControls(list.length, page);
+
+  // --- Sync URL hash ---
+  syncGamesHash(page);
+}
+
+/* ----------------------------------------------------------------
+   Pagination controls
+   ---------------------------------------------------------------- */
+function renderPaginationControls(totalGames, currentPage){
+  const totalPages = Math.max(1, Math.ceil(totalGames / GAMES_PER_PAGE));
+
+  // Remove any existing controls first
+  $$('.games-pagination').forEach(el => el.remove());
+
+  // If there's only one page, skip rendering
+  if(totalPages <= 1){
+    return;
+  }
+
+  const html = `
+    <div class="games-pagination" style="display:flex;align-items:center;justify-content:center;gap:.5rem;flex-wrap:wrap;margin-bottom:1.25rem;">
+      <button class="btn btn-sm btn-ghost" data-page="1" ${currentPage===1?'disabled':''} title="First page">
+        <i class="fas fa-angles-left"></i>
+      </button>
+      <button class="btn btn-sm btn-ghost" data-page="${currentPage-1}" ${currentPage===1?'disabled':''} title="Previous page">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <div style="display:flex;align-items:center;gap:.5rem;padding:.25rem .75rem;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-pill);font-size:.82rem;">
+        <span class="text-muted" style="font-weight:600;">Page</span>
+        <input type="number" id="gamesPageInput" min="1" max="${totalPages}" value="${currentPage}"
+               style="width:56px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.2rem .4rem;color:var(--text);font-family:inherit;font-size:.82rem;font-weight:700;text-align:center;">
+        <span class="text-muted" style="font-weight:600;">of ${totalPages}</span>
+      </div>
+      <button class="btn btn-sm btn-ghost" data-page="${currentPage+1}" ${currentPage===totalPages?'disabled':''} title="Next page">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+      <button class="btn btn-sm btn-ghost" data-page="${totalPages}" ${currentPage===totalPages?'disabled':''} title="Last page">
+        <i class="fas fa-angles-right"></i>
+      </button>
+      <span class="text-muted" style="font-size:.78rem;margin-left:.5rem;">
+        ${totalGames} games
+      </span>
+    </div>
+  `;
+
+  const gamesList = $('#gamesList');
+  if(!gamesList) return;
+
+  // Insert before and after the grid
+  gamesList.insertAdjacentHTML('beforebegin', html);
+  gamesList.insertAdjacentHTML('afterend', html);
+
+  // Wire buttons
+  $$('.games-pagination').forEach(container => {
+    container.querySelectorAll('button[data-page]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = parseInt(btn.dataset.page, 10);
+        if(!isNaN(target)){
+          state.gamePage = target;
+          renderGamesPage();
+          // Scroll to top of grid
+          const pages = $('#pages');
+          if(pages) pages.scrollTop = 0;
+        }
+      });
+    });
+    const input = container.querySelector('#gamesPageInput');
+    if(input){
+      input.addEventListener('change', () => {
+        let v = parseInt(input.value, 10);
+        if(isNaN(v)) v = 1;
+        v = Math.max(1, Math.min(totalPages, v));
+        state.gamePage = v;
+        renderGamesPage();
+        const pages = $('#pages');
+        if(pages) pages.scrollTop = 0;
+      });
+      input.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter'){
+          e.preventDefault();
+          input.blur();
+        }
+      });
+    }
+  });
+}
+
+/* ----------------------------------------------------------------
+   URL hash sync — #/games?page=2
+   ---------------------------------------------------------------- */
+function syncGamesHash(page){
+  // Only touch the hash if we're on the games page
+  if(!$('#page-games').classList.contains('active')) return;
+  const desired = page > 1 ? `#/games?page=${page}` : '#/games';
+  if(window.location.hash !== desired){
+    history.replaceState(null, '', desired);
+  }
+}
+
+/* ----------------------------------------------------------------
+   Read the page number from the URL on load
+   ---------------------------------------------------------------- */
+function readGamesHashPage(){
+  const hash = window.location.hash || '';
+  const m = hash.match(/page=(\d+)/);
+  if(m){
+    const p = parseInt(m[1], 10);
+    if(!isNaN(p) && p > 0) state.gamePage = p;
+  } else {
+    state.gamePage = 1;
+  }
 }
 
 function wireFavButtons(){
@@ -1260,10 +1399,19 @@ function wireFavButtons(){
     });
   });
 }
-$('#gameFilterQuality').addEventListener('change', renderGamesPage);
-$('#gameSort').addEventListener('change', renderGamesPage);
+$('#gameFilterQuality').addEventListener('change', () => {
+  state.gamePage = 1;
+  renderGamesPage();
+});
+$('#gameSort').addEventListener('change', () => {
+  state.gamePage = 1;
+  renderGamesPage();
+});
 document.addEventListener('input', (e)=>{
-  if(e.target && e.target.id === 'targetFps') renderGamesPage();
+  if(e.target && e.target.id === 'targetFps'){
+    state.gamePage = 1;
+    renderGamesPage();
+  }
 });
 
 /* ----------------------------------------------------------------
