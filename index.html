@@ -615,6 +615,28 @@ body::before{
 .games-pagination.bottom{
   margin-top:1.5rem;
 }
+/* Skeleton card on games grid */
+.game-card-skeleton{
+  pointer-events:none;
+  cursor:default;
+}
+.game-card-skeleton::before{
+  display:none;
+}
+.game-card-skeleton:hover{
+  transform:none;
+  border-color:var(--border);
+  box-shadow:none;
+}
+
+/* Grid fade-in when real cards replace the skeleton */
+#gamesList.games-loaded{
+  animation:gamesGridFadeIn 300ms ease;
+}
+@keyframes gamesGridFadeIn{
+  from{ opacity:0.85; }
+  to  { opacity:1; }
+}
 .games-pagination button:disabled{
   opacity:.4;
   cursor:not-allowed;
