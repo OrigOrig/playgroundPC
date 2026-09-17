@@ -1216,18 +1216,31 @@ function renderGamesPage(){
       </div>`;
   }
 
-  $('#gamesList').innerHTML = bannerHtml + pageSlice.map(g=>gameCardHtml(g)).join('');
+  // --- Skeleton phase ---
+  renderGamesSkeleton(pageSlice.length);
 
-  // Wire card clicks
-  const cards = $$('#gamesList .game-card');
-  cards.forEach((el, i) => {
-    el.addEventListener('click', (e)=>{
-      if(e.target.closest('.game-card-fav')) return;
-      openGameModal(pageSlice[i]);
+  // --- Real content after a short beat ---
+  setTimeout(() => {
+    $('#gamesList').innerHTML = bannerHtml + pageSlice.map(g=>gameCardHtml(g)).join('');
+
+    // Wire card clicks
+    const cards = $$('#gamesList .game-card');
+    cards.forEach((el, i) => {
+      el.addEventListener('click', (e)=>{
+        if(e.target.closest('.game-card-fav')) return;
+        openGameModal(pageSlice[i]);
+      });
     });
-  });
-  wireFavButtons();
-  renderRecentSlideshow();
+    wireFavButtons();
+    renderRecentSlideshow();
+
+    // Mark the grid as "loaded" for the fade-in
+    const grid = $('#gamesList');
+    if(grid){
+      grid.classList.add('games-loaded');
+      setTimeout(() => grid.classList.remove('games-loaded'), 350);
+    }
+  }, 380);
 
   // --- Pagination controls (top + bottom) ---
   renderPaginationControls(list.length, page);
@@ -5020,4 +5033,37 @@ function computeUpgradeSuggestions(){
   suggestions.sort((a, b) => b.value - a.value);
 
   return suggestions;
+}
+
+/* ----------------------------------------------------------------
+   Games page skeleton — grid of placeholder cards
+   ---------------------------------------------------------------- */
+function renderGamesSkeleton(count){
+  const grid = $('#gamesList');
+  if(!grid) return;
+
+  // Show up to 12 placeholder cards (enough to fill the viewport)
+  const visibleCount = Math.min(12, count || 12);
+
+  let html = '';
+  for(let i = 0; i < visibleCount; i++){
+    html += `
+      <div class="game-card game-card-skeleton">
+        <div class="game-card-banner skeleton"></div>
+        <div class="game-card-inner">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.6rem;">
+            <div style="flex:1;">
+              <div class="skeleton skeleton-line w-80" style="height:14px;margin-bottom:.4rem;"></div>
+              <div class="skeleton skeleton-line w-40" style="height:9px;"></div>
+            </div>
+            <div class="skeleton" style="width:44px;height:22px;border-radius:6px;margin-left:.5rem;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div class="skeleton" style="width:70px;height:18px;border-radius:40px;"></div>
+            <div class="skeleton skeleton-line w-40" style="height:10px;width:36px;"></div>
+          </div>
+        </div>
+      </div>`;
+  }
+  grid.innerHTML = html;
 }
