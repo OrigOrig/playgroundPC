@@ -1590,6 +1590,139 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
 .compare-result-fadein{
   animation:fadeIn 400ms ease;
 }
+/* ============================================================
+   PRINT / SAVE AS PDF
+   Hides chrome, shows analysis on white paper.
+   ============================================================ */
+@media print{
+
+  /* Force light theme for print */
+  body,
+  body.theme-light{
+    --bg:#ffffff;
+    --surface:#ffffff;
+    --surface-2:#f7f9fc;
+    --surface-3:#eef2f8;
+    --border:#d8dee7;
+    --text:#0f172a;
+    --text-2:#475569;
+    --text-3:#94a3b8;
+    background:#ffffff !important;
+    color:#0f172a !important;
+    overflow:visible !important;
+    padding:0 !important;
+  }
+  body::before{ display:none !important; }
+
+  /* Hide everything that isn't content */
+  .sidebar,
+  .sidebar-backdrop,
+  .topbar,
+  .toast-container,
+  .modal-backdrop,
+  .btn,
+  button,
+  .icon-btn,
+  .nav-item,
+  .hero-actions,
+  .hero-chips,
+  .search-box,
+  .quick-tools,
+  #settingsBtn,
+  #themeToggle,
+  #quickSettings,
+  #quickTheme,
+  #menuBtn,
+  .page-header .btn,
+  #simEmptyState,
+  .empty,
+  .toast,
+  .sidebar-close,
+  .user-chip
+  { display:none !important; }
+
+  /* Only show the active page */
+  .pages{ padding:0 !important; overflow:visible !important; height:auto !important; }
+  .page{ display:none !important; }
+  .page.active{ display:block !important; }
+
+  /* Cards become printable blocks */
+  .card,
+  .card-soft{
+    background:#ffffff !important;
+    border:1px solid #d8dee7 !important;
+    box-shadow:none !important;
+    backdrop-filter:none !important;
+    page-break-inside:avoid;
+    break-inside:avoid;
+    padding:1rem !important;
+    margin-bottom:.75rem !important;
+  }
+
+  /* Hero becomes a simple header */
+  .hero{
+    background:#ffffff !important;
+    border:1px solid #d8dee7 !important;
+    padding:1.25rem !important;
+    margin-bottom:.75rem !important;
+    page-break-inside:avoid;
+  }
+  .hero h1{
+    font-size:1.5rem !important;
+    color:#0f172a !important;
+  }
+  .hero h1 .accent{
+    background:none !important;
+    color:#3b82f6 !important;
+    -webkit-text-fill-color:#3b82f6 !important;
+  }
+  .hero p{ color:#475569 !important; }
+  .hero-visual{ display:none !important; }
+
+  /* Game grid: 2 columns of cards per printed page */
+  .game-grid{
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    gap:.5rem !important;
+  }
+  .game-card{
+    page-break-inside:avoid;
+    break-inside:avoid;
+    border:1px solid #d8dee7 !important;
+    box-shadow:none !important;
+    transform:none !important;
+  }
+  .game-card:hover{ transform:none !important; }
+  .game-card-banner{ display:none !important; }
+  .game-card-inner{ padding:.6rem !important; }
+  .game-fps .val{ font-size:1.1rem !important; }
+
+  /* Colored accents still visible but toned down */
+  .score-value .num,
+  .score-number,
+  .score-ring .progress{
+    color:#3b82f6 !important;
+    stroke:#3b82f6 !important;
+  }
+
+  /* Kill animations and transitions */
+  *{
+    animation:none !important;
+    transition:none !important;
+  }
+
+  /* Links print with visible text */
+  a[href]::after{
+    content:" (" attr(href) ")";
+    font-size:.75rem;
+    color:#64748b;
+  }
+
+  /* Page setup */
+  @page{
+    margin:1.5cm;
+  }
+}
 </style>
 </head>
 <body>
@@ -1744,9 +1877,12 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
         <div class="card mb-3" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
           <div>
             <div class="card-title mb-1"><i class="fas fa-image"></i> Share your score</div>
-            <div class="text-muted" style="font-size:.82rem;">Download a PNG card with your build + score, ready to post on Discord, Reddit, or Twitter.</div>
+            <div class="text-muted" style="font-size:.82rem;">Download a PNG card with your build + score, or save the full analysis as a PDF.</div>
           </div>
-          <button class="btn btn-primary" onclick="generateShareCard()"><i class="fas fa-download"></i> Generate card</button>
+          <div class="flex" style="gap:.5rem;">
+            <button class="btn btn-ghost" onclick="window.print()"><i class="fas fa-file-pdf"></i> Save as PDF</button>
+            <button class="btn btn-primary" onclick="generateShareCard()"><i class="fas fa-download"></i> Generate card</button>
+          </div>
         </div>
 
         <!-- QUICK STATS -->
@@ -2100,7 +2236,7 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
           <div class="empty">
             <i class="fas fa-triangle-exclamation" style="color:var(--warn);"></i>
             <p>Configure your PC in <strong>My PC</strong> first. There's nothing to simulate until you have a build.</p>
-            <button class="btn btn-primary mt-2" onclick="navigate('mypc')">
+            <button class="btn btn-primary btn-sm mt-2" style="display:inline-flex;" onclick="navigate('mypc')">
               <i class="fas fa-bolt"></i> Configure My PC
             </button>
           </div>
