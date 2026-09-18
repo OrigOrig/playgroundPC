@@ -5161,3 +5161,40 @@ function renderGamesSkeleton(count){
     renderGamesPage();
   });
 })();
+
+/* ----------------------------------------------------------------
+   Genre filter — populate the dropdown from actual game data
+   ---------------------------------------------------------------- */
+function populateGenreFilter(){
+  const sel = $('#gameFilterGenre');
+  if(!sel) return;
+
+  // Count games per genre
+  const counts = {};
+  GAMES.forEach(g => {
+    if(!g.genre) return;
+    counts[g.genre] = (counts[g.genre] || 0) + 1;
+  });
+
+  // Sort by count desc, then name asc
+  const sorted = Object.entries(counts)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+
+  // Preserve current selection
+  const current = sel.value || 'all';
+
+  sel.innerHTML = `<option value="all">All genres</option>` +
+    sorted.map(([genre, count]) =>
+      `<option value="${genre}">${genre} (${count})</option>`
+    ).join('');
+
+  // Restore the previous selection if it still exists
+  if(current !== 'all' && counts[current]){
+    sel.value = current;
+  } else {
+    sel.value = 'all';
+  }
+
+  // Sync the combobox display if it's been converted
+  if(typeof sel._comboboxSync === 'function') sel._comboboxSync();
+}
