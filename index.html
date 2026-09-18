@@ -1620,6 +1620,8 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
                border-color var(--transition);
     box-shadow:0 0 60px rgba(0,0,0,.5);
     padding:1rem .75rem;
+    height:100dvh;
+    overflow:hidden;
   }
   .sidebar.open{transform:translateX(0);}
 
@@ -1627,6 +1629,16 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
     overflow-y:auto;
     overflow-x:hidden;
     -webkit-overflow-scrolling:touch;
+    flex:1;
+    min-height:0;
+    padding-right:.25rem;
+  }
+  .nav::-webkit-scrollbar{
+    width:6px;
+  }
+  .nav::-webkit-scrollbar-thumb{
+    background:var(--surface-3);
+    border-radius:3px;
   }
   .nav-group{ transition:none; }
   .nav-section{ padding:.75rem .6rem .3rem; }
