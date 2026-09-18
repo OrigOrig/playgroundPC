@@ -1274,86 +1274,89 @@ function renderGamesPage(){
 function renderPaginationControls(totalGames, currentPage){
   const totalPages = Math.max(1, Math.ceil(totalGames / GAMES_PER_PAGE));
 
-  // Remove any existing controls first
-  $$('.games-pagination').forEach(el => el.remove());
+  // Clear both slots
+  const topSlot = $('#gamesPaginationTop');
+  if(topSlot) topSlot.innerHTML = '';
+  const bottomOld = $('.games-pagination-bottom');
+  if(bottomOld) bottomOld.remove();
 
-  // If there's only one page, skip rendering
+  // If only one page, don't render controls
   if(totalPages <= 1){
     return;
   }
 
   const html = `
-    <div class="games-pagination" style="display:flex;align-items:center;justify-content:center;gap:.5rem;flex-wrap:wrap;margin-bottom:1.25rem;">
-      <button class="btn btn-sm btn-ghost" data-page="1" ${currentPage===1?'disabled':''} title="First page">
-        <i class="fas fa-angles-left"></i>
-      </button>
-      <button class="btn btn-sm btn-ghost" data-page="${currentPage-1}" ${currentPage===1?'disabled':''} title="Previous page">
-        <i class="fas fa-chevron-left"></i>
-      </button>
-      <div style="display:flex;align-items:center;gap:.5rem;padding:.25rem .75rem;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-pill);font-size:.82rem;">
-        <span class="text-muted" style="font-weight:600;">Page</span>
-        <input type="number" id="gamesPageInput" min="1" max="${totalPages}" value="${currentPage}"
-               style="width:56px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.2rem .4rem;color:var(--text);font-family:inherit;font-size:.82rem;font-weight:700;text-align:center;">
-        <span class="text-muted" style="font-weight:600;">of ${totalPages}</span>
-      </div>
-      <button class="btn btn-sm btn-ghost" data-page="${currentPage+1}" ${currentPage===totalPages?'disabled':''} title="Next page">
-        <i class="fas fa-chevron-right"></i>
-      </button>
-      <button class="btn btn-sm btn-ghost" data-page="${totalPages}" ${currentPage===totalPages?'disabled':''} title="Last page">
-        <i class="fas fa-angles-right"></i>
-      </button>
-      <span class="text-muted" style="font-size:.78rem;margin-left:.5rem;">
-        ${totalGames} games
-      </span>
+    <button class="btn btn-sm btn-ghost" data-page="1" ${currentPage===1?'disabled':''} title="First page">
+      <i class="fas fa-angles-left"></i>
+    </button>
+    <button class="btn btn-sm btn-ghost" data-page="${currentPage-1}" ${currentPage===1?'disabled':''} title="Previous page">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <div style="display:flex;align-items:center;gap:.4rem;padding:.25rem .65rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-pill);font-size:.8rem;">
+      <span class="text-muted" style="font-weight:600;">Page</span>
+      <input type="number" class="games-page-input" min="1" max="${totalPages}" value="${currentPage}"
+             style="width:52px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.15rem .35rem;color:var(--text);font-family:inherit;font-size:.8rem;font-weight:700;text-align:center;">
+      <span class="text-muted" style="font-weight:600;">of ${totalPages}</span>
     </div>
+    <button class="btn btn-sm btn-ghost" data-page="${currentPage+1}" ${currentPage===totalPages?'disabled':''} title="Next page">
+      <i class="fas fa-chevron-right"></i>
+    </button>
+    <button class="btn btn-sm btn-ghost" data-page="${totalPages}" ${currentPage===totalPages?'disabled':''} title="Last page">
+      <i class="fas fa-angles-right"></i>
+    </button>
+    <span class="text-muted" style="font-size:.75rem;margin-left:.4rem;">
+      ${totalGames} games
+    </span>
   `;
 
-  const gamesList = $('#gamesList');
-  if(!gamesList) return;
-
-  // Insert before and after the grid
-  gamesList.insertAdjacentHTML('beforebegin', html);
-  gamesList.insertAdjacentHTML('afterend', html);
-
-  // Give the second (bottom) instance an extra class for spacing
-  const allControls = $$('.games-pagination');
-  if(allControls.length >= 2){
-    allControls[allControls.length - 1].classList.add('bottom');
+  // Render into top slot
+  if(topSlot){
+    topSlot.innerHTML = html;
+    wirePaginationSlot(topSlot, totalPages);
   }
 
-  // Wire buttons
-  $$('.games-pagination').forEach(container => {
-    container.querySelectorAll('button[data-page]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const target = parseInt(btn.dataset.page, 10);
-        if(!isNaN(target)){
-          state.gamePage = target;
-          renderGamesPage();
-          // Scroll to top of grid
-          const pages = $('#pages');
-          if(pages) pages.scrollTop = 0;
-        }
-      });
-    });
-    const input = container.querySelector('#gamesPageInput');
-    if(input){
-      input.addEventListener('change', () => {
-        let v = parseInt(input.value, 10);
-        if(isNaN(v)) v = 1;
-        v = Math.max(1, Math.min(totalPages, v));
-        state.gamePage = v;
+  // Create bottom instance after the grid
+  const grid = $('#gamesList');
+  if(grid){
+    const bottom = document.createElement('div');
+    bottom.className = 'games-pagination-bottom';
+    bottom.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:.5rem;flex-wrap:wrap;margin-top:1.5rem;';
+    bottom.innerHTML = html;
+    grid.insertAdjacentElement('afterend', bottom);
+    wirePaginationSlot(bottom, totalPages);
+  }
+}
+
+function wirePaginationSlot(container, totalPages){
+  container.querySelectorAll('button[data-page]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = parseInt(btn.dataset.page, 10);
+      if(!isNaN(target)){
+        state.gamePage = target;
         renderGamesPage();
         const pages = $('#pages');
         if(pages) pages.scrollTop = 0;
-      });
-      input.addEventListener('keydown', (e) => {
-        if(e.key === 'Enter'){
-          e.preventDefault();
-          input.blur();
-        }
-      });
-    }
+      }
+    });
   });
+  const input = container.querySelector('.games-page-input');
+  if(input){
+    input.addEventListener('change', () => {
+      let v = parseInt(input.value, 10);
+      if(isNaN(v)) v = 1;
+      v = Math.max(1, Math.min(totalPages, v));
+      state.gamePage = v;
+      renderGamesPage();
+      const pages = $('#pages');
+      if(pages) pages.scrollTop = 0;
+    });
+    input.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        input.blur();
+      }
+    });
+  }
 }
 
 /* ----------------------------------------------------------------
