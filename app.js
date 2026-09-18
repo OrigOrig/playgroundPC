@@ -92,7 +92,8 @@ let state = {
   },
   savedBuilds: [],
   analysis: null,
-  gamepage: 1
+  gamepage: 1,
+  gameSearch: ''
 };
 
 const savedBuild = CK.get('pcp_build');
@@ -1172,21 +1173,34 @@ function renderGamesPage(){
   }
   $('#gamesCountBadge').textContent = a.gameResults.length;
 
-  const filter = $('#gameFilterQuality').value;
-  const sort   = $('#gameSort').value;
-  const target = parseInt(($('#targetFps') && $('#targetFps').value) || '60', 10) || 60;
+  populateGenreFilter();
+
+  const filter      = $('#gameFilterQuality').value;
+  const genreFilter = ($('#gameFilterGenre') && $('#gameFilterGenre').value) || 'all';
+  const sort        = $('#gameSort').value;
+  const target      = parseInt(($('#targetFps') && $('#targetFps').value) || '60', 10) || 60;
+  const search      = (state.gameSearch || '').trim().toLowerCase();
 
   // Build the full sorted list
   let list = [...a.gameResults];
+
   if(filter==='excellent') list = list.filter(g=>g.fps>=144);
   else if(filter==='playable') list = list.filter(g=>g.fps>=30);
   else if(filter==='hits-target') list = list.filter(g=>g.fps>=target);
+
+  if(genreFilter && genreFilter !== 'all'){
+    list = list.filter(g => g.genre === genreFilter);
+  }
+
+  if(search){
+    list = list.filter(g => g.name.toLowerCase().includes(search));
+  }
 
   if(sort==='fps-desc') list.sort((x,y)=>y.fps-x.fps);
   else if(sort==='fps-asc') list.sort((x,y)=>x.fps-y.fps);
   else list.sort((x,y)=>x.name.localeCompare(y.name));
 
-  // Favorites float to the top
+  // Favorites float to top
   list.sort((x,y)=>{
     const fx = isFavorite(x.name) ? 0 : 1;
     const fy = isFavorite(y.name) ? 0 : 1;
@@ -1204,26 +1218,35 @@ function renderGamesPage(){
   const end   = start + GAMES_PER_PAGE;
   const pageSlice = list.slice(start, end);
 
-  // --- Render grid ---
-  let bannerHtml = '';
-  if(filter==='hits-target'){
-    const hits = list.length;
-    const total = a.gameResults.length;
-    bannerHtml = `
-      <div style="grid-column:1/-1;background:color-mix(in srgb,var(--success) 10%,transparent);border:1px solid color-mix(in srgb,var(--success) 30%,transparent);border-radius:var(--radius-sm);padding:.75rem 1rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.65rem;font-size:.85rem;">
-        <i class="fas fa-bullseye" style="color:var(--success);"></i>
-        <span>Your PC hits <strong>${target} FPS</strong> in <strong>${hits} of ${total}</strong> games.</span>
-      </div>`;
-  }
-
   // --- Skeleton phase ---
   renderGamesSkeleton(pageSlice.length);
 
+  // --- Empty state (no matches) ---
+  if(pageSlice.length === 0){
+    $('#gamesList').innerHTML = `
+      <div class="empty" style="grid-column:1/-1;padding:2.5rem 1rem;">
+        <i class="fas fa-search"></i>
+        <p>No games match your filters${search ? ` for "${state.gameSearch}"` : ''}.</p>
+      </div>`;
+    renderPaginationControls(0, 1);
+    return;
+  }
+
   // --- Real content after a short beat ---
   setTimeout(() => {
+    let bannerHtml = '';
+    if(filter==='hits-target'){
+      const hits = list.length;
+      const total = a.gameResults.length;
+      bannerHtml = `
+        <div style="grid-column:1/-1;background:color-mix(in srgb,var(--success) 10%,transparent);border:1px solid color-mix(in srgb,var(--success) 30%,transparent);border-radius:var(--radius-sm);padding:.75rem 1rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.65rem;font-size:.85rem;">
+          <i class="fas fa-bullseye" style="color:var(--success);"></i>
+          <span>Your PC hits <strong>${target} FPS</strong> in <strong>${hits} of ${total}</strong> games.</span>
+        </div>`;
+    }
+
     $('#gamesList').innerHTML = bannerHtml + pageSlice.map(g=>gameCardHtml(g)).join('');
 
-    // Wire card clicks
     const cards = $$('#gamesList .game-card');
     cards.forEach((el, i) => {
       el.addEventListener('click', (e)=>{
@@ -1234,18 +1257,14 @@ function renderGamesPage(){
     wireFavButtons();
     renderRecentSlideshow();
 
-    // Mark the grid as "loaded" for the fade-in
     const grid = $('#gamesList');
     if(grid){
       grid.classList.add('games-loaded');
       setTimeout(() => grid.classList.remove('games-loaded'), 350);
     }
-  }, 380);
+  }, 300);
 
-  // --- Pagination controls (top + bottom) ---
   renderPaginationControls(list.length, page);
-
-  // --- Sync URL hash ---
   syncGamesHash(page);
 }
 
@@ -5067,3 +5086,78 @@ function renderGamesSkeleton(count){
   }
   grid.innerHTML = html;
 }
+
+/* ----------------------------------------------------------------
+   Games page search — icon that expands on click
+   ---------------------------------------------------------------- */
+(function wireGamesSearch(){
+
+  const wrap      = document.getElementById('gamesSearchWrap');
+  const toggle    = document.getElementById('gamesSearchToggle');
+  const input     = document.getElementById('gamesSearch');
+  const clearBtn  = document.getElementById('gamesSearchClear');
+  if(!wrap || !input) return;
+
+  function openSearch(){
+    wrap.classList.add('open');
+    setTimeout(() => input.focus(), 100);
+  }
+  function closeSearch(){
+    if(input.value.trim() !== '') return;  // stay open if it has text
+    wrap.classList.remove('open');
+    input.blur();
+  }
+
+  if(toggle) toggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if(wrap.classList.contains('open')) closeSearch();
+    else openSearch();
+  });
+
+  input.addEventListener('input', () => {
+    state.gameSearch = input.value;
+    state.gamePage = 1;
+    wrap.classList.toggle('has-text', input.value.trim() !== '');
+    renderGamesPage();
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape'){
+      input.value = '';
+      state.gameSearch = '';
+      wrap.classList.remove('has-text');
+      closeSearch();
+      state.gamePage = 1;
+      renderGamesPage();
+    }
+  });
+
+  if(clearBtn) clearBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    input.value = '';
+    state.gameSearch = '';
+    wrap.classList.remove('has-text');
+    wrap.classList.remove('open');
+    state.gamePage = 1;
+    renderGamesPage();
+  });
+
+  document.addEventListener('click', (e) => {
+    if(!wrap.contains(e.target)) closeSearch();
+  });
+
+  // Restore from state on load
+  if(state.gameSearch){
+    input.value = state.gameSearch;
+    wrap.classList.add('open', 'has-text');
+  }
+})();
+
+(function wireGenreFilter(){
+  const el = document.getElementById('gameFilterGenre');
+  if(!el) return;
+  el.addEventListener('change', () => {
+    state.gamePage = 1;
+    renderGamesPage();
+  });
+})();
