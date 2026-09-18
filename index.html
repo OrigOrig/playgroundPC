@@ -781,36 +781,41 @@ body::before{
   color:var(--primary);
 }
 
-@media(max-width:700px){
+@media(max-width:760px){
   .games-toolbar{
-    padding:.5rem .6rem;
+    grid-template-columns:1fr;
+    padding:.6rem;
+    gap:.5rem;
   }
   .games-toolbar-left,
   .games-toolbar-center,
   .games-toolbar-right{
     width:100%;
-    justify-content:space-between;
+    justify-content:center;
   }
   .games-toolbar-left .combobox,
   .games-toolbar-left select{
+    width:100%;
+    max-width:none;
     min-width:0;
-    flex:1;
   }
   .games-toolbar-center{
-    order:3;
-    padding-top:.5rem;
-    border-top:1px solid var(--border);
-    margin-top:.35rem;
+    order:-1;
+    border-bottom:1px solid var(--border);
+    padding-bottom:.5rem;
+  }
+  .games-toolbar-center:empty{
+    display:none;
   }
   .games-search{
     width:100%;
-    height:38px;
+    height:40px;
     border-radius:var(--radius-sm);
   }
   .games-search input{
     opacity:1;
     width:auto;
-    padding-right:.25rem;
+    padding-right:.4rem;
   }
   .games-search-clear{ display:grid; }
   .games-search-toggle{ display:none; }
@@ -1001,6 +1006,24 @@ body::before{
 .up-arrow{color:var(--text-3);font-size:.7rem;}
 
 table.data{width:100%;border-collapse:collapse;font-size:.82rem;}
+@media(max-width:760px){
+  table.data{
+    display:block;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    white-space:nowrap;
+  }
+  table.data thead,
+  table.data tbody{
+    display:table;
+    width:100%;
+    min-width:520px;
+  }
+  table.data th,
+  table.data td{
+    white-space:nowrap;
+  }
+}
 table.data th{text-align:left;font-weight:700;color:var(--text-3);text-transform:uppercase;font-size:.7rem;letter-spacing:.05em;padding:.5rem .5rem .5rem 0;border-bottom:1px solid var(--border);}
 table.data td{padding:.7rem .5rem .7rem 0;border-bottom:1px solid var(--border);font-weight:500;}
 table.data tr:last-child td{border-bottom:none;}
@@ -1594,10 +1617,32 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
   .sidebar.open{transform:translateX(0);}
   .hero h1{font-size:1.75rem;}
   .pages{padding:1rem;}
-  .topbar{padding:0 1rem;}
-  .search-box{max-width:none;}
   .storage-item{grid-template-columns:1fr;gap:.5rem;}
   .pc-hero-image{max-height:220px;}
+
+  /* Topbar tightening */
+  .topbar{
+    padding:0 .75rem;
+    gap:.4rem;
+    height:56px;
+  }
+  .search-box{
+    max-width:none;
+    flex:1;
+    min-width:0;
+    padding:.4rem .75rem;
+  }
+  .topbar-right{
+    gap:.35rem;
+  }
+  .icon-btn{
+    width:34px;
+    height:34px;
+  }
+  /* Hide the notifications bell on mobile — least essential */
+  .topbar-right .icon-btn[title="Notifications"]{
+    display:none;
+  }
 }
 
 .sidebar-backdrop{
@@ -1931,6 +1976,18 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
   /* Page setup */
   @page{
     margin:1.5cm;
+  }
+}
+.advisor-target-grid{
+  display:grid;
+  grid-template-columns:2fr 1fr auto;
+  gap:.75rem;
+  align-items:end;
+  margin-bottom:1rem;
+}
+@media(max-width:760px){
+  .advisor-target-grid{
+    grid-template-columns:1fr;
   }
 }
 </style>
