@@ -2391,7 +2391,7 @@ $$('#advisorGoals button').forEach(btn=>btn.addEventListener('click', ()=>{
     html = `
       <div class="card-title mb-2"><i class="fas fa-bullseye"></i> Target FPS Advisor</div>
       <p class="text-muted mb-2">Tell us what you want to play and at what framerate.</p>
-      <div style="display:grid;grid-template-columns:2fr 1fr auto;gap:.75rem;align-items:end;margin-bottom:1rem;">
+      <div class="advisor-target-grid">
         <div class="field" style="margin:0;">
           <label>Game</label>
           <select id="targetGame" style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.6rem .75rem;color:var(--text);font-family:inherit;font-size:.85rem;font-weight:500;">
