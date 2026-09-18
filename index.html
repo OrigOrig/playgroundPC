@@ -2147,6 +2147,19 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
     grid-template-columns:1fr;
   }
 }
+/* Hide number input spinner arrows */
+.games-pagination input[type="number"]::-webkit-outer-spin-button,
+.games-pagination input[type="number"]::-webkit-inner-spin-button,
+.games-page-input::-webkit-outer-spin-button,
+.games-page-input::-webkit-inner-spin-button{
+  -webkit-appearance: none;
+  margin: 0;
+}
+.games-pagination input[type="number"],
+.games-page-input{
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
 </style>
 </head>
 <body>
