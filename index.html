@@ -656,6 +656,157 @@ body::before{
 }
 
 /* ============================================================
+   GAMES TOOLBAR
+   ============================================================ */
+.games-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+  flex-wrap:wrap;
+  margin-bottom:1.25rem;
+  padding:.75rem 1rem;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  transition:var(--transition);
+}
+.games-toolbar-left,
+.games-toolbar-center,
+.games-toolbar-right{
+  display:flex;
+  align-items:center;
+  gap:.5rem;
+}
+.games-toolbar-left .combobox,
+.games-toolbar-left select{
+  min-width:180px;
+}
+.games-toolbar-center{
+  flex:1;
+  justify-content:center;
+}
+.games-toolbar-center:empty{
+  display:none;
+}
+.games-toolbar-right{
+  justify-content:flex-end;
+}
+
+/* --- Search box --- */
+.games-search{
+  display:flex;
+  align-items:center;
+  gap:0;
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:var(--radius-pill);
+  overflow:hidden;
+  transition:width 240ms cubic-bezier(.22,1,.36,1),
+             border-color 180ms ease,
+             box-shadow 180ms ease;
+  width:38px;
+  height:38px;
+  padding:0;
+  position:relative;
+}
+.games-search.open{
+  width:220px;
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px var(--primary-glow);
+}
+.games-search-toggle{
+  flex-shrink:0;
+  width:36px;
+  height:36px;
+  border:none;
+  background:transparent;
+  color:var(--text-2);
+  cursor:pointer;
+  display:grid;
+  place-items:center;
+  transition:color var(--transition);
+}
+.games-search-toggle:hover{ color:var(--primary); }
+.games-search.open .games-search-toggle{
+  color:var(--primary);
+}
+.games-search input{
+  flex:1;
+  min-width:0;
+  background:transparent;
+  border:none;
+  outline:none;
+  color:var(--text);
+  font-family:inherit;
+  font-size:.85rem;
+  padding:0;
+  opacity:0;
+  width:0;
+  transition:opacity 200ms ease;
+}
+.games-search.open input{
+  opacity:1;
+  width:auto;
+  padding-right:.25rem;
+}
+.games-search input::placeholder{ color:var(--text-3); }
+.games-search-clear{
+  flex-shrink:0;
+  width:28px;
+  height:36px;
+  border:none;
+  background:transparent;
+  color:var(--text-3);
+  cursor:pointer;
+  display:none;
+  place-items:center;
+  transition:color var(--transition);
+}
+.games-search-clear:hover{ color:var(--text); }
+.games-search.open .games-search-clear{
+  display:grid;
+}
+.games-search.open.has-text .games-search-clear{
+  color:var(--primary);
+}
+
+@media(max-width:700px){
+  .games-toolbar{
+    padding:.5rem .6rem;
+  }
+  .games-toolbar-left,
+  .games-toolbar-center,
+  .games-toolbar-right{
+    width:100%;
+    justify-content:space-between;
+  }
+  .games-toolbar-left .combobox,
+  .games-toolbar-left select{
+    min-width:0;
+    flex:1;
+  }
+  .games-toolbar-center{
+    order:3;
+    padding-top:.5rem;
+    border-top:1px solid var(--border);
+    margin-top:.35rem;
+  }
+  .games-search{
+    width:100%;
+    height:38px;
+    border-radius:var(--radius-sm);
+  }
+  .games-search input{
+    opacity:1;
+    width:auto;
+    padding-right:.25rem;
+  }
+  .games-search-clear{ display:grid; }
+  .games-search-toggle{ display:none; }
+}
+   
+/* ============================================================
    GAME CARDS
    ============================================================ */
 .game-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;}
@@ -2234,6 +2385,32 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:7px;}
           </div>
         </div>
         <div id="recentSlideshow" style="display:none;margin-bottom:1.5rem;"></div>
+        <div class="games-toolbar" id="gamesToolbar">
+
+          <!-- Left: genre filter -->
+          <div class="games-toolbar-left">
+            <select class="field" id="gameFilterGenre" style="padding:.5rem .75rem;border-radius:var(--radius-sm);background:var(--surface-2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:.82rem;">
+              <option value="all">All genres</option>
+            </select>
+          </div>
+
+          <!-- Center: pagination -->
+          <div class="games-toolbar-center" id="gamesPaginationTop"></div>
+
+          <!-- Right: search -->
+          <div class="games-toolbar-right">
+            <div class="games-search" id="gamesSearchWrap">
+              <button class="games-search-toggle" id="gamesSearchToggle" title="Search games">
+                <i class="fas fa-search"></i>
+              </button>
+              <input type="text" id="gamesSearch" placeholder="Search games…" autocomplete="off">
+              <button class="games-search-clear" id="gamesSearchClear" title="Clear">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+
+        </div>
         <div id="gamesList" class="game-grid"></div>
       </section>
 
